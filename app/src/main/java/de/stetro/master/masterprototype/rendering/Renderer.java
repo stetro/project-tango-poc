@@ -35,6 +35,7 @@ public class Renderer extends RajawaliRenderer {
     private PointCloud pointCloud;
     private Object3D monkey;
     private Plane plane;
+    private boolean refreshPlane = false;
 
     public Renderer(Context context) {
         super(context);
@@ -42,6 +43,10 @@ public class Renderer extends RajawaliRenderer {
         green = Materials.generateGreenMaterial();
         red = Materials.generateRedMaterial();
         setFrameRate(60);
+    }
+
+    public void setRefreshPlane(boolean refreshPlane) {
+        this.refreshPlane = refreshPlane;
     }
 
     @Override
@@ -105,13 +110,16 @@ public class Renderer extends RajawaliRenderer {
             pointCloud.init();
             getCurrentScene().addChild(pointCloud);
 
-            extractPlaneFromPointCloudAndTransform(points);
+            if (refreshPlane) {
+                refreshPlane = false;
+                extractPlaneFromPointCloudAndTransform(points);
+            }
         }
     }
 
     private void extractPlaneFromPointCloudAndTransform(float[][] points) {
-        // detect Plane with Greedy RANSAC TODO: plot pointcloud
-        float[] planeValues = RANSAC.detectPlane(points, 0.1f, 10, (int) (0.8f * points.length));
+        // detect Plane with Greedy RANSAC
+        float[] planeValues = RANSAC.detectPlane(points, 0.1f, 10, (int) (0.7f * points.length));
         if (plane != null) {
             getCurrentScene().removeChild(plane);
         }
@@ -123,8 +131,7 @@ public class Renderer extends RajawaliRenderer {
 
         // generate in front of camera position for plane
         Vector3 planeCameraDirection = new Vector3(0, 0, 1).multiply(currentRotation.clone().inverse().toRotationMatrix());
-        Vector3 planeInFrontOfCamera = currentPosition.clone().add(planeCameraDirection.multiply(-4));
-        planeInFrontOfCamera.add(normal.multiply(planeValues[3]));
+        Vector3 planeInFrontOfCamera = currentPosition.clone().add(planeCameraDirection.multiply(-1.3 * POSITION_SCALE_FACTOR * Math.abs(planeValues[3])));
         plane.setPosition(planeInFrontOfCamera);
 
         // calculate plane object related rotation between Plane and normal

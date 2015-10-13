@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -17,8 +16,6 @@ import com.google.atap.tangoservice.TangoConfig;
 import com.google.atap.tangoservice.TangoCoordinateFramePair;
 import com.google.atap.tangoservice.TangoPoseData;
 
-import org.rajawali3d.materials.Material;
-import org.rajawali3d.primitives.Cube;
 import org.rajawali3d.surface.IRajawaliSurface;
 import org.rajawali3d.surface.RajawaliSurfaceView;
 
@@ -87,6 +84,12 @@ public class MainActivity extends Activity {
     private RajawaliSurfaceView get3DSurfaceView() {
         final RajawaliSurfaceView surface = new RajawaliSurfaceView(this);
         surface.setFrameRate(60.0);
+        surface.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                renderer.setRefreshPlane(true);
+            }
+        });
         surface.setRenderMode(IRajawaliSurface.RENDERMODE_WHEN_DIRTY);
         surface.setTransparent(true);
         renderer = new Renderer(this);
