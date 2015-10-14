@@ -2,6 +2,7 @@ package de.stetro.master.masterprototype.rendering;
 
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
+import org.rajawali3d.materials.plugins.DepthMaterialPlugin;
 
 
 public class Materials {
@@ -24,8 +25,22 @@ public class Materials {
     public static Material generateRedMaterial() {
         Material red = new Material();
         red.enableLighting(true);
-        red.setDiffuseMethod(new DiffuseMethod.Lambert());
+        red.setDiffuseMethod(new DiffuseMethod.Toon());
         red.setColor(new float[]{1.0f, 0.0f, 0.0f, 1.0f});
         return red;
+    }
+
+    public static Material generateBlueMaterial() {
+        Material blue = new Material();
+        blue.enableLighting(true);
+        blue.setColor(new float[]{0.0f, 0.0f, 1.0f, 1.0f});
+        return blue;
+    }
+
+    public static Material generateAlphaMaterial() {
+        Material alphaRed = new Material();
+        alphaRed.addPlugin(new DepthMaterialPlugin());
+        alphaRed.setColor(new float[]{0.0f, 0.0f, 0.0f, 0.05f});
+        return alphaRed;
     }
 }
