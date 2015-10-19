@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.atap.tangoservice.Tango;
@@ -22,30 +24,40 @@ import org.rajawali3d.surface.RajawaliSurfaceView;
 import java.util.Collections;
 import java.util.List;
 
+import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.R;
+import de.stetro.master.masterprototype.SensorUpdateListener;
 import de.stetro.master.masterprototype.rendering.Renderer;
-import de.stetro.master.masterprototype.rendering.SensorUpdateListener;
+import de.stetro.master.masterprototype.ui.event.NewPlaneEvent;
+import de.stetro.master.masterprototype.ui.event.NewPointCloudEvent;
 
 public class MainActivity extends Activity {
     private final String tag = MainActivity.class.getSimpleName();
     private TangoCameraPreview tangoCameraPreview;
     private Tango tango;
     private Renderer renderer;
+    private TextView currentPointCloud;
+    private TextView currentPlane;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
         setContentView(R.layout.activity_main);
+        RelativeLayout wrapperView = (RelativeLayout) findViewById(R.id.wrapper_view);
+        currentPointCloud = (TextView) findViewById(R.id.activity_main_current_pointcloud);
+        currentPlane = (TextView) findViewById(R.id.activity_main_plane);
 
         // prepare 3D surface
         final RajawaliSurfaceView surface = get3DSurfaceView();
-        addContentView(surface, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
+        wrapperView.addView(surface, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
 
         // prepare video preview
         tangoCameraPreview = new TangoCameraPreview(this);
         tango = new Tango(this);
         startActivityForResult(Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING), Tango.TANGO_INTENT_ACTIVITYCODE);
-        addContentView(tangoCameraPreview, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
+        wrapperView.addView(tangoCameraPreview, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     @Override
@@ -65,6 +77,7 @@ public class MainActivity extends Activity {
         config.putBoolean(TangoConfig.KEY_BOOLEAN_SMOOTH_POSE, true);
         config.putBoolean(TangoConfig.KEY_BOOLEAN_DEPTH, true);
         config.putBoolean(TangoConfig.KEY_BOOLEAN_MOTIONTRACKING, true);
+        config.putBoolean(TangoConfig.KEY_BOOLEAN_EXPERIMENTAL_ENABLE_DENSE_ALIGNMENT, true);
         tango.connect(config);
         tangoCameraPreview.connectToTangoCamera(tango, TangoCameraIntrinsics.TANGO_CAMERA_COLOR);
         List<TangoCoordinateFramePair> framePairs = Collections.singletonList(
@@ -95,6 +108,30 @@ public class MainActivity extends Activity {
         renderer = new Renderer(this);
         surface.setSurfaceRenderer(renderer);
         return surface;
+
     }
 
+    @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+    }
+
+    public void onEvent(final NewPointCloudEvent e) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                currentPointCloud.setText("PointCloud: " + String.valueOf(e.getPoints()) + " points");
+            }
+        });
+    }
+
+    public void onEvent(final NewPlaneEvent e) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                currentPlane.setText("Plane: supports " + String.valueOf(e.getSupportedPoints()) + " points");
+            }
+        });
+    }
 }

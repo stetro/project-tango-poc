@@ -11,9 +11,16 @@ public class RANSAC {
     // list of points supporting the plane computed in detectPlane
     public static LinkedList<float[]> supportingPoints = null;
     // array of boolean: if supportFlag[i] == true, points[i] is a supporting point
-    public static boolean[] supportFlags;
 
-    // -------------------------------------------------------------------------
+    /**
+     * detects a plane inside a pointcloud
+     *
+     * @param points            in 3d space of type and size float[n][3]
+     * @param distanceThresh    plane distance for accepted iterations
+     * @param numIterations     number of RANSAC iterations
+     * @param sufficientSupport stop criteria for sufficient plane support
+     * @return a plane defined in hesse normal form
+     */
     public static float[] detectPlane(float[][] points, float distanceThresh, int numIterations, int sufficientSupport) {
         // RANSAC
         int numPoints = points.length;
@@ -141,9 +148,14 @@ public class RANSAC {
         return (hnf);
     }
 
-    // -------------------------------------------------------------------------
-    // create Hesse Normal Plane from 3 points
-    // returns {nx,ny,nz,d}
+    /**
+     * create Hesse Normal Plane from 3 points
+     *
+     * @param p0 point 1
+     * @param p1 point 2
+     * @param p2 point 3
+     * @return returns plane in following form {nx,ny,nz,d}
+     */
     private static float[] createPlane(float[] p0, float[] p1, float[] p2) {
         // vectors
         float[] a = {p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]};
@@ -162,18 +174,19 @@ public class RANSAC {
         return (new float[]{n[0], n[1], n[2], d});
     }
 
-    // -------------------------------------------------------------------------
-    // create list and flag-array for supporting points
-    // returns result in fields supportingPoints, supportFlag.
-    // input: plane in hesse form, points, support-threshold
+    /**
+     * calculates the list of supporting Points for the given 3 points
+     *
+     * @param plane   found plane in RANSAC iteration
+     * @param points  list of all points
+     * @param mindist minimum distance between point and plane to determine support of a point
+     */
     private static void computeSupport(float[] plane, float[][] points, float mindist) {
-        supportingPoints = new LinkedList<float[]>();
-        supportFlags = new boolean[points.length];
-        for (int i = 0; i < points.length; i++) {
-            float d1 = points[i][0] * plane[0] + points[i][1] * plane[1] + points[i][2] * plane[2] - plane[3];
-            if (FastMath.abs(d1) <= mindist) {
-                supportingPoints.addLast(points[i]);
-                supportFlags[i] = true;
+        supportingPoints = new LinkedList<>();
+        for (float[] point : points) {
+            float distanceToPlane = point[0] * plane[0] + point[1] * plane[1] + point[2] * plane[2] - plane[3];
+            if (FastMath.abs(distanceToPlane) <= mindist) {
+                supportingPoints.addLast(point);
             }
         }
     }

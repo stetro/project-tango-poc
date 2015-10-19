@@ -25,6 +25,7 @@ dependencies {
     compile 'org.rajawali3d:rajawali:1.0.306-SNAPSHOT@aar'
     compile 'gov.nist.math:jama:1.0.2'
     compile 'org.apache.commons:commons-math3:3.0'
+    compile 'de.greenrobot:eventbus:2.4.0'
 
 
 }

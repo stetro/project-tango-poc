@@ -15,14 +15,17 @@ import org.rajawali3d.loader.ParsingException;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
+import org.rajawali3d.primitives.Cube;
 import org.rajawali3d.primitives.Line3D;
 import org.rajawali3d.primitives.Plane;
 import org.rajawali3d.renderer.RajawaliRenderer;
 
 import java.util.Stack;
 
+import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.R;
 import de.stetro.master.masterprototype.calc.RANSAC;
+import de.stetro.master.masterprototype.ui.event.NewPlaneEvent;
 
 
 public class Renderer extends RajawaliRenderer {
@@ -37,11 +40,12 @@ public class Renderer extends RajawaliRenderer {
     public Vector3 currentPosition = new Vector3();
     private Quaternion currentRotation = new Quaternion();
     private PointCloud pointCloud;
-    private Object3D monkey;
+    private Object3D frontObject;
     private Plane plane;
     private boolean refreshPlane = false;
     private DirectionalLight flashLight;
     private Object3D sceneObject;
+    private Object3D line;
 
     public Renderer(Context context) {
         super(context);
@@ -73,21 +77,22 @@ public class Renderer extends RajawaliRenderer {
         LoaderOBJ loaderOBJ = new LoaderOBJ(this, R.raw.monkey);
         try {
             loaderOBJ.parse();
-            monkey = loaderOBJ.getParsedObject();
-            monkey.setMaterial(white);
-            monkey.setScale(0.2);
-            getCurrentScene().addChild(monkey);
+
+            sceneObject = loaderOBJ.getParsedObject();
+            sceneObject.setMaterial(red);
+            sceneObject.setY(5f);
+            sceneObject.setScale(1.0);
+            sceneObject.setRotation(Vector3.Axis.X, 180);
+            getCurrentScene().addChild(sceneObject);
         } catch (ParsingException e) {
             e.printStackTrace();
         }
+        frontObject = new Cube(1);
+        frontObject.setMaterial(white);
+        frontObject.setScale(0.2);
+        getCurrentScene().addChild(frontObject);
 
-        sceneObject = monkey.clone();
-        sceneObject.setMaterial(red);
-        sceneObject.setY(5f);
-        sceneObject.setScale(1.0);
-        sceneObject.setRotation(Vector3.Axis.X, 180);
 
-        getCurrentScene().addChild(sceneObject);
     }
 
     @Override
@@ -133,10 +138,12 @@ public class Renderer extends RajawaliRenderer {
                 Stack<Vector3> vector3s = new Stack<>();
                 vector3s.add(plane.getPosition());
                 vector3s.add(sceneObject.getPosition());
-
-                Line3D child = new Line3D(vector3s, 0.1f);
-                child.setMaterial(blue);
-                getCurrentScene().addChild(child);
+                if (line != null) {
+                    getCurrentScene().removeChild(line);
+                }
+                line = new Line3D(vector3s, 0.1f);
+                line.setMaterial(blue);
+                getCurrentScene().addChild(line);
             }
         }
     }
@@ -144,6 +151,7 @@ public class Renderer extends RajawaliRenderer {
     private void extractPlaneFromPointCloudAndTransform(float[][] points) {
         // detect Plane normal and position using Greedy: RANSAC
         float[] planeValues = RANSAC.detectPlane(points, 0.1f, 10, (int) (0.7f * points.length));
+        EventBus.getDefault().post(new NewPlaneEvent(RANSAC.supportingPoints.size()));
         // If plane already exists in scene graph - remove
         if (plane != null) {
             getCurrentScene().removeChild(plane);
@@ -187,7 +195,7 @@ public class Renderer extends RajawaliRenderer {
         flashLight.setPosition(currentPosition);
 
         // MONKEY RELATED COMPUTATIONS
-        updateMonkeyTransformations(devicePosition, deviceRotation);
+        updateFrontObjectTransformations(devicePosition, deviceRotation);
 
         // POINTCLOUD RELATED COMPUTATIONS
         updatePointCloudTransformations(devicePosition, deviceRotation);
@@ -225,20 +233,20 @@ public class Renderer extends RajawaliRenderer {
         }
     }
 
-    private void updateMonkeyTransformations(Vector3 devicePosition, Quaternion deviceRotation) {
-        // generate in front of camera position for monkey
+    private void updateFrontObjectTransformations(Vector3 devicePosition, Quaternion deviceRotation) {
+        // generate in front of camera position for frontObject
         Vector3 monkeyCameraDirection = new Vector3(0.4, 0.2, 1).multiply(deviceRotation.clone().inverse().toRotationMatrix());
         Vector3 monkeyInFrontOfCamera = devicePosition.clone().add(monkeyCameraDirection.multiply(-1.5));
 
-        // generate camera based rotation for monkey
+        // generate camera based rotation for frontObject
         Quaternion monkeyObjectOrientation = deviceRotation.clone().inverse();
 
-        monkey.setPosition(monkeyInFrontOfCamera);
-        monkey.setOrientation(monkeyObjectOrientation);
+        frontObject.setPosition(monkeyInFrontOfCamera);
+        frontObject.setOrientation(monkeyObjectOrientation);
 
-        // calculate monkey object related rotation (-90° on x axis of camera orientation)
+        // calculate frontObject object related rotation (-90° on x axis of camera orientation)
         Vector3 monkeyCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(deviceRotation.clone().inverse().toRotationMatrix());
-        monkey.rotate(monkeyCameraHorizontalDirection, -90);
+        frontObject.rotate(monkeyCameraHorizontalDirection, -45);
     }
 
 }
