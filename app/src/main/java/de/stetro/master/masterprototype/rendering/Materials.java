@@ -40,7 +40,7 @@ public class Materials {
     public static Material generateAlphaMaterial() {
         Material alphaRed = new Material();
         alphaRed.addPlugin(new DepthMaterialPlugin());
-        alphaRed.setColor(new float[]{0.0f, 0.0f, 0.0f, 0.05f});
+        alphaRed.setColor(new float[]{0.0f, 0.0f, 0.0f, 0.15f});
         return alphaRed;
     }
 }

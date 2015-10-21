@@ -29,7 +29,7 @@ import de.stetro.master.masterprototype.ui.event.NewPlaneEvent;
 
 
 public class Renderer extends RajawaliRenderer {
-    private static final float POSITION_SCALE_FACTOR = 5.0f;
+    private static final float POSITION_SCALE_FACTOR = 10.0f;
     private static final String tag = Renderer.class.getSimpleName();
     private final Object pointCloudSynchronise = new Object();
     private final Material white;
@@ -150,7 +150,7 @@ public class Renderer extends RajawaliRenderer {
 
     private void extractPlaneFromPointCloudAndTransform(float[][] points) {
         // detect Plane normal and position using Greedy: RANSAC
-        float[] planeValues = RANSAC.detectPlane(points, 0.1f, 10, (int) (0.7f * points.length));
+        float[] planeValues = RANSAC.detectPlane(points, 0.01f, 10, (int) (0.7f * points.length));
         EventBus.getDefault().post(new NewPlaneEvent(RANSAC.supportingPoints.size()));
         // If plane already exists in scene graph - remove
         if (plane != null) {

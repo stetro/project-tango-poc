@@ -56,15 +56,17 @@ public class MainActivity extends Activity {
         // prepare video preview
         tangoCameraPreview = new TangoCameraPreview(this);
         tango = new Tango(this);
-        startActivityForResult(Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING), Tango.TANGO_INTENT_ACTIVITYCODE);
+        startActivityForResult(Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING), 0);
         wrapperView.addView(tangoCameraPreview, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == Tango.TANGO_INTENT_ACTIVITYCODE) {
+        // Check which request we're responding to
+        if (requestCode == 0) {
+            // Make sure the request was successful
             if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, "Motion Tracking Permissions Required!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "No motion tracking permission", Toast.LENGTH_SHORT).show();
                 finish();
             } else {
                 connectTango();
@@ -77,7 +79,7 @@ public class MainActivity extends Activity {
         config.putBoolean(TangoConfig.KEY_BOOLEAN_SMOOTH_POSE, true);
         config.putBoolean(TangoConfig.KEY_BOOLEAN_DEPTH, true);
         config.putBoolean(TangoConfig.KEY_BOOLEAN_MOTIONTRACKING, true);
-        config.putBoolean(TangoConfig.KEY_BOOLEAN_EXPERIMENTAL_ENABLE_DENSE_ALIGNMENT, true);
+        config.putBoolean(TangoConfig.KEY_BOOLEAN_LOWLATENCYIMUINTEGRATION, true);
         tango.connect(config);
         tangoCameraPreview.connectToTangoCamera(tango, TangoCameraIntrinsics.TANGO_CAMERA_COLOR);
         List<TangoCoordinateFramePair> framePairs = Collections.singletonList(
@@ -121,7 +123,7 @@ public class MainActivity extends Activity {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                currentPointCloud.setText("PointCloud: " + String.valueOf(e.getPoints()) + " points");
+                currentPointCloud.setText(String.format("PointCloud: %d points", e.getPoints()));
             }
         });
     }
@@ -130,7 +132,7 @@ public class MainActivity extends Activity {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                currentPlane.setText("Plane: supports " + String.valueOf(e.getSupportedPoints()) + " points");
+                currentPlane.setText(String.format("Plane: supports %d points", e.getSupportedPoints()));
             }
         });
     }
