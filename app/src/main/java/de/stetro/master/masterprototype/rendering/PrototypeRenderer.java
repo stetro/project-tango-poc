@@ -10,23 +10,28 @@ import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
 import org.rajawali3d.lights.DirectionalLight;
+import org.rajawali3d.materials.Material;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.util.ArrayUtils;
 
+import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
+import de.stetro.master.masterprototype.rendering.event.CubeUpdateEvent;
 
 public class PrototypeRenderer extends TangoRajawaliRenderer {
     private static final float CAMERA_NEAR = 0.01f;
     private static final float CAMERA_FAR = 200f;
     private static final int MAX_NUMBER_OF_POINTS = 60000;
+    private static final Object pointCloudSync = new Object();
     private static final String tag = PrototypeRenderer.class.getSimpleName();
     private Points points;
     private PointCloudManager pointCloudManager;
     private boolean pointCloudFreeze = false;
     private boolean pointCloudVisible = true;
     private Cubes cubes;
+    private Material blue;
 
     public PrototypeRenderer(Context context, PointCloudManager pointCloudManager) {
         super(context);
@@ -46,6 +51,7 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
         cubes = new Cubes();
         getCurrentScene().addChild(cubes);
 
+        blue = Materials.generateBlueMaterial();
         points = new Points(MAX_NUMBER_OF_POINTS);
         getCurrentScene().addChild(points);
         getCurrentCamera().setNearPlane(CAMERA_NEAR);
@@ -53,20 +59,22 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
     }
 
     @Override
-    protected synchronized void onRender(long ellapsedRealtime, double deltaTime) {
-        super.onRender(ellapsedRealtime, deltaTime);
-        if (!pointCloudFreeze) {
-            PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
-            points.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount);
-            Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
-            Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
-            Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix(pointCloudCameraHorizontalDirection);
-            points.calculateModelMatrix(modelMatrix);
+    protected void onRender(long ellapsedRealtime, double deltaTime) {
+        synchronized (pointCloudSync) {
+            super.onRender(ellapsedRealtime, deltaTime);
+            if (!pointCloudFreeze) {
+                PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
+                points.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount);
+                Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix();
+                points.calculateModelMatrix(modelMatrix);
+            }
         }
     }
 
     @NonNull
-    private Matrix4 generateCurrentPointCloudModelMatrix(Vector3 pointCloudCameraHorizontalDirection) {
+    private Matrix4 generateCurrentPointCloudModelMatrix() {
+        Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
+        Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
         return Matrix4
                 .createTranslationMatrix(getCurrentCamera().getPosition())
                 .rotate(pointCloudCameraHorizontalDirection, 180)
@@ -79,23 +87,30 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
     }
 
     @Override
-    public synchronized void onTouchEvent(MotionEvent event) {
-        float x = event.getX();
-        float y = event.getY();
-        Vector3 pointNear = unProject(x, y, -1);
-        Vector3 pointFar = unProject(x, y, 1);
+    public void onTouchEvent(MotionEvent event) {
+        synchronized (pointCloudSync) {
+            CubeUpdateEvent cubeUpdateEvent = new CubeUpdateEvent();
+            float x = event.getX();
+            float y = event.getY();
+            cubeUpdateEvent.setTouchPosition(x, y);
 
-        Log.d(tag, "touched at " + x + " x " + y + " Ray intersection between " + pointNear.toString() + " " + pointFar.toString());
+            Vector3 pointNear = unProject(x, y, 0);
+            Vector3 pointFar = unProject(x, y, 1);
+            cubeUpdateEvent.setIntersectionRay(pointNear, pointFar);
 
-        Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
-        Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
-        Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix(pointCloudCameraHorizontalDirection);
+            Log.d(tag, "touched at " + x + " x " + y + " - ray intersection between " + pointNear.toString() + " " + pointFar.toString());
 
-        if (points.intersect(pointNear, pointFar, modelMatrix)) {
-            Log.d(tag, "intersects ..." + points.intersection);
-            cubes.addChildCubeAt(points.intersection);
-        } else {
-            Log.d(tag, "intersects not...");
+            Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix();
+
+            if (points.intersect(pointNear, pointFar, modelMatrix)) {
+                Log.d(tag, "intersects and added cube at ..." + points.intersection);
+                cubeUpdateEvent.setIntersectionPoint(points.intersection.clone());
+                cubes.addChildCubeAt(points.intersection);
+            } else {
+                Log.d(tag, "intersects not...");
+            }
+
+            EventBus.getDefault().post(cubeUpdateEvent);
         }
     }
 
@@ -125,7 +140,8 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
         float y = (float) dY;
         float z = (float) dZ;
 
-        float[] mmatrix = ArrayUtils.convertDoublesToFloats(getCurrentCamera().getViewMatrix().getDoubleValues());
+        Matrix4 viewMatrix = getCurrentCamera().getViewMatrix().clone();
+        float[] mmatrix = ArrayUtils.convertDoublesToFloats(viewMatrix.getDoubleValues());
         float[] pmatrix = ArrayUtils.convertDoublesToFloats(getCurrentCamera().getProjectionMatrix().getDoubleValues());
 
         GLU.gluUnProject(
@@ -141,5 +157,9 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
 
     public void deleteCubes() {
         this.cubes.clear();
+    }
+
+    public Cubes getCubes() {
+        return cubes;
     }
 }

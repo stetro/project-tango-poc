@@ -18,8 +18,11 @@ import org.rajawali3d.util.RajLog;
 
 import java.util.ArrayList;
 
+import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
+import de.stetro.master.masterprototype.rendering.Cubes;
 import de.stetro.master.masterprototype.rendering.PrototypeRenderer;
+import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
 
 public abstract class TangoAppActivity extends BaseActivity implements View.OnTouchListener {
     protected TangoRajawaliView glView;
@@ -73,6 +76,11 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
                 @Override
                 public void onXyzIjAvailable(TangoXyzIjData xyzIj) {
                     synchronized (renderer) {
+                        SceneUpdateEvent e = new SceneUpdateEvent();
+                        e.setPointCloundPointsCount(xyzIj.xyzCount);
+                        e.setCubeCount(renderer.getCubes().getCubeCount());
+                        e.setMaxCubeCount(Cubes.getMaxCubeCount());
+                        EventBus.getDefault().post(e);
                         pointCloudManager.updateCallbackBufferAndSwap(xyzIj.xyz, xyzIj.xyzCount);
                     }
                 }
@@ -108,6 +116,5 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
         renderer.onTouchEvent(event);
         return super.onTouchEvent(event);
     }
-
 
 }
