@@ -18,6 +18,7 @@ import org.rajawali3d.math.vector.Vector3;
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.R;
 import de.stetro.master.masterprototype.rendering.event.CubeUpdateEvent;
+import de.stetro.master.masterprototype.rendering.event.DebugEvent;
 import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
 
 public class MainActivity extends TangoAppActivity {
@@ -26,6 +27,7 @@ public class MainActivity extends TangoAppActivity {
     private TextView cubeInfoTextView;
     private boolean infoViewVisible = true;
     private TextView sceneInfoTextView;
+    private TextView debugTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +39,7 @@ public class MainActivity extends TangoAppActivity {
         infoView = (LinearLayout) findViewById(R.id.info_view);
         cubeInfoTextView = (TextView) findViewById(R.id.cube_info_text_view);
         sceneInfoTextView = (TextView) findViewById(R.id.scene_info_text_view);
+        debugTextView = (TextView) findViewById(R.id.debug_text_view);
         EventBus.getDefault().register(this);
     }
 
@@ -108,7 +111,10 @@ public class MainActivity extends TangoAppActivity {
                 } else {
                     builder.append("no PointCloud points available!").append("\n");
                 }
-                builder.append("Cubes: ").append(e.getCubeCount()).append(" / ").append(e.getMaxCubeCount()).append("\n");
+                builder.append("Cubes: ")
+                        .append(e.getCubeCount())
+                        .append(" / ")
+                        .append(e.getMaxCubeCount());
                 sceneInfoTextView.setText(builder.toString());
             }
         });
@@ -133,6 +139,15 @@ public class MainActivity extends TangoAppActivity {
                     .append(beautifyVector3(e.getIntersectionPoint()));
         }
         cubeInfoTextView.setText(builder.toString());
+    }
+
+    public void onEvent(final DebugEvent e) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                debugTextView.setText(e.getDebugObject().toString());
+            }
+        });
     }
 
     private String beautifyVector3(Vector3 v) {

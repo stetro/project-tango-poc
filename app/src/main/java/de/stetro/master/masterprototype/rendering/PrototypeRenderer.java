@@ -98,11 +98,7 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
             Vector3 pointFar = unProject(x, y, 1);
             cubeUpdateEvent.setIntersectionRay(pointNear, pointFar);
 
-            Log.d(tag, "touched at " + x + " x " + y + " - ray intersection between " + pointNear.toString() + " " + pointFar.toString());
-
-            Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix();
-
-            if (points.intersect(pointNear, pointFar, modelMatrix)) {
+            if (points.intersect(pointNear, pointFar)) {
                 Log.d(tag, "intersects and added cube at ..." + points.intersection);
                 cubeUpdateEvent.setIntersectionPoint(points.intersection.clone());
                 cubes.addChildCubeAt(points.intersection);
