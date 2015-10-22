@@ -1,37 +1,32 @@
 package de.stetro.master.masterprototype.rendering;
 
 import android.content.Context;
+import android.opengl.GLU;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.MotionEvent;
 
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
-import org.rajawali3d.Object3D;
 import org.rajawali3d.lights.DirectionalLight;
-import org.rajawali3d.materials.Material;
-import org.rajawali3d.materials.methods.DiffuseMethod;
-import org.rajawali3d.materials.plugins.DepthMaterialPlugin;
+import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
-import org.rajawali3d.primitives.Cube;
-import org.rajawali3d.primitives.Plane;
-
-import java.nio.FloatBuffer;
-import java.util.Arrays;
+import org.rajawali3d.util.ArrayUtils;
 
 import de.stetro.master.masterprototype.PointCloudManager;
-import de.stetro.master.masterprototype.calc.RANSAC;
 
 public class PrototypeRenderer extends TangoRajawaliRenderer {
     private static final float CAMERA_NEAR = 0.01f;
     private static final float CAMERA_FAR = 200f;
     private static final int MAX_NUMBER_OF_POINTS = 60000;
     private static final String tag = PrototypeRenderer.class.getSimpleName();
-    private Plane plane;
     private Points points;
     private PointCloudManager pointCloudManager;
-    private Material red;
+    private boolean pointCloudFreeze = false;
+    private boolean pointCloudVisible = true;
+    private Cubes cubes;
 
     public PrototypeRenderer(Context context, PointCloudManager pointCloudManager) {
         super(context);
@@ -48,44 +43,34 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
         light.setPosition(3, 2, 4);
         getCurrentScene().addLight(light);
 
-        red = new Material();
-        red.setColor(0xff990000);
-        red.enableLighting(true);
-        red.setDiffuseMethod(new DiffuseMethod.Lambert());
-
-        Object3D cube = new Cube(0.1f);
-        cube.setMaterial(red);
-        cube.setPosition(.05f, 0, -0.5f);
-        getCurrentScene().addChild(cube);
-
-        plane = new Plane(10, 10, 1, 1);
-        plane.setDoubleSided(true);
-        plane.setMaterial(red);
-        plane.setVisible(false);
-        getCurrentScene().addChild(plane);
-
-        Material alphaRed = new Material();
-        alphaRed.addPlugin(new DepthMaterialPlugin());
-        alphaRed.setColor(new float[]{0.0f, 0.0f, 0.0f, 0.15f});
+        cubes = new Cubes();
+        getCurrentScene().addChild(cubes);
 
         points = new Points(MAX_NUMBER_OF_POINTS);
-        points.setMaterial(red);
         getCurrentScene().addChild(points);
         getCurrentCamera().setNearPlane(CAMERA_NEAR);
         getCurrentCamera().setFarPlane(CAMERA_FAR);
-
     }
 
     @Override
     protected synchronized void onRender(long ellapsedRealtime, double deltaTime) {
         super.onRender(ellapsedRealtime, deltaTime);
-        PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
-        points.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount);
-        Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
-        Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
-        points.setPosition(getCurrentCamera().getPosition());
-        points.setOrientation(cameraOrientation);
-        points.rotate(pointCloudCameraHorizontalDirection, 180);
+        if (!pointCloudFreeze) {
+            PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
+            points.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount);
+            Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
+            Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
+            Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix(pointCloudCameraHorizontalDirection);
+            points.calculateModelMatrix(modelMatrix);
+        }
+    }
+
+    @NonNull
+    private Matrix4 generateCurrentPointCloudModelMatrix(Vector3 pointCloudCameraHorizontalDirection) {
+        return Matrix4
+                .createTranslationMatrix(getCurrentCamera().getPosition())
+                .rotate(pointCloudCameraHorizontalDirection, 180)
+                .rotate(getCurrentCamera().getOrientation());
     }
 
     @Override
@@ -95,30 +80,66 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
 
     @Override
     public synchronized void onTouchEvent(MotionEvent event) {
-        FloatBuffer pointCloud = pointCloudManager.getCurrentPointCloud();
-        int pointCloudCount = pointCloudManager.getCurrentPointCloudCount();
-        if (pointCloud != null && pointCloudCount > 100) {
-            float[][] points = new float[pointCloudCount][3];
-            for (int i = 0; i < pointCloudCount; i++) {
-                points[i][0] = pointCloud.get();
-                points[i][1] = pointCloud.get();
-                points[i][2] = pointCloud.get();
-            }
-            float[] planeValues = RANSAC.detectPlane(points, 1.0f, 10, (int) (0.7 * points.length));
-            Log.d(tag, "plane found with settings " + Arrays.toString(planeValues));
+        float x = event.getX();
+        float y = event.getY();
+        Vector3 pointNear = unProject(x, y, -1);
+        Vector3 pointFar = unProject(x, y, 1);
 
-            // place plane
-            if (plane != null) {
-                getCurrentScene().removeChild(plane);
-            }
+        Log.d(tag, "touched at " + x + " x " + y + " Ray intersection between " + pointNear.toString() + " " + pointFar.toString());
 
-            Vector3 normal = new Vector3(planeValues[0], planeValues[1], planeValues[2]);
-            Vector3 planePosition = normal.multiply(1.0).add(getCurrentCamera().getPosition());
-            plane.setPosition(planePosition);
-            plane.setVisible(true);
+        Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
+        Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
+        Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix(pointCloudCameraHorizontalDirection);
 
+        if (points.intersect(pointNear, pointFar, modelMatrix)) {
+            Log.d(tag, "intersects ..." + points.intersection);
+            cubes.addChildCubeAt(points.intersection);
         } else {
-            Log.d(tag, "No points captured");
+            Log.d(tag, "intersects not...");
         }
+    }
+
+    public void togglePointCloudFreeze() {
+        pointCloudFreeze = !pointCloudFreeze;
+    }
+
+    public boolean isPointCloudFreeze() {
+        return pointCloudFreeze;
+    }
+
+    public void togglePointCloudVisibility() {
+        pointCloudVisible = !pointCloudVisible;
+        points.setVisible(pointCloudVisible);
+    }
+
+    public boolean isPointCloudVisible() {
+        return pointCloudVisible;
+    }
+
+
+    @Override
+    public Vector3 unProject(double dX, double dY, double dZ) {
+        float[] np4 = new float[4];
+        int[] mViewport = new int[]{0, 0, getViewportWidth(), getViewportHeight()};
+        float x = (float) dX;
+        float y = (float) dY;
+        float z = (float) dZ;
+
+        float[] mmatrix = ArrayUtils.convertDoublesToFloats(getCurrentCamera().getViewMatrix().getDoubleValues());
+        float[] pmatrix = ArrayUtils.convertDoublesToFloats(getCurrentCamera().getProjectionMatrix().getDoubleValues());
+
+        GLU.gluUnProject(
+                x, getViewportHeight() - y, z,
+                mmatrix, 0,
+                pmatrix, 0,
+                mViewport, 0,
+                np4, 0
+        );
+
+        return new Vector3((double) (np4[0] / np4[3]), (double) (np4[1] / np4[3]), (double) (np4[2] / np4[3]));
+    }
+
+    public void deleteCubes() {
+        this.cubes.clear();
     }
 }

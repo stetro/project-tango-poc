@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/activity_main_menu_delete_cubes"
+        android:icon="@mipmap/ic_delete_white_24dp"
+        android:title="@string/delete_cubes"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/activity_main_menu_toggle_pointcloud"
+        android:icon="@mipmap/ic_visibility_white_24dp"
+        android:title="@string/toggle_pointcloud"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/activity_main_menu_toggle_pointcloud_capturing"
+        android:icon="@mipmap/ic_pause_white_24dp"
+        android:title="@string/toggle_pointcloud_capturing"
+        app:showAsAction="always" />
+</menu>

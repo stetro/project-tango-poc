@@ -1,57 +1,23 @@
 package de.stetro.master.masterprototype.ui;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.atap.tangoservice.Tango;
-import com.google.atap.tangoservice.TangoCameraIntrinsics;
-import com.google.atap.tangoservice.TangoConfig;
-import com.google.atap.tangoservice.TangoCoordinateFramePair;
-import com.google.atap.tangoservice.TangoEvent;
-import com.google.atap.tangoservice.TangoPoseData;
-import com.google.atap.tangoservice.TangoXyzIjData;
-import com.projecttango.rajawali.ar.TangoRajawaliView;
 
-import java.util.ArrayList;
-
-import de.stetro.master.masterprototype.PointCloudManager;
 import de.stetro.master.masterprototype.R;
-import de.stetro.master.masterprototype.rendering.PrototypeRenderer;
 
-public class MainActivity extends Activity {
-    private TangoRajawaliView glView;
-    private Tango tango;
-    private boolean isPermissionGranted;
-    private boolean isConnected;
-    private TangoConfig config;
-    private PointCloudManager pointCloudManager;
-    private PrototypeRenderer renderer;
+public class MainActivity extends TangoAppActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        glView = new TangoRajawaliView(this);
-        tango = new Tango(this);
-        config = tango.getConfig(TangoConfig.CONFIG_TYPE_DEFAULT);
-        config.putBoolean(TangoConfig.KEY_BOOLEAN_LOWLATENCYIMUINTEGRATION, true);
-        config.putBoolean(TangoConfig.KEY_BOOLEAN_DEPTH, true);
-
-        int maxDepthPoints = config.getInt("max_point_cloud_elements");
-        pointCloudManager = new PointCloudManager(maxDepthPoints);
-        renderer = new PrototypeRenderer(this, pointCloudManager);
-        glView.setEGLContextClientVersion(2);
-        glView.setSurfaceRenderer(renderer);
-        glView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                renderer.onTouchEvent(null);
-            }
-        });
 
         startActivityForResult(Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING), Tango.TANGO_INTENT_ACTIVITYCODE);
         setContentView(R.layout.activity_main);
@@ -72,56 +38,35 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void startAugmentedreality() {
-        if (!isConnected) {
-            glView.connectToTangoCamera(tango, TangoCameraIntrinsics.TANGO_CAMERA_COLOR);
-
-            tango.connect(config);
-            isConnected = true;
-            ArrayList<TangoCoordinateFramePair> framePairs = new ArrayList<>();
-            tango.connectListener(framePairs, new Tango.OnTangoUpdateListener() {
-                @Override
-                public void onPoseAvailable(TangoPoseData pose) {
-
-                }
-
-                @Override
-                public void onFrameAvailable(int cameraId) {
-                    if (cameraId == TangoCameraIntrinsics.TANGO_CAMERA_COLOR) {
-                        glView.onFrameAvailable();
-                    }
-                }
-
-                @Override
-                public void onXyzIjAvailable(TangoXyzIjData xyzIj) {
-                    synchronized (renderer) {
-                        pointCloudManager.updateCallbackBufferAndSwap(xyzIj.xyz, xyzIj.xyzCount);
-                    }
-                }
-
-                @Override
-                public void onTangoEvent(TangoEvent event) {
-
-                }
-            });
-        }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_main_menu, menu);
+        return true;
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if (isConnected) {
-            glView.disconnectCamera();
-            tango.disconnect();
-            isConnected = false;
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.activity_main_menu_toggle_pointcloud:
+                renderer.togglePointCloudVisibility();
+                if (renderer.isPointCloudVisible()) {
+                    item.setIcon(R.mipmap.ic_visibility_white_24dp);
+                } else {
+                    item.setIcon(R.mipmap.ic_visibility_off_white_24dp);
+                }
+                return true;
+            case R.id.activity_main_menu_toggle_pointcloud_capturing:
+                renderer.togglePointCloudFreeze();
+                if (renderer.isPointCloudFreeze()) {
+                    item.setIcon(R.mipmap.ic_play_arrow_white_24dp);
+                } else {
+                    item.setIcon(R.mipmap.ic_pause_white_24dp);
+                }
+                return true;
+            case R.id.activity_main_menu_delete_cubes:
+                renderer.deleteCubes();
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (!isConnected && isPermissionGranted) {
-            startAugmentedreality();
-        }
+        return super.onOptionsItemSelected(item);
     }
 }

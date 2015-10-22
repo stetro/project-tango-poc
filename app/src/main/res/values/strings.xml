@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">MasterPrototype</string>
+    <string name="toggle_pointcloud">Pointcloud Sichtbarkeit</string>
+    <string name="toggle_pointcloud_capturing">Pointcloud Aufnahme</string>
+    <string name="delete_cubes">Würfel entfernen</string>
 </resources>
