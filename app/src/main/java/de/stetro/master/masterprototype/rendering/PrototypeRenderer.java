@@ -3,14 +3,12 @@ package de.stetro.master.masterprototype.rendering;
 import android.content.Context;
 import android.opengl.GLU;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
 import org.rajawali3d.lights.DirectionalLight;
-import org.rajawali3d.materials.Material;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
@@ -18,20 +16,18 @@ import org.rajawali3d.util.ArrayUtils;
 
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
-import de.stetro.master.masterprototype.rendering.event.CubeUpdateEvent;
+import de.stetro.master.masterprototype.rendering.event.TouchUpdateEvent;
 
-public class PrototypeRenderer extends TangoRajawaliRenderer {
+public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
+    protected static final Object pointCloudSync = new Object();
     private static final float CAMERA_NEAR = 0.01f;
     private static final float CAMERA_FAR = 200f;
     private static final int MAX_NUMBER_OF_POINTS = 60000;
-    private static final Object pointCloudSync = new Object();
-    private static final String tag = PrototypeRenderer.class.getSimpleName();
-    private Points points;
+    protected Points points;
     private PointCloudManager pointCloudManager;
     private boolean pointCloudFreeze = false;
     private boolean pointCloudVisible = true;
-    private Cubes cubes;
-    private Material blue;
+
 
     public PrototypeRenderer(Context context, PointCloudManager pointCloudManager) {
         super(context);
@@ -48,10 +44,6 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
         light.setPosition(3, 2, 4);
         getCurrentScene().addLight(light);
 
-        cubes = new Cubes();
-        getCurrentScene().addChild(cubes);
-
-        blue = Materials.generateBlueMaterial();
         points = new Points(MAX_NUMBER_OF_POINTS);
         getCurrentScene().addChild(points);
         getCurrentCamera().setNearPlane(CAMERA_NEAR);
@@ -87,27 +79,22 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
     }
 
     @Override
-    public void onTouchEvent(MotionEvent event) {
-        synchronized (pointCloudSync) {
-            CubeUpdateEvent cubeUpdateEvent = new CubeUpdateEvent();
-            float x = event.getX();
-            float y = event.getY();
-            cubeUpdateEvent.setTouchPosition(x, y);
+    abstract public void onTouchEvent(MotionEvent event);
 
-            Vector3 pointNear = unProject(x, y, 0);
-            Vector3 pointFar = unProject(x, y, 1);
-            cubeUpdateEvent.setIntersectionRay(pointNear, pointFar);
-
-            if (points.intersect(pointNear, pointFar)) {
-                Log.d(tag, "intersects and added cube at ..." + points.intersection);
-                cubeUpdateEvent.setIntersectionPoint(points.intersection.clone());
-                cubes.addChildCubeAt(points.intersection);
-            } else {
-                Log.d(tag, "intersects not...");
-            }
-
-            EventBus.getDefault().post(cubeUpdateEvent);
+    protected boolean hasDepthPointIntersection(MotionEvent event) {
+        TouchUpdateEvent touchUpdateEvent = new TouchUpdateEvent();
+        float x = event.getX();
+        float y = event.getY();
+        touchUpdateEvent.setTouchPosition(x, y);
+        Vector3 pointNear = unProject(x, y, 0);
+        Vector3 pointFar = unProject(x, y, 1);
+        touchUpdateEvent.setIntersectionRay(pointNear, pointFar);
+        boolean intersect = points.intersect(pointNear, pointFar);
+        if (intersect) {
+            touchUpdateEvent.setIntersectionPoint(points.intersection.clone());
         }
+        EventBus.getDefault().post(touchUpdateEvent);
+        return intersect;
     }
 
     public void togglePointCloudFreeze() {
@@ -151,11 +138,5 @@ public class PrototypeRenderer extends TangoRajawaliRenderer {
         return new Vector3((double) (np4[0] / np4[3]), (double) (np4[1] / np4[3]), (double) (np4[2] / np4[3]));
     }
 
-    public void deleteCubes() {
-        this.cubes.clear();
-    }
-
-    public Cubes getCubes() {
-        return cubes;
-    }
+    public abstract void clearContent();
 }

@@ -2,7 +2,7 @@ package de.stetro.master.masterprototype.rendering.event;
 
 import org.rajawali3d.math.vector.Vector3;
 
-public class CubeUpdateEvent {
+public class TouchUpdateEvent {
     private float touchX;
     private float touchY;
     private Vector3 nearIntersectionRayPoint;
