@@ -40,7 +40,7 @@ public class TDGame extends PrototypeRenderer {
         enemies = new Enemies();
         getCurrentScene().addChild(enemies);
 
-        lineMaterial = Materials.generateBlueMaterial();
+        lineMaterial = Materials.getBlueMaterial();
 
     }
 
@@ -70,11 +70,6 @@ public class TDGame extends PrototypeRenderer {
                 if (enemies.getEnemyCount() == 0) {
                     enemies.setPoints(wayPoints.getPoints());
                 }
-                if (enemies.getEnemyCount() < Enemies.getMaxEnemyCount()) {
-                    enemies.addEnemy();
-                } else {
-                    tdMode = TDMode.DONE;
-                }
             }
         }
     }
@@ -103,7 +98,11 @@ public class TDGame extends PrototypeRenderer {
             getCurrentScene().addChild(wayPointLine);
         }
         if (tdMode.equals(TDMode.READY)) {
-            enemies.move();
+            enemies.move(tdMode);
+            towers.attack(enemies);
+            if (enemies.allDead()) {
+                tdMode = TDMode.DONE;
+            }
         }
     }
 }

@@ -17,7 +17,7 @@ public class WayPoints extends Object3D {
     private Stack<Vector3> points;
 
     public WayPoints() {
-        Material material = Materials.generateBlueMaterial();
+        Material material = Materials.getBlueMaterial();
         for (int i = 0; i < MAX_WAYPOINT_COUNT; i++) {
             NPrism p = new NPrism(4, 0.05, 0.1);
             p.setMaterial(material);
