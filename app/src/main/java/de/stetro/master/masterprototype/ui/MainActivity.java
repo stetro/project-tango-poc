@@ -17,7 +17,7 @@ import org.rajawali3d.math.vector.Vector3;
 
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.R;
-import de.stetro.master.masterprototype.rendering.event.CubeUpdateEvent;
+import de.stetro.master.masterprototype.rendering.event.TouchUpdateEvent;
 import de.stetro.master.masterprototype.rendering.event.DebugEvent;
 import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
 
@@ -83,7 +83,7 @@ public class MainActivity extends TangoAppActivity {
                 }
                 return true;
             case R.id.activity_main_menu_delete_cubes:
-                renderer.deleteCubes();
+                renderer.clearContent();
                 return true;
             case R.id.activity_main_menu_info:
                 this.toggleInfoSection();
@@ -110,17 +110,13 @@ public class MainActivity extends TangoAppActivity {
                     builder.append("PointCloud points: ").append(e.getPointCloundPointsCount()).append("\n");
                 } else {
                     builder.append("no PointCloud points available!").append("\n");
-                }
-                builder.append("Cubes: ")
-                        .append(e.getCubeCount())
-                        .append(" / ")
-                        .append(e.getMaxCubeCount());
+                };
                 sceneInfoTextView.setText(builder.toString());
             }
         });
     }
 
-    public void onEvent(CubeUpdateEvent e) {
+    public void onEvent(TouchUpdateEvent e) {
         StringBuilder builder = new StringBuilder();
         builder.append("touch event @ ")
                 .append(e.getTouchX())

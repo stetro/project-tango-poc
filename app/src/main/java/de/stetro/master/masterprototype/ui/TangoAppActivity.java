@@ -20,9 +20,9 @@ import java.util.ArrayList;
 
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
-import de.stetro.master.masterprototype.rendering.Cubes;
 import de.stetro.master.masterprototype.rendering.PrototypeRenderer;
 import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
+import de.stetro.master.masterprototype.rendering.td.TDGame;
 
 public abstract class TangoAppActivity extends BaseActivity implements View.OnTouchListener {
     protected TangoRajawaliView glView;
@@ -47,7 +47,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
 
         int maxDepthPoints = config.getInt("max_point_cloud_elements");
         pointCloudManager = new PointCloudManager(maxDepthPoints);
-        renderer = new PrototypeRenderer(this, pointCloudManager);
+        renderer = new TDGame(this, pointCloudManager);
         glView.setEGLContextClientVersion(2);
         glView.setSurfaceRenderer(renderer);
         glView.setOnTouchListener(this);
@@ -78,8 +78,6 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
                     synchronized (renderer) {
                         SceneUpdateEvent e = new SceneUpdateEvent();
                         e.setPointCloundPointsCount(xyzIj.xyzCount);
-                        e.setCubeCount(renderer.getCubes().getCubeCount());
-                        e.setMaxCubeCount(Cubes.getMaxCubeCount());
                         EventBus.getDefault().post(e);
                         pointCloudManager.updateCallbackBufferAndSwap(xyzIj.xyz, xyzIj.xyzCount);
                     }
