@@ -17,9 +17,9 @@ import org.rajawali3d.math.vector.Vector3;
 
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.R;
-import de.stetro.master.masterprototype.rendering.event.TouchUpdateEvent;
 import de.stetro.master.masterprototype.rendering.event.DebugEvent;
 import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
+import de.stetro.master.masterprototype.rendering.event.TouchUpdateEvent;
 
 public class MainActivity extends TangoAppActivity {
 
@@ -110,10 +110,11 @@ public class MainActivity extends TangoAppActivity {
             public void run() {
                 StringBuilder builder = new StringBuilder();
                 if (e.getPointCloundPointsCount() > 0) {
-                    builder.append("PointCloud points: ").append(e.getPointCloundPointsCount()).append("\n");
+                    builder.append("pc: ").append(e.getPointCloundPointsCount());
+                    builder.append(" OctTree: ").append(e.getOctTreePointCloudPointsCount()).append("\n");
                 } else {
                     builder.append("no PointCloud points available!").append("\n");
-                };
+                }
                 sceneInfoTextView.setText(builder.toString());
             }
         });

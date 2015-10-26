@@ -30,7 +30,7 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     private boolean pointCloudFreeze = false;
     private boolean pointCloudVisible = true;
     private boolean takeSnapshot = false;
-    private OctTreePoints pointSnapshot;
+    private OctTreePoints octTreePoints;
 
 
     public PrototypeRenderer(Context context, PointCloudManager pointCloudManager) {
@@ -51,11 +51,11 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
         points = new IntersectionPoints(MAX_NUMBER_OF_POINTS);
         points.setMaterial(Materials.getGreenPointCloudMaterial());
 
-        pointSnapshot = new OctTreePoints(MAX_NUMBER_OF_SNAPSHOT_POINTS);
-        pointSnapshot.setMaterial(Materials.getBluePointCloudMaterial());
+        octTreePoints = new OctTreePoints(MAX_NUMBER_OF_SNAPSHOT_POINTS);
+        octTreePoints.setMaterial(Materials.getBluePointCloudMaterial());
 
         getCurrentScene().addChild(points);
-        getCurrentScene().addChild(pointSnapshot);
+        getCurrentScene().addChild(octTreePoints);
 
         getCurrentCamera().setNearPlane(CAMERA_NEAR);
         getCurrentCamera().setFarPlane(CAMERA_FAR);
@@ -74,7 +74,7 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
             if (takeSnapshot) {
                 takeSnapshot = false;
                 PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
-                pointSnapshot.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount, points.getModelMatrix());
+                octTreePoints.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount, points.getModelMatrix());
             }
         }
     }
@@ -153,9 +153,15 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
         return new Vector3((double) (np4[0] / np4[3]), (double) (np4[1] / np4[3]), (double) (np4[2] / np4[3]));
     }
 
-    public abstract void clearContent();
+    public void clearContent(){
+        octTreePoints.clear();
+    };
 
     public void takePointCloudSnapshot() {
         takeSnapshot = true;
+    }
+
+    public int getOctTreePointCloudPointsCount() {
+        return octTreePoints.getSize();
     }
 }

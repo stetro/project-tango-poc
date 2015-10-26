@@ -83,6 +83,7 @@ public class TDGame extends PrototypeRenderer {
             wayPointLine.setVisible(false);
         }
         tdMode = TDMode.WAYPOINTS;
+        super.clearContent();
     }
 
     @Override

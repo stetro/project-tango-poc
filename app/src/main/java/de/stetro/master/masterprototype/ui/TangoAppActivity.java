@@ -42,7 +42,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
 
         glView = new TangoRajawaliView(this);
         tango = new Tango(this);
-        
+
         config = tango.getConfig(TangoConfig.CONFIG_TYPE_DEFAULT);
         config.putBoolean(TangoConfig.KEY_BOOLEAN_LOWLATENCYIMUINTEGRATION, true);
         config.putBoolean(TangoConfig.KEY_BOOLEAN_DEPTH, true);
@@ -65,6 +65,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
             final TangoCoordinateFramePair frames_of_reference = new TangoCoordinateFramePair();
             frames_of_reference.baseFrame = TangoPoseData.COORDINATE_FRAME_START_OF_SERVICE;
             frames_of_reference.targetFrame = TangoPoseData.COORDINATE_FRAME_DEVICE;
+
             tango.connectListener(framePairs, new Tango.OnTangoUpdateListener() {
                 @Override
                 public void onPoseAvailable(TangoPoseData pose) {
@@ -83,6 +84,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
                     synchronized (depthSyncObject) {
                         SceneUpdateEvent e = new SceneUpdateEvent();
                         e.setPointCloundPointsCount(xyzIj.xyzCount);
+                        e.setOctTreePointCloudPointsCount(renderer.getOctTreePointCloudPointsCount());
                         EventBus.getDefault().post(e);
                         TangoPoseData poseAtTime = tango.getPoseAtTime(xyzIj.timestamp, frames_of_reference);
                         pointCloudManager.updateCallbackBufferAndSwap(xyzIj.xyz, xyzIj.xyzCount, xyzIj.timestamp);

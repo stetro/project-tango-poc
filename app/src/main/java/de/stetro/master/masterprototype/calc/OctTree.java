@@ -5,6 +5,9 @@ import org.rajawali3d.math.vector.Vector3;
 
 import java.nio.FloatBuffer;
 
+/**
+ * @author stetro
+ */
 public class OctTree {
     private final double range;
     private final double halfRange;
