@@ -50,7 +50,7 @@ public class MainActivity extends TangoAppActivity {
                 Toast.makeText(this, "Motion Tracking Permissions Required!", Toast.LENGTH_SHORT).show();
                 finish();
             } else {
-                startAugmentedreality();
+                startAugmentedReality();
                 isPermissionGranted = true;
             }
         }
@@ -87,6 +87,9 @@ public class MainActivity extends TangoAppActivity {
                 return true;
             case R.id.activity_main_menu_info:
                 this.toggleInfoSection();
+                return true;
+            case R.id.activity_main_menu_photo:
+                renderer.takePointCloudSnapshot();
                 return true;
         }
         return super.onOptionsItemSelected(item);

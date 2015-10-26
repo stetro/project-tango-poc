@@ -41,7 +41,7 @@ mdicons {
             densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'
             colors 'white'
             sizes '24dp'
-            names 'visibility', 'visibility_off', 'pause', 'play_arrow', 'delete', 'info_outline'
+            names 'visibility', 'visibility_off', 'pause', 'play_arrow', 'delete', 'info_outline', 'photo_camera'
         }
     }
 }

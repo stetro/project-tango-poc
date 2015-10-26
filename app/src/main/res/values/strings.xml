@@ -3,4 +3,6 @@
     <string name="toggle_pointcloud">Pointcloud Sichtbarkeit</string>
     <string name="toggle_pointcloud_capturing">Pointcloud Aufnahme</string>
     <string name="delete_cubes">Würfel entfernen</string>
+    <string name="take_snapshot">Snapshot machen</string>
+    <string name="show_infos">Infos anzeigen</string>
 </resources>

@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.view.MotionEvent;
 
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
-import com.projecttango.rajawali.renderables.primitives.Points;
 
 import org.rajawali3d.lights.DirectionalLight;
 import org.rajawali3d.math.Matrix4;
@@ -17,16 +16,21 @@ import org.rajawali3d.util.ArrayUtils;
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
 import de.stetro.master.masterprototype.rendering.event.TouchUpdateEvent;
+import de.stetro.master.masterprototype.rendering.primitives.IntersectionPoints;
+import de.stetro.master.masterprototype.rendering.primitives.OctTreePoints;
 
 public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     protected static final Object pointCloudSync = new Object();
     private static final float CAMERA_NEAR = 0.01f;
     private static final float CAMERA_FAR = 200f;
     private static final int MAX_NUMBER_OF_POINTS = 60000;
-    protected Points points;
+    private static final int MAX_NUMBER_OF_SNAPSHOT_POINTS = 500000;
+    protected IntersectionPoints points;
     private PointCloudManager pointCloudManager;
     private boolean pointCloudFreeze = false;
     private boolean pointCloudVisible = true;
+    private boolean takeSnapshot = false;
+    private OctTreePoints pointSnapshot;
 
 
     public PrototypeRenderer(Context context, PointCloudManager pointCloudManager) {
@@ -44,8 +48,15 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
         light.setPosition(3, 2, 4);
         getCurrentScene().addLight(light);
 
-        points = new Points(MAX_NUMBER_OF_POINTS);
+        points = new IntersectionPoints(MAX_NUMBER_OF_POINTS);
+        points.setMaterial(Materials.getGreenPointCloudMaterial());
+
+        pointSnapshot = new OctTreePoints(MAX_NUMBER_OF_SNAPSHOT_POINTS);
+        pointSnapshot.setMaterial(Materials.getBluePointCloudMaterial());
+
         getCurrentScene().addChild(points);
+        getCurrentScene().addChild(pointSnapshot);
+
         getCurrentCamera().setNearPlane(CAMERA_NEAR);
         getCurrentCamera().setFarPlane(CAMERA_FAR);
     }
@@ -59,6 +70,11 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
                 points.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount);
                 Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix();
                 points.calculateModelMatrix(modelMatrix);
+            }
+            if (takeSnapshot) {
+                takeSnapshot = false;
+                PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
+                pointSnapshot.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount, points.getModelMatrix());
             }
         }
     }
@@ -123,14 +139,13 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
         float y = (float) dY;
         float z = (float) dZ;
 
-        Matrix4 viewMatrix = getCurrentCamera().getViewMatrix().clone();
-        float[] mmatrix = ArrayUtils.convertDoublesToFloats(viewMatrix.getDoubleValues());
-        float[] pmatrix = ArrayUtils.convertDoublesToFloats(getCurrentCamera().getProjectionMatrix().getDoubleValues());
+        float[] cameraViewMatrix = ArrayUtils.convertDoublesToFloats(getCurrentCamera().getViewMatrix().getDoubleValues());
+        float[] cameraProjectionMatrix = ArrayUtils.convertDoublesToFloats(getCurrentCamera().getProjectionMatrix().getDoubleValues());
 
         GLU.gluUnProject(
                 x, getViewportHeight() - y, z,
-                mmatrix, 0,
-                pmatrix, 0,
+                cameraViewMatrix, 0,
+                cameraProjectionMatrix, 0,
                 mViewport, 0,
                 np4, 0
         );
@@ -139,4 +154,8 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     }
 
     public abstract void clearContent();
+
+    public void takePointCloudSnapshot() {
+        takeSnapshot = true;
+    }
 }

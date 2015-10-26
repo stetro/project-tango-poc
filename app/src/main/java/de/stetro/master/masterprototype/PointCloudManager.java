@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-
 public class PointCloudManager {
     private static final int BYTES_PER_FLOAT = 4;
     private static final int POINT_TO_XYZ = 3;
@@ -13,9 +12,7 @@ public class PointCloudManager {
     private PointCloudData mSharedPointCloudData;
     private PointCloudData mRenderPointCloudData;
     private boolean mSwapSignal;
-    private FloatBuffer currentPointCloud;
-    private int currentPointCloudCount;
-
+    private double mCallbackTimestamp;
 
     public PointCloudManager(int maxDepthPoints) {
         mSwapSignal = false;
@@ -47,13 +44,12 @@ public class PointCloudManager {
 
     /**
      * Updates the callbackbuffer with latest pointcloud and swaps the
-     *
-     * @param callbackBuffer
+     *  @param callbackBuffer
      * @param pointCount
+     * @param timestamp
      */
-    public void updateCallbackBufferAndSwap(FloatBuffer callbackBuffer, int pointCount) {
-        currentPointCloud = callbackBuffer.asReadOnlyBuffer();
-        currentPointCloudCount = pointCount;
+    public void updateCallbackBufferAndSwap(FloatBuffer callbackBuffer, int pointCount, double timestamp) {
+        mCallbackTimestamp= timestamp;
         mSharedPointCloudData.floatBuffer.position(0);
         mCallbackPointCloudData.floatBuffer.put(callbackBuffer);
         synchronized (mPointCloudLock) {
@@ -87,19 +83,11 @@ public class PointCloudManager {
         return mRenderPointCloudData;
     }
 
-    public int getCurrentPointCloudCount() {
-        return currentPointCloudCount;
-    }
-
     /**
      * A class to hold Depth data in a {@link FloatBuffer} and number of points associated with it.
      */
     public class PointCloudData {
         public FloatBuffer floatBuffer;
         public int pointCount;
-    }
-
-    public FloatBuffer getCurrentPointCloud() {
-        return currentPointCloud;
     }
 }

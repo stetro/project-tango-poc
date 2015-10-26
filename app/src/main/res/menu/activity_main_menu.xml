@@ -4,13 +4,18 @@
     <item
         android:id="@+id/activity_main_menu_info"
         android:icon="@mipmap/ic_info_outline_white_24dp"
-        android:title="@string/delete_cubes"
-        app:showAsAction="always" />
+        android:title="@string/show_infos"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/activity_main_menu_photo"
+        android:icon="@mipmap/ic_photo_camera_white_24dp"
+        android:title="@string/take_snapshot"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/activity_main_menu_delete_cubes"
         android:icon="@mipmap/ic_delete_white_24dp"
         android:title="@string/delete_cubes"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/activity_main_menu_toggle_pointcloud"
         android:icon="@mipmap/ic_visibility_white_24dp"
