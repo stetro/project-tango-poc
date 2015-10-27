@@ -1,5 +1,7 @@
 package de.stetro.master.masterprototype;
 
+import com.google.atap.tangoservice.TangoPoseData;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -14,6 +16,7 @@ public class PointCloudManager {
     private boolean mSwapSignal;
     private double currentTimestamp = 0;
     private double newTimestamp = 0;
+    private TangoPoseData pointCloudPose;
 
     public PointCloudManager(int maxDepthPoints) {
         mSwapSignal = false;
@@ -49,9 +52,11 @@ public class PointCloudManager {
      * @param callbackBuffer
      * @param pointCount
      * @param timestamp
+     * @param pointClodePose
      */
-    public void updateCallbackBufferAndSwap(FloatBuffer callbackBuffer, int pointCount, double timestamp) {
+    public void updateCallbackBufferAndSwap(FloatBuffer callbackBuffer, int pointCount, double timestamp, TangoPoseData pointCloudPose) {
         newTimestamp = timestamp;
+        this.pointCloudPose = pointCloudPose;
         mSharedPointCloudData.floatBuffer.position(0);
         mCallbackPointCloudData.floatBuffer.put(callbackBuffer);
         synchronized (mPointCloudLock) {
@@ -83,6 +88,10 @@ public class PointCloudManager {
             }
         }
         return mRenderPointCloudData;
+    }
+
+    public TangoPoseData getCurrentPointCloudPose() {
+        return pointCloudPose;
     }
 
     public void pointCloudRed() {

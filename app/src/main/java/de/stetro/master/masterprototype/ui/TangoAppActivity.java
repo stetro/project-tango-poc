@@ -85,7 +85,8 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
                         e.setPointCloundPointsCount(xyzIj.xyzCount);
                         e.setOctTreePointCloudPointsCount(renderer.getOctTreePointCloudPointsCount());
                         EventBus.getDefault().post(e);
-                        pointCloudManager.updateCallbackBufferAndSwap(xyzIj.xyz, xyzIj.xyzCount, xyzIj.timestamp);
+                        TangoPoseData pointCloudPose = tango.getPoseAtTime(xyzIj.timestamp, frames_of_reference);
+                        pointCloudManager.updateCallbackBufferAndSwap(xyzIj.xyz, xyzIj.xyzCount, xyzIj.timestamp, pointCloudPose);
                     }
                 }
 

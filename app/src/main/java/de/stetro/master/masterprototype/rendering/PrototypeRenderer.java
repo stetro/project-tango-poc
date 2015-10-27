@@ -3,9 +3,9 @@ package de.stetro.master.masterprototype.rendering;
 import android.content.Context;
 import android.opengl.GLU;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.MotionEvent;
 
+import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 
 import org.rajawali3d.lights.DirectionalLight;
@@ -71,7 +71,6 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
             Matrix4 pointCloudModelMatrix;
             if (!pointCloudFreeze) {
                 if (pointCloudManager.hasNewPoints()) {
-                    Log.d(tag, "update points");
                     pointCloudModelMatrix = generateCurrentPointCloudModelMatrix();
                     points.calculateModelMatrix(pointCloudModelMatrix);
                     pointCloudModelMatrix = points.getModelMatrix().clone();
@@ -89,13 +88,14 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
 
     @NonNull
     private Matrix4 generateCurrentPointCloudModelMatrix() {
-        Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
-        Vector3 cameraPosition = getCurrentCamera().getPosition().clone();
-        Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
+        Pose pose = scenePoseCalcuator.toOpenGLCameraPose(pointCloudManager.getCurrentPointCloudPose());
+        Quaternion pointCloudOrientation = pose.getOrientation().clone();
+        Vector3 pointCloudPosition = pose.getPosition().clone();
+        Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(pointCloudOrientation.toRotationMatrix());
         return Matrix4
-                .createTranslationMatrix(cameraPosition)
+                .createTranslationMatrix(pointCloudPosition)
                 .rotate(pointCloudCameraHorizontalDirection, 180)
-                .rotate(cameraOrientation);
+                .rotate(pointCloudOrientation);
     }
 
     @Override
