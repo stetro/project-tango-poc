@@ -47,4 +47,8 @@ public class OctTreePoints extends Points {
     public int getSize() {
         return size;
     }
+
+    public OctTree getOctTree() {
+        return octTree;
+    }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.opengl.GLU;
 import android.support.annotation.NonNull;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 
@@ -13,11 +14,22 @@ import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.util.ArrayUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.FloatBuffer;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
 import de.stetro.master.masterprototype.rendering.event.TouchUpdateEvent;
 import de.stetro.master.masterprototype.rendering.primitives.IntersectionPoints;
 import de.stetro.master.masterprototype.rendering.primitives.OctTreePoints;
+import de.stetro.master.masterprototype.util.PointCloudExporter;
 
 public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     protected static final Object pointCloudSync = new Object();
@@ -153,9 +165,11 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
         return new Vector3((double) (np4[0] / np4[3]), (double) (np4[1] / np4[3]), (double) (np4[2] / np4[3]));
     }
 
-    public void clearContent(){
+    public void clearContent() {
         octTreePoints.clear();
-    };
+    }
+
+    ;
 
     public void takePointCloudSnapshot() {
         takeSnapshot = true;
@@ -163,5 +177,10 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
 
     public int getOctTreePointCloudPointsCount() {
         return octTreePoints.getSize();
+    }
+
+    public void exportPointCloud(Context context) {
+        PointCloudExporter exporter = new PointCloudExporter(context, octTreePoints.getOctTree());
+        exporter.export();
     }
 }

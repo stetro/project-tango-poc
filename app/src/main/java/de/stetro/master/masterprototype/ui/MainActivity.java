@@ -1,7 +1,9 @@
 package de.stetro.master.masterprototype.ui;
 
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -23,6 +25,7 @@ import de.stetro.master.masterprototype.rendering.event.TouchUpdateEvent;
 
 public class MainActivity extends TangoAppActivity {
 
+    private static final String tag = MainActivity.class.getSimpleName();
     private LinearLayout infoView;
     private TextView cubeInfoTextView;
     private boolean infoViewVisible = true;
@@ -91,16 +94,26 @@ public class MainActivity extends TangoAppActivity {
             case R.id.activity_main_menu_photo:
                 renderer.takePointCloudSnapshot();
                 return true;
+            case R.id.activity_main_menu_export_pointcloud:
+                renderer.exportPointCloud(this);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void toggleInfoSection() {
+        Log.d(tag, "Toggle info section");
         infoViewVisible = !infoViewVisible;
+        ValueAnimator.AnimatorUpdateListener updateListener = new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                infoView.invalidate();
+            }
+        };
         if (infoViewVisible) {
-            infoView.animate().translationY(0);
+            infoView.animate().setUpdateListener(updateListener).translationY(0);
         } else {
-            infoView.animate().translationY(220 * this.getResources().getDisplayMetrics().density);
+            infoView.animate().setUpdateListener(updateListener).translationY(220 * this.getResources().getDisplayMetrics().density);
         }
     }
 

@@ -5,4 +5,8 @@
     <string name="delete_objects">Objekte zurücksetzen</string>
     <string name="take_snapshot">Snapshot machen</string>
     <string name="show_infos">Infos anzeigen</string>
+    <string name="export_pointcloud">Pointcloud exportieren</string>
+    <string name="exporting_pointcloud">Pointcloud wird exportiert</string>
+    <string name="please_wait">Bitte warten …</string>
+    <string name="export_pointcloud_failure">Fehler beim Pointscloud Export!</string>
 </resources>
