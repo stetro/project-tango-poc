@@ -69,7 +69,6 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
             tango.connectListener(framePairs, new Tango.OnTangoUpdateListener() {
                 @Override
                 public void onPoseAvailable(TangoPoseData pose) {
-
                 }
 
                 @Override
@@ -86,14 +85,12 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
                         e.setPointCloundPointsCount(xyzIj.xyzCount);
                         e.setOctTreePointCloudPointsCount(renderer.getOctTreePointCloudPointsCount());
                         EventBus.getDefault().post(e);
-                        TangoPoseData poseAtTime = tango.getPoseAtTime(xyzIj.timestamp, frames_of_reference);
                         pointCloudManager.updateCallbackBufferAndSwap(xyzIj.xyz, xyzIj.xyzCount, xyzIj.timestamp);
                     }
                 }
 
                 @Override
                 public void onTangoEvent(TangoEvent event) {
-
                 }
             });
         }

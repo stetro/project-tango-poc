@@ -3,6 +3,7 @@ package de.stetro.master.masterprototype.rendering;
 import android.content.Context;
 import android.opengl.GLU;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
@@ -26,6 +27,7 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     private static final float CAMERA_FAR = 200f;
     private static final int MAX_NUMBER_OF_POINTS = 60000;
     private static final int MAX_NUMBER_OF_SNAPSHOT_POINTS = 500000;
+    private static final String tag = PrototypeRenderer.class.getSimpleName();
     protected IntersectionPoints points;
     private PointCloudManager pointCloudManager;
     private boolean pointCloudFreeze = false;
@@ -64,20 +66,23 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
 
     @Override
     protected void onRender(long ellapsedRealtime, double deltaTime) {
+        super.onRender(ellapsedRealtime, deltaTime);
         synchronized (pointCloudSync) {
-            super.onRender(ellapsedRealtime, deltaTime);
+            Matrix4 pointCloudModelMatrix;
             if (!pointCloudFreeze) {
                 if (pointCloudManager.hasNewPoints()) {
+                    Log.d(tag, "update points");
+                    pointCloudModelMatrix = generateCurrentPointCloudModelMatrix();
+                    points.calculateModelMatrix(pointCloudModelMatrix);
+                    pointCloudModelMatrix = points.getModelMatrix().clone();
                     PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
                     points.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount);
-                    Matrix4 modelMatrix = generateCurrentPointCloudModelMatrix();
-                    points.calculateModelMatrix(modelMatrix);
+                    if (takeSnapshot) {
+                        takeSnapshot = false;
+                        octTreePoints.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount, pointCloudModelMatrix);
+                    }
+                    pointCloudManager.pointCloudRed();
                 }
-            }
-            if (takeSnapshot) {
-                takeSnapshot = false;
-                PointCloudManager.PointCloudData renderPointCloudData = pointCloudManager.updateAndGetLatestPointCloudRenderBuffer();
-                octTreePoints.updatePoints(renderPointCloudData.floatBuffer, renderPointCloudData.pointCount, points.getModelMatrix().clone());
             }
         }
     }
@@ -85,11 +90,12 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     @NonNull
     private Matrix4 generateCurrentPointCloudModelMatrix() {
         Quaternion cameraOrientation = getCurrentCamera().getOrientation().clone();
+        Vector3 cameraPosition = getCurrentCamera().getPosition().clone();
         Vector3 pointCloudCameraHorizontalDirection = new Vector3(1, 0, 0).multiply(cameraOrientation.toRotationMatrix());
         return Matrix4
-                .createTranslationMatrix(getCurrentCamera().getPosition().clone())
+                .createTranslationMatrix(cameraPosition)
                 .rotate(pointCloudCameraHorizontalDirection, 180)
-                .rotate(getCurrentCamera().getOrientation().clone());
+                .rotate(cameraOrientation);
     }
 
     @Override

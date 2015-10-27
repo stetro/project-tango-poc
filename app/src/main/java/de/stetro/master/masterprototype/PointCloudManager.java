@@ -72,7 +72,6 @@ public class PointCloudManager {
      */
     public PointCloudData updateAndGetLatestPointCloudRenderBuffer() {
         synchronized (mPointCloudLock) {
-            currentTimestamp = newTimestamp;
             if (mSwapSignal) {
                 FloatBuffer temp = mRenderPointCloudData.floatBuffer;
                 int tempCount = mRenderPointCloudData.pointCount;
@@ -84,6 +83,10 @@ public class PointCloudManager {
             }
         }
         return mRenderPointCloudData;
+    }
+
+    public void pointCloudRed() {
+        currentTimestamp = newTimestamp;
     }
 
     public boolean hasNewPoints() {
