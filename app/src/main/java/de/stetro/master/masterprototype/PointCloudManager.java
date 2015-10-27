@@ -12,7 +12,8 @@ public class PointCloudManager {
     private PointCloudData mSharedPointCloudData;
     private PointCloudData mRenderPointCloudData;
     private boolean mSwapSignal;
-    private double mCallbackTimestamp;
+    private double currentTimestamp = 0;
+    private double newTimestamp = 0;
 
     public PointCloudManager(int maxDepthPoints) {
         mSwapSignal = false;
@@ -44,12 +45,13 @@ public class PointCloudManager {
 
     /**
      * Updates the callbackbuffer with latest pointcloud and swaps the
-     *  @param callbackBuffer
+     *
+     * @param callbackBuffer
      * @param pointCount
      * @param timestamp
      */
     public void updateCallbackBufferAndSwap(FloatBuffer callbackBuffer, int pointCount, double timestamp) {
-        mCallbackTimestamp= timestamp;
+        newTimestamp = timestamp;
         mSharedPointCloudData.floatBuffer.position(0);
         mCallbackPointCloudData.floatBuffer.put(callbackBuffer);
         synchronized (mPointCloudLock) {
@@ -70,6 +72,7 @@ public class PointCloudManager {
      */
     public PointCloudData updateAndGetLatestPointCloudRenderBuffer() {
         synchronized (mPointCloudLock) {
+            currentTimestamp = newTimestamp;
             if (mSwapSignal) {
                 FloatBuffer temp = mRenderPointCloudData.floatBuffer;
                 int tempCount = mRenderPointCloudData.pointCount;
@@ -81,6 +84,10 @@ public class PointCloudManager {
             }
         }
         return mRenderPointCloudData;
+    }
+
+    public boolean hasNewPoints() {
+        return currentTimestamp != newTimestamp;
     }
 
     /**

@@ -55,6 +55,7 @@ public class PointCloudExporter {
             try {
                 OutputStream os = new FileOutputStream(file);
                 int size = octTree.getSize();
+                dialog.setMaxProgress(size);
                 FloatBuffer floatBuffer = FloatBuffer.allocate(size * 3);
                 octTree.fill(floatBuffer);
                 floatBuffer.rewind();
@@ -63,8 +64,8 @@ public class PointCloudExporter {
                     String row = String.valueOf(floatBuffer.get()) + " " + String.valueOf(floatBuffer.get()) + " " + String.valueOf(floatBuffer.get()) + "\n";
                     os.write(row.getBytes());
                     progressCounter++;
-                    if (progressCounter % (int) ((double) size / 100.0) == 0) {
-                        publishProgress((int) (((double) progressCounter / (double) size) * 100.0));
+                    if (progressCounter % (int) ((double) size / 200.0) == 0) {
+                        publishProgress(progressCounter);
                     }
                 }
                 os.close();

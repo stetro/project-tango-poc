@@ -123,7 +123,7 @@ public class MainActivity extends TangoAppActivity {
             public void run() {
                 StringBuilder builder = new StringBuilder();
                 if (e.getPointCloundPointsCount() > 0) {
-                    builder.append("pc: ").append(e.getPointCloundPointsCount());
+                    builder.append("Cloud: ").append(e.getPointCloundPointsCount());
                     builder.append(" OctTree: ").append(e.getOctTreePointCloudPointsCount()).append("\n");
                 } else {
                     builder.append("no PointCloud points available!").append("\n");
