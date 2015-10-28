@@ -21,13 +21,13 @@ import de.stetro.master.masterprototype.rendering.primitives.IntersectionPoints;
 import de.stetro.master.masterprototype.rendering.primitives.OctTreePoints;
 import de.stetro.master.masterprototype.util.PointCloudExporter;
 
-public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
+public abstract class VRPointCloudRenderer extends TangoRajawaliRenderer {
     protected static final Object pointCloudSync = new Object();
     private static final float CAMERA_NEAR = 0.01f;
     private static final float CAMERA_FAR = 200f;
     private static final int MAX_NUMBER_OF_POINTS = 60000;
     private static final int MAX_NUMBER_OF_SNAPSHOT_POINTS = 500000;
-    private static final String tag = PrototypeRenderer.class.getSimpleName();
+    private static final String tag = VRPointCloudRenderer.class.getSimpleName();
     protected IntersectionPoints points;
     private PointCloudManager pointCloudManager;
     private boolean pointCloudFreeze = false;
@@ -36,7 +36,7 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     private OctTreePoints octTreePoints;
 
 
-    public PrototypeRenderer(Context context, PointCloudManager pointCloudManager) {
+    public VRPointCloudRenderer(Context context, PointCloudManager pointCloudManager) {
         super(context);
         this.pointCloudManager = pointCloudManager;
     }
@@ -165,8 +165,6 @@ public abstract class PrototypeRenderer extends TangoRajawaliRenderer {
     public void clearContent() {
         octTreePoints.clear();
     }
-
-    ;
 
     public void takePointCloudSnapshot() {
         takeSnapshot = true;

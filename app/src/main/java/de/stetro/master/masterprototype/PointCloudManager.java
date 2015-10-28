@@ -58,6 +58,7 @@ public class PointCloudManager {
         newTimestamp = timestamp;
         this.pointCloudPose = pointCloudPose;
         mSharedPointCloudData.floatBuffer.position(0);
+        mCallbackPointCloudData.floatBuffer.position(0);
         mCallbackPointCloudData.floatBuffer.put(callbackBuffer);
         synchronized (mPointCloudLock) {
             FloatBuffer temp = mSharedPointCloudData.floatBuffer;

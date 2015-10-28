@@ -11,10 +11,10 @@ import org.rajawali3d.primitives.Line3D;
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
 import de.stetro.master.masterprototype.rendering.Materials;
-import de.stetro.master.masterprototype.rendering.PrototypeRenderer;
+import de.stetro.master.masterprototype.rendering.VRPointCloudRenderer;
 import de.stetro.master.masterprototype.rendering.event.DebugEvent;
 
-public class TDGame extends PrototypeRenderer {
+public class TDGame extends VRPointCloudRenderer {
     private Towers towers;
     private WayPoints wayPoints;
     private TDMode tdMode = TDMode.WAYPOINTS;

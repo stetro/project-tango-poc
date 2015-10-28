@@ -20,7 +20,7 @@ import java.util.ArrayList;
 
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
-import de.stetro.master.masterprototype.rendering.PrototypeRenderer;
+import de.stetro.master.masterprototype.rendering.VRPointCloudRenderer;
 import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
 import de.stetro.master.masterprototype.rendering.td.TDGame;
 
@@ -32,7 +32,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
     protected boolean isConnected;
     protected TangoConfig config;
     protected PointCloudManager pointCloudManager;
-    protected PrototypeRenderer renderer;
+    protected VRPointCloudRenderer renderer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
