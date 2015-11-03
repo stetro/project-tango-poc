@@ -48,7 +48,8 @@ public class TDGame extends VRPointCloudRenderer {
     public void onTouchEvent(MotionEvent event) {
         synchronized (pointCloudSync) {
             if (hasDepthPointIntersection(event)) {
-                Vector3 location = points.intersection;
+                Vector3 location = points.intersection.clone();
+                location.y = location.y + 0.1;
                 switch (tdMode) {
                     case WAYPOINTS:
                         wayPoints.addWayPoint(location);

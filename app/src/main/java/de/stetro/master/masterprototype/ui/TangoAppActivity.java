@@ -40,6 +40,8 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
         RajLog.setDebugEnabled(true);
 
         glView = new TangoRajawaliView(this);
+        glView.setEGLConfigChooser(8,8,8,8,0,0);
+
         tango = new Tango(this);
 
         config = tango.getConfig(TangoConfig.CONFIG_TYPE_DEFAULT);

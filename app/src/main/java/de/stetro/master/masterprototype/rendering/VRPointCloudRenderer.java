@@ -22,7 +22,6 @@ import de.stetro.master.masterprototype.rendering.primitives.OctTreePoints;
 import de.stetro.master.masterprototype.util.PointCloudExporter;
 
 public abstract class VRPointCloudRenderer extends TangoRajawaliRenderer {
-    public static final Object synchronizedPointCloudBufferAccess = new Object();
     protected static final Object pointCloudSync = new Object();
     private static final float CAMERA_NEAR = 0.01f;
     private static final float CAMERA_FAR = 200f;
@@ -46,6 +45,8 @@ public abstract class VRPointCloudRenderer extends TangoRajawaliRenderer {
     protected void initScene() {
         super.initScene();
 
+        mEnableDepthBuffer = false;
+
         DirectionalLight light = new DirectionalLight(1, 0.2, -1);
         light.setColor(1, 1, 1);
         light.setPower(0.8f);
@@ -53,7 +54,8 @@ public abstract class VRPointCloudRenderer extends TangoRajawaliRenderer {
         getCurrentScene().addLight(light);
 
         points = new IntersectionPoints(MAX_NUMBER_OF_POINTS);
-        points.setMaterial(Materials.getGreenPointCloudMaterial());
+        points.setMaterial(Materials.getTransparentPointCloudMaterial());
+        points.setDepthMaskEnabled(true);
 
         octTreePoints = new OctTreePoints(MAX_NUMBER_OF_SNAPSHOT_POINTS);
         octTreePoints.setMaterial(Materials.getBluePointCloudMaterial());

@@ -7,7 +7,7 @@ import org.rajawali3d.math.vector.Vector3;
 
 public class IntersectionPoints extends MemoryPoints {
     public IntersectionPoints(int numberOfPoints) {
-        super(numberOfPoints, 5.0f);
+        super(numberOfPoints, 30.0f);
     }
 
     public boolean intersect(Vector3 startRay, Vector3 endRay) {

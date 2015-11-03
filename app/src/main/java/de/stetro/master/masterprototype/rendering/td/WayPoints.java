@@ -19,7 +19,7 @@ public class WayPoints extends Object3D {
     public WayPoints() {
         Material material = Materials.getBlueMaterial();
         for (int i = 0; i < MAX_WAYPOINT_COUNT; i++) {
-            NPrism p = new NPrism(4, 0.05, 0.1);
+            NPrism p = new NPrism(4, 0.1, 0.2);
             p.setMaterial(material);
             p.setVisible(false);
             addChild(p);

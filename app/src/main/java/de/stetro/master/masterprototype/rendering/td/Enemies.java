@@ -116,7 +116,7 @@ public class Enemies extends Object3D {
 
 
         public Enemy() {
-            sphere = new Sphere(0.03f, 20, 20);
+            sphere = new Sphere(0.06f, 20, 20);
             sphere.setMaterial(Materials.getGreenMaterial());
             addChild(sphere);
         }

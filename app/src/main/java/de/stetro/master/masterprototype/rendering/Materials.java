@@ -37,6 +37,14 @@ public class Materials {
         return greenPointCloud;
     }
 
+    public static Material getTransparentPointCloudMaterial() {
+        if (greenPointCloud == null) {
+            float[] color = {0.0f, 0.0f, 0.0f, 0.001f};
+            greenPointCloud = createMaterial(color);
+        }
+        return greenPointCloud;
+    }
+
     public static Material getBluePointCloudMaterial() {
         if (bluePointCloud == null) {
             float[] color = {0.0f, 0.0f, 1.0f, 1.0f};

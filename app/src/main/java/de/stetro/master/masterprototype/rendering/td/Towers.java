@@ -67,7 +67,7 @@ public class Towers extends Object3D {
         private int intervalPosition = 0;
 
         public Tower() {
-            rectangular = new RectangularPrism(0.05f, 0.15f, 0.05f);
+            rectangular = new RectangularPrism(0.1f, 0.3f, 0.1f);
             rectangular.setMaterial(Materials.getRedMaterial());
             addChild(rectangular);
 
