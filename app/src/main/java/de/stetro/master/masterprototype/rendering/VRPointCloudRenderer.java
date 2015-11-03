@@ -22,6 +22,7 @@ import de.stetro.master.masterprototype.rendering.primitives.OctTreePoints;
 import de.stetro.master.masterprototype.util.PointCloudExporter;
 
 public abstract class VRPointCloudRenderer extends TangoRajawaliRenderer {
+    public static final Object synchronizedPointCloudBufferAccess = new Object();
     protected static final Object pointCloudSync = new Object();
     private static final float CAMERA_NEAR = 0.01f;
     private static final float CAMERA_FAR = 200f;
@@ -67,7 +68,7 @@ public abstract class VRPointCloudRenderer extends TangoRajawaliRenderer {
     @Override
     protected void onRender(long ellapsedRealtime, double deltaTime) {
         super.onRender(ellapsedRealtime, deltaTime);
-        synchronized (pointCloudSync) {
+        synchronized (PointCloudManager.mPointCloudLock) {
             Matrix4 pointCloudModelMatrix;
             if (!pointCloudFreeze) {
                 if (pointCloudManager.hasNewPoints()) {

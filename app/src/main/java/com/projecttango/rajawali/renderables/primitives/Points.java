@@ -28,11 +28,9 @@ import java.nio.FloatBuffer;
  * Intended to be contributed and PR'ed to Rajawali.
  */
 public class Points extends Object3D {
-    private static final String tag = Points.class.getSimpleName();
     public Vector3 intersection;
     private int mMaxNumberofVertices;
     private float size;
-
 
     public Points(int numberOfPoints, float size) {
         super();
@@ -73,6 +71,6 @@ public class Points extends Object3D {
         super.preRender();
         setDrawingMode(GLES20.GL_POINTS);
         GLES10.glPointSize(size);
+        
     }
-
 }

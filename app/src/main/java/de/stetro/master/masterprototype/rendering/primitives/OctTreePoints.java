@@ -25,19 +25,17 @@ public class OctTreePoints extends Points {
     }
 
     public void updatePoints(FloatBuffer floatBuffer, int pointCount, Matrix4 modelMatrix) {
-        synchronized (this) {
-            floatBuffer.rewind();
-            while (floatBuffer.hasRemaining()) {
-                Vector3 v = new Vector3(floatBuffer.get(), floatBuffer.get(), floatBuffer.get());
-                v.multiply(modelMatrix);
-                octTree.put(v);
-            }
-            size = octTree.getSize();
-            FloatBuffer newBuffer = FloatBuffer.allocate(size * 3);
-            Log.d(tag, "loaded " + size + " from OctTree");
-            octTree.fill(newBuffer);
-            super.updatePoints(newBuffer, size);
+        floatBuffer.rewind();
+        while (floatBuffer.hasRemaining()) {
+            Vector3 v = new Vector3(floatBuffer.get(), floatBuffer.get(), floatBuffer.get());
+            v.multiply(modelMatrix);
+            octTree.put(v);
         }
+        size = octTree.getSize();
+        FloatBuffer newBuffer = FloatBuffer.allocate(size * 3);
+        Log.d(tag, "loaded " + size + " from OctTree");
+        octTree.fill(newBuffer);
+        super.updatePoints(newBuffer, size);
     }
 
     public void clear() {

@@ -25,7 +25,6 @@ import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
 import de.stetro.master.masterprototype.rendering.td.TDGame;
 
 public abstract class TangoAppActivity extends BaseActivity implements View.OnTouchListener {
-    private final Object depthSyncObject = new Object();
     protected TangoRajawaliView glView;
     protected Tango tango;
     protected boolean isPermissionGranted;
@@ -80,7 +79,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
 
                 @Override
                 public void onXyzIjAvailable(TangoXyzIjData xyzIj) {
-                    synchronized (depthSyncObject) {
+                    synchronized (PointCloudManager.mPointCloudLock) {
                         SceneUpdateEvent e = new SceneUpdateEvent();
                         e.setPointCloundPointsCount(xyzIj.xyzCount);
                         e.setOctTreePointCloudPointsCount(renderer.getOctTreePointCloudPointsCount());
