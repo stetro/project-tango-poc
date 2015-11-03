@@ -31,6 +31,7 @@ dependencies {
     compile 'gov.nist.math:jama:1.0.2'
     compile 'org.apache.commons:commons-math3:3.0'
     compile 'de.greenrobot:eventbus:2.4.0'
+    compile 'com.github.erz05:JoyStick:fcd19c2704'
     compile('com.afollestad.material-dialogs:core:0.8.4.2@aar') {
         transitive = true
     }

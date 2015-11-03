@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.erz.joysticklibrary.JoyStick;
 import com.google.atap.tangoservice.Tango;
 import com.google.atap.tangoservice.TangoCameraIntrinsics;
 import com.google.atap.tangoservice.TangoConfig;
@@ -20,9 +21,9 @@ import java.util.ArrayList;
 
 import de.greenrobot.event.EventBus;
 import de.stetro.master.masterprototype.PointCloudManager;
-import de.stetro.master.masterprototype.rendering.VRPointCloudRenderer;
+import de.stetro.master.masterprototype.R;
 import de.stetro.master.masterprototype.rendering.event.SceneUpdateEvent;
-import de.stetro.master.masterprototype.rendering.td.TDGame;
+import de.stetro.master.masterprototype.rendering.interactive.InteractionGame;
 
 public abstract class TangoAppActivity extends BaseActivity implements View.OnTouchListener {
     protected TangoRajawaliView glView;
@@ -31,7 +32,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
     protected boolean isConnected;
     protected TangoConfig config;
     protected PointCloudManager pointCloudManager;
-    protected VRPointCloudRenderer renderer;
+    protected InteractionGame renderer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +41,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
         RajLog.setDebugEnabled(true);
 
         glView = new TangoRajawaliView(this);
-        glView.setEGLConfigChooser(8,8,8,8,0,0);
+        glView.setEGLConfigChooser(8, 8, 8, 8, 0, 0);
 
         tango = new Tango(this);
 
@@ -50,7 +51,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
 
         int maxDepthPoints = config.getInt("max_point_cloud_elements");
         pointCloudManager = new PointCloudManager(maxDepthPoints);
-        renderer = new TDGame(this, pointCloudManager);
+        renderer = new InteractionGame(this, pointCloudManager);
         glView.setEGLContextClientVersion(2);
         glView.setSurfaceRenderer(renderer);
         glView.setOnTouchListener(this);
@@ -122,4 +123,7 @@ public abstract class TangoAppActivity extends BaseActivity implements View.OnTo
         return super.onTouchEvent(event);
     }
 
+    public InteractionGame getRenderer() {
+        return renderer;
+    }
 }

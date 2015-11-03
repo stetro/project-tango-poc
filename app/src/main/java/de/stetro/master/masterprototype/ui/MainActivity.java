@@ -13,6 +13,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.erz.joysticklibrary.JoyStick;
 import com.google.atap.tangoservice.Tango;
 
 import org.rajawali3d.math.vector.Vector3;
@@ -43,7 +44,11 @@ public class MainActivity extends TangoAppActivity {
         cubeInfoTextView = (TextView) findViewById(R.id.cube_info_text_view);
         sceneInfoTextView = (TextView) findViewById(R.id.scene_info_text_view);
         debugTextView = (TextView) findViewById(R.id.debug_text_view);
+        JoyStick joyStick = (JoyStick) findViewById(R.id.joystick);
+        joyStick.setListener(renderer);
         EventBus.getDefault().register(this);
+
+
     }
 
     @Override
