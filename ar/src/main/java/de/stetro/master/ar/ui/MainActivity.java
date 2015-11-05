@@ -69,7 +69,6 @@ public class MainActivity extends TangoAppActivity {
         return true;
     }
 
-    pointCloudManager
 
     private void toggleInfoSection() {
         Log.d(tag, "Toggle info section");
