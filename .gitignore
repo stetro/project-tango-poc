@@ -6,4 +6,5 @@
 /build
 /captures
 *.iml
-app/src/main/res-mdicons/
+ar/src/main/res-mdicons/
+pc/src/main/res-mdicons/
