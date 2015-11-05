@@ -7,7 +7,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "de.stetro.master.pc"
+        applicationId "de.stetro.master.construct"
         minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
@@ -31,6 +31,7 @@ dependencies {
     compile 'org.apache.commons:commons-math3:3.0'
     compile 'de.greenrobot:eventbus:2.4.0'
     compile 'com.github.erz05:JoyStick:fcd19c2704'
+    compile 'com.github.quickhull3d:quickhull3d:1.0.0'
     compile('com.afollestad.material-dialogs:core:0.8.4.2@aar') {
         transitive = true
     }
@@ -39,21 +40,17 @@ dependencies {
 preBuild.dependsOn installAssets
 
 mdicons {
+    defcolor 'black', '#000000'
     defcolor 'white', '#FFFFFF'
+    defcolor 'gray', '#CCCCCC'
     defcolor 'blue', '#3F51B5'
 
     assets {
-        toolbarIcons {
-            densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'
-            colors 'white'
-            sizes '24dp'
-            names 'archive'
-        }
         appIcon {
             densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'
             colors 'blue'
             sizes '48dp'
-            names 'blur_circular'
+            names 'blur_linear'
         }
     }
 }
