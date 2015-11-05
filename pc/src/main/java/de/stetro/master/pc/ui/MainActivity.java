@@ -3,8 +3,12 @@ package de.stetro.master.pc.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.atap.tangoservice.Tango;
@@ -18,6 +22,7 @@ import com.projecttango.rajawali.ar.TangoRajawaliView;
 
 import java.util.ArrayList;
 
+import de.stetro.master.pc.R;
 import de.stetro.master.pc.rendering.PointCloudARRenderer;
 import de.stetro.master.pc.util.PointCloudManager;
 
@@ -25,10 +30,10 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
     private static final String tag = MainActivity.class.getSimpleName();
     private TangoRajawaliView glView;
     private PointCloudARRenderer renderer;
-    private PointCloudManager mPointCloudManager;
-    private Tango mTango;
-    private boolean mIsConnected;
-    private boolean mIsPermissionGranted;
+    private PointCloudManager pointCloudManager;
+    private Tango tango;
+    private boolean isConnected;
+    private boolean isPermissionGranted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,11 +42,14 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
         renderer = new PointCloudARRenderer(this);
         glView.setSurfaceRenderer(renderer);
         glView.setOnTouchListener(this);
-        mTango = new Tango(this);
+        setContentView(R.layout.activity_main);
+        RelativeLayout wrapper = (RelativeLayout) findViewById(R.id.wrapper_view);
+        tango = new Tango(this);
         startActivityForResult(
                 Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING),
                 Tango.TANGO_INTENT_ACTIVITYCODE);
-        setContentView(glView);
+        wrapper.addView(glView);
+
     }
 
     @Override
@@ -52,22 +60,22 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
                 finish();
             } else {
                 startAugmentedReality();
-                mIsPermissionGranted = true;
+                isPermissionGranted = true;
             }
         }
     }
 
     private void startAugmentedReality() {
-        if (!mIsConnected) {
-            mIsConnected = true;
-            glView.connectToTangoCamera(mTango, TangoCameraIntrinsics.TANGO_CAMERA_COLOR);
-            TangoConfig config = mTango.getConfig(TangoConfig.CONFIG_TYPE_DEFAULT);
+        if (!isConnected) {
+            isConnected = true;
+            glView.connectToTangoCamera(tango, TangoCameraIntrinsics.TANGO_CAMERA_COLOR);
+            TangoConfig config = tango.getConfig(TangoConfig.CONFIG_TYPE_DEFAULT);
             config.putBoolean(TangoConfig.KEY_BOOLEAN_LOWLATENCYIMUINTEGRATION, true);
             config.putBoolean(TangoConfig.KEY_BOOLEAN_DEPTH, true);
-            mTango.connect(config);
+            tango.connect(config);
 
             ArrayList<TangoCoordinateFramePair> framePairs = new ArrayList<>();
-            mTango.connectListener(framePairs, new Tango.OnTangoUpdateListener() {
+            tango.connectListener(framePairs, new Tango.OnTangoUpdateListener() {
                 @Override
                 public void onPoseAvailable(TangoPoseData pose) {
                 }
@@ -84,9 +92,9 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
                     TangoCoordinateFramePair framePair = new TangoCoordinateFramePair(
                             TangoPoseData.COORDINATE_FRAME_START_OF_SERVICE,
                             TangoPoseData.COORDINATE_FRAME_DEVICE);
-                    TangoPoseData cloudPose = mTango.getPoseAtTime(xyzIj.timestamp, framePair);
+                    TangoPoseData cloudPose = tango.getPoseAtTime(xyzIj.timestamp, framePair);
 
-                    mPointCloudManager.updateXyzIjData(xyzIj, cloudPose);
+                    pointCloudManager.updateXyzIjData(xyzIj, cloudPose);
                 }
 
                 @Override
@@ -97,7 +105,8 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
 
             setupExtrinsic();
 
-            mPointCloudManager = new PointCloudManager(mTango.getCameraIntrinsics(TangoCameraIntrinsics.TANGO_CAMERA_COLOR));
+            pointCloudManager = new PointCloudManager(tango.getCameraIntrinsics(TangoCameraIntrinsics.TANGO_CAMERA_COLOR));
+            renderer.setPointCloudManager(pointCloudManager);
         }
     }
 
@@ -106,34 +115,50 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
         TangoCoordinateFramePair framePair = new TangoCoordinateFramePair();
         framePair.baseFrame = TangoPoseData.COORDINATE_FRAME_IMU;
         framePair.targetFrame = TangoPoseData.COORDINATE_FRAME_CAMERA_COLOR;
-        TangoPoseData imuTrgbPose = mTango.getPoseAtTime(0.0, framePair);
+        TangoPoseData imuTrgbPose = tango.getPoseAtTime(0.0, framePair);
 
         // Create Device to IMU Transform
         framePair.targetFrame = TangoPoseData.COORDINATE_FRAME_DEVICE;
-        TangoPoseData imuTdevicePose = mTango.getPoseAtTime(0.0, framePair);
+        TangoPoseData imuTdevicePose = tango.getPoseAtTime(0.0, framePair);
 
         // Create Depth camera to IMU Transform
         framePair.targetFrame = TangoPoseData.COORDINATE_FRAME_CAMERA_DEPTH;
-        TangoPoseData imuTdepthPose = mTango.getPoseAtTime(0.0, framePair);
+        TangoPoseData imuTdepthPose = tango.getPoseAtTime(0.0, framePair);
 
         renderer.setupExtrinsics(imuTdevicePose, imuTrgbPose, imuTdepthPose);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.activity_main_menu_export_pointcloud:
+                renderer.exportPointCloud(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (mIsConnected) {
+        if (isConnected) {
             glView.disconnectCamera();
-            mTango.disconnect();
-            mIsConnected = false;
+            tango.disconnect();
+            isConnected = false;
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (!mIsConnected && mIsPermissionGranted) {
+        if (!isConnected && isPermissionGranted) {
             startAugmentedReality();
         }
     }

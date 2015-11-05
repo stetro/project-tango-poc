@@ -1,34 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/activity_main_menu_info"
-        android:icon="@mipmap/ic_info_outline_white_24dp"
-        android:title="@string/show_infos"
-        app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/activity_main_menu_export_pointcloud"
         android:icon="@mipmap/ic_archive_white_24dp"
         android:title="@string/export_pointcloud"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/activity_main_menu_photo"
-        android:icon="@mipmap/ic_photo_camera_white_24dp"
-        android:title="@string/take_snapshot"
         app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/activity_main_menu_delete_cubes"
-        android:icon="@mipmap/ic_delete_white_24dp"
-        android:title="@string/delete_objects"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/activity_main_menu_toggle_pointcloud"
-        android:icon="@mipmap/ic_visibility_white_24dp"
-        android:title="@string/toggle_pointcloud"
-        app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/activity_main_menu_toggle_pointcloud_capturing"
-        android:icon="@mipmap/ic_pause_white_24dp"
-        android:title="@string/toggle_pointcloud_capturing"
-        app:showAsAction="ifRoom" />
+
 </menu>

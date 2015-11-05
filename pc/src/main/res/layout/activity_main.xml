@@ -15,62 +15,9 @@
         app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <RelativeLayout
+        android:id="@+id/wrapper_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-
-        <RelativeLayout
-            android:id="@+id/wrapper_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true">
-
-            <com.erz.joysticklibrary.JoyStick
-                android:id="@+id/joystick"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
-                android:layout_gravity="bottom"
-                app:buttonColor="#aaffffff"
-                app:padColor="#55ffffff" />
-        </RelativeLayout>
-
-        <LinearLayout
-            android:id="@+id/info_view"
-            android:layout_width="300dp"
-            android:layout_height="200dp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:background="@color/colorPrimary"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <TextView
-                android:id="@+id/scene_info_text_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@android:style/TextAppearance.Small.Inverse" />
-
-            <TextView
-                android:id="@+id/cube_info_text_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@android:style/TextAppearance.Small.Inverse" />
-
-            <TextView
-                android:id="@+id/debug_text_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@android:style/TextAppearance.Small.Inverse" />
-
-
-        </LinearLayout>
 
     </RelativeLayout>
 

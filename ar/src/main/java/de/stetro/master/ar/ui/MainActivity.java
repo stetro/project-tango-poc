@@ -69,40 +69,7 @@ public class MainActivity extends TangoAppActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.activity_main_menu_toggle_pointcloud:
-                renderer.togglePointCloudVisibility();
-                if (renderer.isPointCloudVisible()) {
-                    item.setIcon(R.mipmap.ic_visibility_white_24dp);
-                } else {
-                    item.setIcon(R.mipmap.ic_visibility_off_white_24dp);
-                }
-                return true;
-            case R.id.activity_main_menu_toggle_pointcloud_capturing:
-                renderer.togglePointCloudFreeze();
-                if (renderer.isPointCloudFreeze()) {
-                    item.setIcon(R.mipmap.ic_play_arrow_white_24dp);
-                } else {
-                    item.setIcon(R.mipmap.ic_pause_white_24dp);
-                }
-                return true;
-            case R.id.activity_main_menu_delete_cubes:
-                renderer.clearContent();
-                return true;
-            case R.id.activity_main_menu_info:
-                this.toggleInfoSection();
-                return true;
-            case R.id.activity_main_menu_photo:
-                renderer.takePointCloudSnapshot();
-                return true;
-            case R.id.activity_main_menu_export_pointcloud:
-                renderer.exportPointCloud(this);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+    pointCloudManager
 
     private void toggleInfoSection() {
         Log.d(tag, "Toggle info section");
