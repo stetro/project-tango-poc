@@ -2,3 +2,6 @@ include ':ar'
 include ':pc'
 include ':construct'
 include ':utils'
+
+include ':construct-native'
+include ':tango_client_api'
