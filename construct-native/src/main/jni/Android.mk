@@ -23,8 +23,10 @@ LOCAL_SHARED_LIBRARIES := tango_client_api
 LOCAL_CFLAGS    := -std=c++11
 MY_LOCAL_LIB:= /home/stetro/Source/tango-examples-c
 
-LOCAL_SRC_FILES := augmented_reality_app.cc \
-                   jni_interface.cc \
+LOCAL_SRC_FILES := jni_interface.cc \
+                   point_cloud_data.cc \
+                   point_cloud_drawable.cc \
+                   augmented_reality_app.cc \
                    pose_data.cc \
                    scene.cc \
                    tango_event_data.cc \

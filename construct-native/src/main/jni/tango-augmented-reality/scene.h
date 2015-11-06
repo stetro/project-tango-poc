@@ -33,6 +33,7 @@
 #include <tango-gl/util.h>
 #include <tango-gl/video_overlay.h>
 
+#include <tango-augmented-reality/point_cloud_drawable.h>
 #include <tango-augmented-reality/pose_data.h>
 
 namespace tango_augmented_reality {
@@ -61,7 +62,9 @@ class Scene {
   void SetupViewPort(int x, int y, int w, int h);
 
   // Render loop.
-  void Render(const glm::mat4& cur_pose_transformation);
+  void Render(const glm::mat4& cur_pose_transformation,
+              const glm::mat4& point_cloud_transformation,
+              const std::vector<float>& point_cloud_vertices);
 
   // Set render camera's viewing angle, first person, third person or top down.
   //
@@ -104,8 +107,6 @@ class Scene {
   // @param: scale, frustum's scale.
   void SetFrustumScale(const glm::vec3& scale) { frustum_->SetScale(scale); }
 
-  // Clear the Motion Tracking trajactory.
-  void ResetTrajectory() { trace_->ClearVertexArray(); }
 
   // Touch event passed from android activity. This function only support two
   // touches.
@@ -132,14 +133,11 @@ class Scene {
   // Device frustum.
   tango_gl::Frustum* frustum_;
 
-  // Ground grid.
-  tango_gl::Grid* grid_;
-
-  // Trace of pose data.
-  tango_gl::Trace* trace_;
-
   // A marker placed at (0.0f, 0.0f, -3.0f) location.
   tango_gl::GoalMarker* marker_;
+
+  // Point cloud drawale object.
+  PointCloudDrawable* point_cloud_;
 
   // We use both camera_image_plane_ratio_ and image_plane_distance_ to compute
   // the first person AR camera's frustum, these value is derived from actual

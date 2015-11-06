@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_blur_linear_red_48dp"
         android:label="@string/sys_name"
         android:theme="@style/AppTheme" >
@@ -22,8 +22,7 @@
             android:required="true" />
         <activity
             android:name="com.projecttango.experiments.nativeaugmentedreality.AugmentedRealityActivity"
-            android:screenOrientation="landscape"
-            android:label="@string/app_name" >
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

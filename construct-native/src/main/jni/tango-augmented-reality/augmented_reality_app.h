@@ -23,6 +23,7 @@
 #include <tango_client_api.h>  // NOLINT
 #include <tango-gl/util.h>
 
+#include <tango-augmented-reality/point_cloud_data.h>
 #include <tango-augmented-reality/pose_data.h>
 #include <tango-augmented-reality/scene.h>
 #include <tango-augmented-reality/tango_event_data.h>
@@ -62,6 +63,19 @@ class AugmentedRealityApp {
   // Note that this will cause motion tracking to re-initialize.
   void TangoResetMotionTracking();
 
+  // Tango Service point cloud callback function for depth data. Called when new
+  // new point cloud data is available from the Tango Service.
+  //
+  // @param pose: The current point cloud returned by the service,
+  //              caller allocated.
+  void onPointCloudAvailable(const TangoXYZij* xyz_ij);
+
+  // Tango service pose callback function for pose data. Called when new
+  // information about device pose is available from the Tango Service.
+  //
+  // @param pose: The current pose returned by the service, caller allocated.
+  void onPoseAvailable(const TangoPoseData* pose);
+
   // Tango service event callback function for pose data. Called when new events
   // are available from the Tango Service.
   //
@@ -93,6 +107,15 @@ class AugmentedRealityApp {
 
   // Retrun Tango Service version string.
   std::string GetVersionString();
+
+  // Return total point count in the current depth frame.
+  int GetPointCloudVerticesCount();
+
+  // Return the average depth of points in the current depth frame.
+  float GetAverageZ();
+
+  // Return the delta time between current and previous depth frames.
+  float GetDepthFrameDeltaTime();
 
   // Set render camera's viewing angle, first person, third person or top down.
   //
@@ -137,6 +160,19 @@ class AugmentedRealityApp {
   // pose_data_ handles all pose onPoseAvailable callbacks, onPoseAvailable()
   // in this object will be routed to pose_data_ to handle.
   PoseData pose_data_;
+
+
+  // point_cloud_ contains the data of current depth frame, it also
+  // has the render function to render the points. This instance will be passed
+  // to main_scene_ for rendering.
+  //
+  // point_cloud_ is a thread safe object, the data protection is handled
+  // internally inside the PointCloud class.
+  PointCloudData point_cloud_data_;
+
+  // Mutex for protecting the point cloud data. The point cloud data is shared
+  // between render thread and TangoService callback thread.
+  std::mutex point_cloud_mutex_;
 
   // Mutex for protecting the pose data. The pose data is shared between render
   // thread and TangoService callback thread.

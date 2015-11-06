@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PlaneConstructor</string>
-    <string name="sys_name">Project Tango Native Augmented Reality</string>
+    <string name="sys_name">PlaneConstructor</string>
     <string name="menu_name">Native Augmented Reality</string>
     <string name="service_version">"Tango service version: "</string>
     <string name="app_version">"App version: "</string>
