@@ -2,7 +2,6 @@ package de.stetro.master.construct.rendering;
 
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
-import org.rajawali3d.materials.plugins.SkeletalAnimationMaterialPlugin;
 
 
 public class Materials {
@@ -13,6 +12,10 @@ public class Materials {
     private static Material transparentRed;
     private static Material greenPointCloud;
     private static Material bluePointCloud;
+    private static Material redPointCloud;
+    private static Material yellowPointCloud;
+    private static Material yellowMaterial;
+    private static Material yellow;
 
     private static Material createLambertMaterial(float[] color) {
         Material material = new Material();
@@ -57,12 +60,13 @@ public class Materials {
     private static Material createMaterial(float[] color) {
         Material material = new Material();
         material.setColor(color);
+
         return material;
     }
 
     public static Material getRedMaterial() {
         if (red == null) {
-            float[] color = {0.8f, 0.0f, 0.0f, 1.0f};
+            float[] color = {0.8f, 0.0f, 0.0f, 0.2f};
             red = createLambertMaterial(color);
         }
         return red;
@@ -70,17 +74,33 @@ public class Materials {
 
     public static Material getBlueMaterial() {
         if (blue == null) {
-            float[] color = {0.0f, 0.0f, 0.8f, 1.0f};
+            float[] color = {0.0f, 0.0f, 0.8f, 0.2f};
             blue = createLambertMaterial(color);
         }
         return blue;
     }
 
-    public static Material getTransparentRed() {
-        if (transparentRed == null) {
-            float[] color = {0.8f, 0.0f, 0.0f, 0.3f};
-            transparentRed = createLambertMaterial(color);
+    public static Material getRedPointCloudMaterial() {
+        if (redPointCloud == null) {
+            float[] color = {1.0f, 0.0f, 0.0f, 1.0f};
+            redPointCloud = createMaterial(color);
         }
-        return transparentRed;
+        return redPointCloud;
+    }
+
+    public static Material getYellowPointCloudMaterial() {
+        if (yellowPointCloud == null) {
+            float[] color = {1.0f, 1.0f, 0.0f, 1.0f};
+            yellowPointCloud = createMaterial(color);
+        }
+        return yellowPointCloud;
+    }
+
+    public static Material getYellowMaterial() {
+        if (yellow == null) {
+            float[] color = {1.0f, 1.0f, 0.0f, 0.2f};
+            yellow = createLambertMaterial(color);
+        }
+        return yellow;
     }
 }

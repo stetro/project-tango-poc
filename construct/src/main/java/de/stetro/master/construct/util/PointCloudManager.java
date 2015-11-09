@@ -6,8 +6,11 @@ import com.google.atap.tangoservice.TangoXyzIjData;
 import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
+import org.rajawali3d.math.vector.Vector3;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 
 public class PointCloudManager {
@@ -59,15 +62,13 @@ public class PointCloudManager {
         return newCloudTime != lastCloudTime;
     }
 
-    public synchronized float[][] get2DPointArray() {
-        float[][] floats = new float[xyzIjData.xyzCount][3];
+    public synchronized ArrayList<Vector3> get2DPointArrayList() {
+        ArrayList<Vector3> points = new ArrayList<>();
         xyzIjData.xyz.rewind();
         for (int i = 0; i < xyzIjData.xyzCount; i++) {
-            floats[i][0] = xyzIjData.xyz.get();
-            floats[i][1] = xyzIjData.xyz.get();
-            floats[i][2] = xyzIjData.xyz.get();
+            points.add(new Vector3(xyzIjData.xyz.get(), xyzIjData.xyz.get(), xyzIjData.xyz.get()));
         }
-        return floats;
+        return points;
     }
 
     public TangoXyzIjData getXyzIjData() {

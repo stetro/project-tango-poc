@@ -1,8 +1,6 @@
 package de.stetro.master.construct.rendering;
 
 
-import android.graphics.Color;
-
 import org.rajawali3d.Object3D;
 import org.rajawali3d.math.vector.Vector3;
 
