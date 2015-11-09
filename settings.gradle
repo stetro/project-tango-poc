@@ -2,7 +2,7 @@ include ':ar'
 include ':pc'
 include ':construct'
 include ':utils'
-if(!"$System.env.HOME".equals(true)){
+if (!"$System.env.HOME".equals("true")) {
     include ':construct-native'
 }
 include ':tango_client_api'
