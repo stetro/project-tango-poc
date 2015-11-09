@@ -19,8 +19,12 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    lintOptions {
+        abortOnError false
     }
 }
 
@@ -30,16 +34,14 @@ tasks.withType(JavaCompile) {
 
 task ndkBuild(type: Exec) {
     Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    def ndkbuild = properties.getProperty('ndk.dir', null)+"/ndk-build"
+     properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def ndkbuild = properties.getProperty('ndk.dir', null) + "/ndk-build"
     commandLine ndkbuild, '-C', file('src/main/jni').absolutePath
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v4:22.1.1'
 }
-
-preBuild.dependsOn installAssets
 
 mdicons {
     defcolor 'black', '#000000'

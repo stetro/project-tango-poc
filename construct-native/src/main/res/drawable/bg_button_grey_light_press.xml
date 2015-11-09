@@ -14,11 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<resources>
-    <string name="app_name">PlaneConstruct</string>
-    <string name="drawer_header">Main panel header</string>
-    <string name="key_debug_point_cloud">key_debug_point_cloud</string>
-    <string name="menu_name">PlaneConstruct</string>
-    <string name="open_drawer_button">Open drawer button</string>
-    <string name="settings">Settings</string>
-</resources>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/grey_pressed" android:state_pressed="true" />
+    <item android:drawable="@android:color/transparent" />
+</selector>

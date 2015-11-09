@@ -15,10 +15,12 @@
   limitations under the License.
 -->
 <resources>
-    <string name="app_name">PlaneConstruct</string>
-    <string name="drawer_header">Main panel header</string>
-    <string name="key_debug_point_cloud">key_debug_point_cloud</string>
-    <string name="menu_name">PlaneConstruct</string>
-    <string name="open_drawer_button">Open drawer button</string>
-    <string name="settings">Settings</string>
+    <color name="background_light">#fafafa</color>
+    <color name="green_dark">#0e7b46</color>
+    <color name="grey_pressed">#efefef</color>
+    <color name="tango_blue">#467ecb</color>
+    <color name="tango_green">#1c9b5a</color>
+    <color name="tango_yellow">#febd2c</color>
+    <color name="text_drawer_header_label">#a8c7fa</color>
+    <color name="text_primary">#232323</color>
 </resources>
