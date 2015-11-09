@@ -84,9 +84,9 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
                     willCalculatePlanes = false;
                     calculatePlanes(pose);
                 } else {
-                    currentPoints.updatePoints(pointCloudManager.getXyzIjData().xyz, pointCloudManager.getXyzIjData().xyzCount);
-                    currentPoints.setPosition(pose.getPosition());
-                    currentPoints.setOrientation(pose.getOrientation());
+//                    currentPoints.updatePoints(pointCloudManager.getXyzIjData().xyz, pointCloudManager.getXyzIjData().xyzCount);
+//                    currentPoints.setPosition(pose.getPosition());
+//                    currentPoints.setOrientation(pose.getOrientation());
                 }
             }
         }
