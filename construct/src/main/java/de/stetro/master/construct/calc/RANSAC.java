@@ -1,16 +1,18 @@
 package de.stetro.master.construct.calc;
 
 import org.apache.commons.math3.util.FastMath;
+import org.rajawali3d.math.vector.Vector3;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 
 public class RANSAC {
     // list of points supporting the plane computed in detectPlane
-    public static LinkedList<float[]> supportingPoints = null;
-    public static LinkedList<float[]> notSupportingPoints = null;
+    public static LinkedList<Vector3> supportingPoints = null;
+    public static LinkedList<Vector3> notSupportingPoints = null;
     // array of boolean: if supportFlag[i] == true, points[i] is a supporting point
 
     /**
@@ -22,55 +24,57 @@ public class RANSAC {
      * @param sufficientSupport stop criteria for sufficient plane support
      * @return a plane defined in hesse normal form
      */
-    public static float[] detectPlane(float[][] points, float distanceThresh, int numIterations, int sufficientSupport) {
-        // RANSAC
-        int numPoints = points.length;
-        boolean[] picked = new boolean[numPoints];
-        LinkedList<float[]> supportPointsMax = null;
+    public static HessePlane detectPlane(List<Vector3> points, float distanceThresh, int numIterations, int sufficientSupport) {
+        int pointCount = points.size();
+        boolean[] picked = new boolean[pointCount];
+        LinkedList<Vector3> supportPointsMax = new LinkedList<>();
         int supportMax = 0;
+
         while (numIterations > 0) {
             numIterations--;
-            int[] p = new int[3];
-            //
+
             // (1) pick 3 mutually different points ----------------------------
+            int[] randomPointIndices = new int[3];
             for (int i = 0; i < 3; i++) {
                 do {
-                    p[i] = (int) (Math.random() * numPoints);
-                } while (picked[p[i]]);
-                picked[p[i]] = true;
+                    randomPointIndices[i] = (int) (Math.random() * pointCount);
+                } while (picked[randomPointIndices[i]]);
+                picked[randomPointIndices[i]] = true;
             }
-            picked[p[0]] = false;
-            picked[p[1]] = false;
-            picked[p[2]] = false;
-            //
+            picked[randomPointIndices[0]] = false;
+            picked[randomPointIndices[1]] = false;
+            picked[randomPointIndices[2]] = false;
+
             // (2) create plane ------------------------------------------------
             // plane is represented in Hesse normal form, n = normal, d = distance
-            float[] p0 = points[p[0]];
-            float[] p1 = points[p[1]];
-            float[] p2 = points[p[2]];
-            float[] plane = createPlane(p0, p1, p2); // returns {n0,n1,n2,d}
-            //
+
+
+            Vector3 p0 = points.get(randomPointIndices[0]);
+            Vector3 p1 = points.get(randomPointIndices[1]);
+            Vector3 p2 = points.get(randomPointIndices[2]);
+            HessePlane plane = HessePlane.createHessePlane(p0, p1, p2); // returns {n0,n1,n2,d}
+
             // (3) compute support
             computeSupport(plane, points, distanceThresh);
             int support = supportingPoints.size();
-            //
+
             // (4) if support is larger then current best support:
             // use this plane
             if (support > supportMax) {
                 supportMax = support;
                 supportPointsMax = supportingPoints;
             }
-            //
+
             // if there is already sufficient support, stop iterating.
             if (supportMax >= sufficientSupport) {
                 break;
             }
         }
-        //
+
         // use max. set of supporting points to re-compute the plane and support
         // pointlist and flag array (fields) are re-computed.
         // this method returns the plane in hesse form
-        float[] plane = planeRegression(supportPointsMax);
+        HessePlane plane = planeRegression(supportPointsMax);
         computeSupport(plane, points, distanceThresh);
         return (plane);
     }
@@ -78,52 +82,51 @@ public class RANSAC {
     // -------------------------------------------------------------------------
     // returns optimal (=> mean square error)  plane in Hesse Normal Form
     // hnf = {nx,ny,nz,d}
-    private static float[] planeRegression(LinkedList<float[]> pts) {
+    private static HessePlane planeRegression(LinkedList<Vector3> pts) {
         int numPoints = pts.size();
         // compute mean
-        float[] mean = {0, 0, 0};
-        for (float[] p : pts) {
-            mean[0] += p[0];
-            mean[1] += p[1];
-            mean[2] += p[2];
+        Vector3 mean = new Vector3();
+        for (Vector3 p : pts) {
+            mean.add(p);
         }
-        mean[0] /= pts.size();
-        mean[1] /= pts.size();
-        mean[2] /= pts.size();
+        mean.divide(pts.size());
 
         // subtract mean (and create array from list on the fly)
-        float[][] points = new float[numPoints][3];
+        LinkedList<Vector3> points = new LinkedList<>();
         int i = 0;
-        for (float[] p : pts) {
-            points[i][0] = p[0] - mean[0];
-            points[i][1] = p[1] - mean[1];
-            points[i][2] = p[2] - mean[2];
+        for (Vector3 p : pts) {
+            points.add(p.clone().subtract(mean));
             i++;
         }
 
         // create covariance matrix
         double[][] COV = new double[3][3];
-        for (int r = 0; r < 3; r++) {
-            for (int c = 0; c < 3; c++) {
-                for (i = 0; i < numPoints; i++) {
-                    COV[r][c] += points[i][r] * points[i][c];
-                }
-            }
+        for (Vector3 p : points) {
+            COV[0][0] += p.x * p.x;
+            COV[0][1] += p.x * p.y;
+            COV[0][2] += p.x * p.z;
+            COV[1][0] += p.y * p.x;
+            COV[1][1] += p.y * p.y;
+            COV[1][2] += p.y * p.z;
+            COV[2][0] += p.z * p.x;
+            COV[2][1] += p.z * p.y;
+            COV[2][2] += p.z * p.z;
+
         }
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
                 COV[r][c] /= numPoints;
             }
         }
-        //
-        // find smallest Eigenvector
+
+        // find smallest EigenVector3
         // EVD
         Matrix K = new Matrix(COV, 3, 3);
         EigenvalueDecomposition evd = new EigenvalueDecomposition(K);
         Matrix V = evd.getV();
         Matrix D = evd.getD();
 
-        // get eigenvector to smallest eigenvalue, that's the normal
+        // get eigenVector3 to smallest eigenvalue, that's the normal
         int smallestIndex = 2;
         double smallestEV = D.get(2, 2);
         if (D.get(1, 1) < smallestEV) {
@@ -134,64 +137,79 @@ public class RANSAC {
             smallestEV = D.get(0, 0);
             smallestIndex = 0;
         }
-        float[] hnf = new float[4];
         double nx = V.get(0, smallestIndex);
         double ny = V.get(1, smallestIndex);
         double nz = V.get(2, smallestIndex);
-        double l = Math.sqrt(nx * nx + ny * ny + nz * nz);
-        hnf[0] = (float) (nx / l);
-        hnf[1] = (float) (ny / l);
-        hnf[2] = (float) (nz / l);
+
+        Vector3 normal = new Vector3(nx, ny, nz);
+        normal.normalize();
 
         // distance: n*mean
-        double d = nx * mean[0] + ny * mean[1] + nz * mean[2];
-        hnf[3] = (float) d;
-        return (hnf);
+        double d = nx * mean.x + ny * mean.y + nz * mean.z;
+        return new HessePlane(normal, d);
     }
 
-    /**
-     * create Hesse Normal Plane from 3 points
-     *
-     * @param p0 point 1
-     * @param p1 point 2
-     * @param p2 point 3
-     * @return returns plane in following form {nx,ny,nz,d}
-     */
-    private static float[] createPlane(float[] p0, float[] p1, float[] p2) {
-        // vectors
-        float[] a = {p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]};
-        float[] b = {p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]};
-        // cross product -> normal vector
-        float[] n = new float[3];
-        n[0] = a[1] * b[2] - a[2] * b[1];
-        n[1] = a[2] * b[0] - a[0] * b[2];
-        n[2] = a[0] * b[1] - a[1] * b[0];
-        float l = (float) Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-        n[0] /= l;
-        n[1] /= l;
-        n[2] /= l;
-        // distance to origin
-        float d = p0[0] * n[0] + p0[1] * n[1] + p0[2] * n[2];
-        return (new float[]{n[0], n[1], n[2], d});
-    }
 
     /**
      * calculates the list of supporting Points for the given 3 points
      *
-     * @param plane   found plane in RANSAC iteration
-     * @param points  list of all points
-     * @param mindist minimum distance between point and plane to determine support of a point
+     * @param plane           found plane in RANSAC iteration
+     * @param points          list of all points
+     * @param minimumDistance minimum distance between point and plane to determine support of a point
      */
-    private static void computeSupport(float[] plane, float[][] points, float mindist) {
+    private static void computeSupport(HessePlane plane, List<Vector3> points, double minimumDistance) {
         supportingPoints = new LinkedList<>();
         notSupportingPoints = new LinkedList<>();
-        for (float[] point : points) {
-            float distanceToPlane = point[0] * plane[0] + point[1] * plane[1] + point[2] * plane[2] - plane[3];
-            if (FastMath.abs(distanceToPlane) <= mindist) {
+        for (Vector3 point : points) {
+            double distanceToPlane = plane.distanceTo(point);
+            if (FastMath.abs(distanceToPlane) <= minimumDistance) {
                 supportingPoints.addLast(point);
             } else {
                 notSupportingPoints.add(point);
             }
+        }
+    }
+
+    public static class HessePlane {
+        public final Vector3 normal;
+        public final double distance;
+
+        public HessePlane(Vector3 normal, double distance) {
+            this.normal = normal;
+            this.distance = distance;
+        }
+
+        /**
+         * create Hesse Normal Plane from 3 points
+         *
+         * @param p0 point 1
+         * @param p1 point 2
+         * @param p2 point 3
+         * @return returns plane in following form {nx,ny,nz,d}
+         */
+        private static HessePlane createHessePlane(Vector3 p0, Vector3 p1, Vector3 p2) {
+            // Vector3s
+            Vector3 a = p1.clone().subtract(p0);
+            Vector3 b = p2.clone().subtract(p0);
+
+            // cross product -> normal Vector3
+            Vector3 normal = a.cross(b);
+            normal.normalize();
+
+            // distance to origin
+            Vector3 scale = p0.clone().multiply(normal);
+            double distance = scale.x + scale.y + scale.z;
+
+            return new HessePlane(normal, distance);
+        }
+
+        public double distanceTo(Vector3 point) {
+            return point.x * normal.x + point.y * normal.y + point.z * normal.z - distance;
+        }
+
+        @Override
+        public String toString() {
+            return "distance: " + distance + " normal: " + String.valueOf(normal);
         }
     }
 }
