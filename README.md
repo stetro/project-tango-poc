@@ -18,7 +18,8 @@
 * Exporter der aufgenommenen PointCloud
 * Sammeln von PointCloud ausschnitten in einem OctTree
 
-![AR Screenshot](img/pc.png)
+![PointCloud Screenshot](img/pc.png)
+![PointCloud Screenshot 2](img/pc2.png)
 
 #### Einfache Ebenen Erkennung (construct)
 * RANSAC Ebenen Suche in Pointcloud
