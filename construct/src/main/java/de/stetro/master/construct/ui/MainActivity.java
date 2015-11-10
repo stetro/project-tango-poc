@@ -43,7 +43,6 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
                 Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING),
                 Tango.TANGO_INTENT_ACTIVITYCODE);
         setContentView(glView);
-
     }
 
     @Override
@@ -120,7 +119,6 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
 
         renderer.setupExtrinsics(imuTdevicePose, imuTrgbPose, imuTdepthPose);
     }
-
 
 
     @Override

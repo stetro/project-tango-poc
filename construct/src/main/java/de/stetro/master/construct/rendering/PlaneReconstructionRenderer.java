@@ -10,11 +10,13 @@ import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
+import org.rajawali3d.materials.Material;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.vector.Vector3;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import de.stetro.master.construct.calc.RANSAC;
@@ -94,172 +96,84 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
 
     private void calculatePlanes(Pose pose) {
 
-        /**
-         * 1ST POTENTIAL ITERATION
-         */
+        List<Vector3> points = pointCloudManager.get2DPointArrayList();
+        List<Vector3> supportingPoints = new ArrayList<>();
+        Stack<Vector3> hullVertices = new Stack<>();
 
-        ArrayList<Vector3> points = pointCloudManager.get2DPointArrayList();
-        int sufficientSupport = (int) (pointCloudManager.getXyzIjData().xyzCount * 0.35);
-        RANSAC.HessePlane plane = RANSAC.detectPlane(points, 0.03f, 10, sufficientSupport);
-        Log.d(tag, "1st Iteration :" + plane.toString()); // {n0,n1,n2,d}
-        Point3d[] supportingPoints = new Point3d[RANSAC.supportingPoints.size()];
-        if (supportingPoints.length < sufficientSupport|| supportingPoints.length < 3) {
-            if (polygon2 != null) {
-                polygon2.setVisible(false);
+        for (int i = 0; i < 5; i++) {
+
+            // skip iterating when enough points are matched
+            if (points.size() < 10) {
+                break;
             }
-            return;
+
+            // 30% of left points need to be supported
+            int sufficientSupport = (int) (points.size() * 0.30);
+
+            // detect plane in hesse normal form
+            RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.03f, 10, sufficientSupport);
+            points = RANSAC.notSupportingPoints;
+            Log.d(tag, "Found potential Plane :" + hessePlane.toString());
+
+            // skip plane if not sufficient support by points
+
+            Point3d[] innerHullPoints = new Point3d[RANSAC.supportingPoints.size()];
+            if (RANSAC.supportingPoints.size() < sufficientSupport || RANSAC.supportingPoints.size() < 3) {
+                continue;
+            }
+
+            // translate points to GL coordinates depending con camera position
+            Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
+
+            for (int j = 0; j < RANSAC.supportingPoints.size(); j++) {
+                supportingPoints.add(RANSAC.supportingPoints.get(j).clone());
+
+                Vector3 v = RANSAC.supportingPoints.get(j).clone();
+                v.multiply(transformation);
+                innerHullPoints[j] = new Point3d(v.x, v.y, v.z);
+            }
+
+            // calculate convex hull and vertices for supporting points
+            if (innerHullPoints.length < 4) {
+                continue;
+            }
+            QuickHull3D hull = new QuickHull3D();
+            hull.build(innerHullPoints);
+            Point3d[] vertices = hull.getVertices();
+            int[][] faces = hull.getFaces();
+
+
+            for (int[] face : faces) {
+                hullVertices.add(new Vector3(vertices[face[0]].x, vertices[face[0]].y, vertices[face[0]].z));
+                hullVertices.add(new Vector3(vertices[face[1]].x, vertices[face[1]].y, vertices[face[1]].z));
+                hullVertices.add(new Vector3(vertices[face[2]].x, vertices[face[2]].y, vertices[face[2]].z));
+            }
+
+            if (polygon != null) {
+                getCurrentScene().removeChild(polygon);
+            }
         }
-        Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
-        for (int i = 0; i < RANSAC.supportingPoints.size(); i++) {
-            Vector3 v = RANSAC.supportingPoints.get(i).clone();
-            v.multiply(transformation);
-            supportingPoints[i] = new Point3d(v.x, v.y, v.z);
-        }
-        QuickHull3D hull = new QuickHull3D();
-        hull.build(supportingPoints);
-        Point3d[] vertices = hull.getVertices();
-        int[][] faces = hull.getFaces();
 
         if (polygon != null) {
             getCurrentScene().removeChild(polygon);
         }
 
-        Stack<Vector3> hullVertices = new Stack<>();
-        for (int[] face : faces) {
-            hullVertices.add(new Vector3(vertices[face[0]].x, vertices[face[0]].y, vertices[face[0]].z));
-            hullVertices.add(new Vector3(vertices[face[1]].x, vertices[face[1]].y, vertices[face[1]].z));
-            hullVertices.add(new Vector3(vertices[face[2]].x, vertices[face[2]].y, vertices[face[2]].z));
-        }
-        polygon = new Polygon(hullVertices);
-        polygon.setMaterial(Materials.getRedMaterial());
-        polygon.setTransparent(true);
-        getCurrentScene().addChild(polygon);
+        if (hullVertices.size() > 0) {
+            polygon = new Polygon(hullVertices);
+            polygon.setMaterial(Materials.getRedMaterial());
+            polygon.setTransparent(true);
+            getCurrentScene().addChild(polygon);
 
-        FloatBuffer f = FloatBuffer.allocate(RANSAC.supportingPoints.size() * 3);
-        for (int i = 0; i < RANSAC.supportingPoints.size(); i++) {
-            f.put((float) RANSAC.supportingPoints.get(i).x);
-            f.put((float) RANSAC.supportingPoints.get(i).y);
-            f.put((float) RANSAC.supportingPoints.get(i).z);
-        }
-        polygonPoints.updatePoints(f, RANSAC.supportingPoints.size());
-        polygonPoints.setPosition(pose.getPosition());
-        polygonPoints.setOrientation(pose.getOrientation());
-
-
-        /**
-         * 2ND POTENTIAL ITERATION
-         */
-
-        sufficientSupport = (int) (RANSAC.notSupportingPoints.size() * 0.3);
-        plane = RANSAC.detectPlane(RANSAC.notSupportingPoints, 0.03f, 10, sufficientSupport);
-        Log.d(tag, "2nd Iteration :" + plane.toString()); // {n0,n1,n2,d}
-        supportingPoints = new Point3d[RANSAC.supportingPoints.size()];
-        if (supportingPoints.length < sufficientSupport|| supportingPoints.length < 3) {
-            if (polygon2 != null) {
-                polygon2.setVisible(false);
+            FloatBuffer f = FloatBuffer.allocate(supportingPoints.size() * 3);
+            for (int i = 0; i < supportingPoints.size(); i++) {
+                f.put((float) supportingPoints.get(i).x);
+                f.put((float) supportingPoints.get(i).y);
+                f.put((float) supportingPoints.get(i).z);
             }
-            return;
+            polygonPoints.updatePoints(f, supportingPoints.size());
+            polygonPoints.setPosition(pose.getPosition());
+            polygonPoints.setOrientation(pose.getOrientation());
         }
-        transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
-        for (int i = 0; i < RANSAC.supportingPoints.size(); i++) {
-            Vector3 v = RANSAC.supportingPoints.get(i).clone();
-            v.multiply(transformation);
-            supportingPoints[i] = new Point3d(v.x, v.y, v.z);
-        }
-        hull = new QuickHull3D();
-        hull.build(supportingPoints);
-        vertices = hull.getVertices();
-        faces = hull.getFaces();
-
-        if (polygon2 != null) {
-            getCurrentScene().removeChild(polygon2);
-        }
-
-        hullVertices = new Stack<>();
-        for (int[] face : faces) {
-            hullVertices.add(new Vector3(vertices[face[0]].x, vertices[face[0]].y, vertices[face[0]].z));
-            hullVertices.add(new Vector3(vertices[face[1]].x, vertices[face[1]].y, vertices[face[1]].z));
-            hullVertices.add(new Vector3(vertices[face[2]].x, vertices[face[2]].y, vertices[face[2]].z));
-        }
-        polygon2 = new Polygon(hullVertices);
-        polygon2.setMaterial(Materials.getBlueMaterial());
-        polygon2.setTransparent(true);
-        getCurrentScene().addChild(polygon2);
-
-        f = FloatBuffer.allocate(RANSAC.supportingPoints.size() * 3);
-        for (int i = 0; i < RANSAC.supportingPoints.size(); i++) {
-            Vector3 vector3 = RANSAC.supportingPoints.get(i);
-            f.put((float) vector3.x);
-            f.put((float) vector3.y);
-            f.put((float) vector3.z);
-        }
-        polygon2Points.updatePoints(f, RANSAC.supportingPoints.size());
-        polygon2Points.setPosition(pose.getPosition());
-        polygon2Points.setOrientation(pose.getOrientation());
-
-
-        /**
-         * 3RD POTENTIAL ITERATION
-         */
-        sufficientSupport = (int) (RANSAC.notSupportingPoints.size() * 0.3);
-        plane = RANSAC.detectPlane(RANSAC.notSupportingPoints, 0.03f, 10, sufficientSupport);
-        Log.d(tag, "3rd Iteration :" + plane.toString()); // {n0,n1,n2,d}
-        supportingPoints = new Point3d[RANSAC.supportingPoints.size()];
-        if (supportingPoints.length < sufficientSupport || supportingPoints.length < 3) {
-            if (polygon3 != null) {
-                polygon3.setVisible(false);
-            }
-            return;
-        }
-
-        transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
-        for (int i = 0; i < RANSAC.supportingPoints.size(); i++) {
-            Vector3 v = RANSAC.supportingPoints.get(i).clone();
-            v.multiply(transformation);
-            supportingPoints[i] = new Point3d(v.x, v.y, v.z);
-        }
-        hull = new QuickHull3D();
-        hull.build(supportingPoints);
-        vertices = hull.getVertices();
-        faces = hull.getFaces();
-
-        if (polygon3 != null) {
-            getCurrentScene().removeChild(polygon3);
-        }
-
-        hullVertices = new Stack<>();
-        for (int[] face : faces) {
-            hullVertices.add(new Vector3(vertices[face[0]].x, vertices[face[0]].y, vertices[face[0]].z));
-            hullVertices.add(new Vector3(vertices[face[1]].x, vertices[face[1]].y, vertices[face[1]].z));
-            hullVertices.add(new Vector3(vertices[face[2]].x, vertices[face[2]].y, vertices[face[2]].z));
-        }
-        polygon3 = new Polygon(hullVertices);
-        polygon3.setMaterial(Materials.getYellowMaterial());
-        polygon3.setTransparent(true);
-        getCurrentScene().addChild(polygon3);
-
-        f = FloatBuffer.allocate(RANSAC.supportingPoints.size() * 3);
-        for (int i = 0; i < RANSAC.supportingPoints.size(); i++) {
-            Vector3 vector3 = RANSAC.supportingPoints.get(i);
-            f.put((float) vector3.x);
-            f.put((float) vector3.y);
-            f.put((float) vector3.z);
-        }
-        polygon3Points.updatePoints(f, RANSAC.supportingPoints.size());
-        polygon3Points.setPosition(pose.getPosition());
-        polygon3Points.setOrientation(pose.getOrientation());
-
-
-        f = FloatBuffer.allocate(RANSAC.notSupportingPoints.size() * 3);
-        for (int i = 0; i < RANSAC.notSupportingPoints.size(); i++) {
-            Vector3 vector3 = RANSAC.notSupportingPoints.get(i);
-            f.put((float) vector3.x);
-            f.put((float) vector3.y);
-            f.put((float) vector3.z);
-        }
-        currentPoints.updatePoints(f, RANSAC.notSupportingPoints.size());
-        currentPoints.setPosition(pose.getPosition());
-        currentPoints.setOrientation(pose.getOrientation());
 
     }
 
