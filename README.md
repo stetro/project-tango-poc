@@ -24,7 +24,8 @@
 #### Einfache Ebenen Erkennung (construct)
 * RANSAC Ebenen Suche in Pointcloud
 * Feststellung der korellierenden Punkte
-* QuickHull für convexe Hüllen Erkennung der korellierenden Punkte
+* KMean Cluster Extraction
+* QuickHull für convexe Hüllen Erkennung der korellierenden Punkte eines Clusters
 * Mesh generierung der convexen Hülle
 
 ![AR Screenshot](img/construct.png)
