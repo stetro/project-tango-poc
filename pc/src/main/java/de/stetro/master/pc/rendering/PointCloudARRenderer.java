@@ -7,9 +7,14 @@ import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
+import org.rajawali3d.math.vector.Vector3;
+
+import java.util.Stack;
+
 import de.stetro.master.pc.ui.MainActivity;
 import de.stetro.master.pc.util.PointCloudExporter;
 import de.stetro.master.pc.util.PointCloudManager;
+import de.stetro.master.pc.util.ReconstructionBuilder;
 
 public class PointCloudARRenderer extends TangoRajawaliRenderer {
     private static final int MAX_POINTS = 100000;
@@ -18,6 +23,9 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
     private PointCollection collectedPoints;
     private PointCloudManager pointCloudManager;
     private boolean collectPoints;
+    private Stack<Vector3> faces;
+    private boolean updateFaces;
+    private Polygon polygon;
 
 
     public PointCloudARRenderer(Context context) {
@@ -67,10 +75,35 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
             }
             pointCloudManager.fillCurrentPoints(currentPoints, pose);
         }
+        if (updateFaces) {
+            updateFaces = false;
+            if (polygon != null) {
+                getCurrentScene().removeChild(polygon);
+            }
+            polygon = new Polygon(faces);
+            polygon.setMaterial(Materials.getTransparentClippingMaterial());
+            polygon.setTransparent(true);
+            getCurrentScene().addChild(polygon);
+        }
     }
 
     public void exportPointCloud(MainActivity mainActivity) {
         PointCloudExporter exporter = new PointCloudExporter(mainActivity, collectedPoints);
         exporter.export();
+    }
+
+    public void reconstruct(MainActivity mainActivity) {
+        ReconstructionBuilder builder = new ReconstructionBuilder(mainActivity, collectedPoints, this);
+        builder.reconstruct();
+    }
+
+    public void setFaces(Stack<Vector3> faces) {
+        this.faces = faces;
+        updateFaces = true;
+    }
+
+    public void togglePointCloudVisibility() {
+        currentPoints.setVisible(!currentPoints.isVisible());
+        collectedPoints.setVisible(!collectedPoints.isVisible());
     }
 }

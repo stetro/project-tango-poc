@@ -12,6 +12,7 @@ public class Materials {
     private static Material transparentRed;
     private static Material greenPointCloud;
     private static Material bluePointCloud;
+    private static Material transparentClippingMaterial;
 
     private static Material createLambertMaterial(float[] color) {
         Material material = new Material();
@@ -81,5 +82,13 @@ public class Materials {
             transparentRed = createLambertMaterial(color);
         }
         return transparentRed;
+    }
+
+    public static Material getTransparentClippingMaterial() {
+        if (transparentClippingMaterial == null) {
+            float[] color = {0.0f, 0.0f, 0.0f, 0.15f};
+            transparentClippingMaterial = createMaterial(color);
+        }
+        return transparentClippingMaterial;
     }
 }

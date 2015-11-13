@@ -9,4 +9,5 @@
     <string name="exporting_pointcloud">Pointcloud wird exportiert</string>
     <string name="please_wait">Bitte warten …</string>
     <string name="export_pointcloud_failure">Fehler beim Pointscloud Export!</string>
+
 </resources>
