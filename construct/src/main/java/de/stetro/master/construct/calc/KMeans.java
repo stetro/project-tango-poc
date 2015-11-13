@@ -21,8 +21,8 @@ public class KMeans {
 
     public void init(List<Vector3> points) {
         this.points = points;
-        this.clusterCount = (points.size() / 500) + 1;
-        
+        this.clusterCount = (points.size() / 500) + 3;
+
         // create cluster with random centroid
         for (int i = 0; i < clusterCount; i++) {
             Cluster cluster = new Cluster(i);
@@ -105,26 +105,17 @@ public class KMeans {
 
     private void calculateCentroids() {
         for (Cluster cluster : clusters) {
-            double sumX = 0;
-            double sumY = 0;
-            double sumZ = 0;
+            Vector3 sum = new Vector3();
+
             List<Vector3> list = cluster.getPoints();
             int n_points = list.size();
 
-            for (Vector3 point : list) {
-                sumX += point.x;
-                sumY += point.y;
-                sumZ += point.z;
-            }
-
-            Vector3 centroid = cluster.getCentroid();
             if (n_points > 0) {
-                double newX = sumX / n_points;
-                double newY = sumY / n_points;
-                double newZ = sumZ / n_points;
-                centroid.x = newX;
-                centroid.y = newY;
-                centroid.z = newZ;
+                for (Vector3 point : list) {
+                    sum.add(point);
+                }
+                sum.divide(n_points);
+                cluster.centroid = sum;
             }
         }
     }

@@ -2,6 +2,7 @@ package de.stetro.master.construct.ui;
 
 
 import android.content.Intent;
+import android.opengl.GLES10;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -36,6 +37,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
         glView = new TangoRajawaliView(this);
         pointCloudManager = new PointCloudManager();
         renderer = new PlaneReconstructionRenderer(this, pointCloudManager);
+        glView.setEGLConfigChooser(8, 8, 8, 8, 0, 0);
         glView.setSurfaceRenderer(renderer);
         glView.setOnTouchListener(this);
         tango = new Tango(this);

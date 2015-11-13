@@ -58,7 +58,7 @@ public class PointCloudManager {
         lastCloudTime = newCloudTime;
     }
 
-    public synchronized boolean hasNewPoints() {
+    public boolean hasNewPoints() {
         return newCloudTime != lastCloudTime;
     }
 

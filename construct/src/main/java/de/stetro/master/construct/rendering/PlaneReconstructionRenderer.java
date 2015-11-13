@@ -10,8 +10,10 @@ import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
+import org.rajawali3d.lights.DirectionalLight;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.vector.Vector3;
+import org.rajawali3d.primitives.Cube;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
@@ -27,12 +29,13 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
     private static final int MAX_POINTS = 100000;
     private static final String tag = PlaneReconstructionRenderer.class.getSimpleName();
     private final PointCloudManager pointCloudManager;
+    private final ArrayList<Vector3> supportingPoints = new ArrayList<>();
     private boolean willCalculatePlanes;
     private Points polygonPoints;
     private Polygon polygon;
     private boolean shouldUpdatePolygon = false;
     private Stack<Vector3> newHullVertices;
-    private ArrayList<Vector3> supportingPoints;
+    private Cube cube;
 
     public PlaneReconstructionRenderer(Context context, PointCloudManager pointCloudManager) {
         super(context);
@@ -44,14 +47,20 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
     protected void initScene() {
         super.initScene();
 
+        DirectionalLight light = new DirectionalLight(1, 0.2, -1);
+        light.setColor(1, 1, 1);
+        light.setPower(0.8f);
+        light.setPosition(3, 2, 4);
+        getCurrentScene().addLight(light);
+
         Points currentPoints = new Points(MAX_POINTS);
         currentPoints.setMaterial(Materials.getGreenPointCloudMaterial());
         getCurrentScene().addChild(currentPoints);
 
         polygonPoints = new Points(MAX_POINTS);
-        polygonPoints.setMaterial(Materials.getRedPointCloudMaterial());
+        polygonPoints.setMaterial(Materials.getWhitePointCloudMaterial());
+        polygonPoints.setTransparent(true);
         getCurrentScene().addChild(polygonPoints);
-
     }
 
     public void capturePoints() {
@@ -80,40 +89,40 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
     protected void onRender(long ellapsedRealtime, double deltaTime) {
         super.onRender(ellapsedRealtime, deltaTime);
         if (pointCloudManager != null && pointCloudManager.hasNewPoints()) {
-            synchronized (pointCloudManager) {
-                if (shouldUpdatePolygon) {
-                    shouldUpdatePolygon = false;
-                    if (polygon != null) {
-                        getCurrentScene().removeChild(polygon);
-                    }
-                    polygon = new Polygon(newHullVertices);
-                    polygon.setMaterial(Materials.getRedMaterial());
-                    polygon.setTransparent(true);
-                    getCurrentScene().addChild(polygon);
 
+            if (shouldUpdatePolygon) {
+                shouldUpdatePolygon = false;
+                if (polygon != null) {
+                    getCurrentScene().removeChild(polygon);
+                }
+                polygon = new Polygon(newHullVertices);
+                polygon.setMaterial(Materials.getTransparentClippingMaterial());
+                polygon.setTransparent(true);
+                getCurrentScene().addChild(polygon);
+                synchronized (supportingPoints) {
                     FloatBuffer f = FloatBuffer.allocate(supportingPoints.size() * 3);
                     for (int i = 0; i < supportingPoints.size(); i++) {
                         f.put((float) supportingPoints.get(i).x);
                         f.put((float) supportingPoints.get(i).y);
                         f.put((float) supportingPoints.get(i).z);
                     }
-
-                    Pose pose = mScenePoseCalcuator.toOpenGLPointCloudPose(pointCloudManager.getDevicePoseAtCloudTime());
                     polygonPoints.updatePoints(f, supportingPoints.size());
-                    polygonPoints.setPosition(pose.getPosition());
-                    polygonPoints.setOrientation(pose.getOrientation());
                 }
             }
         }
     }
 
+
     private void calculatePlanes(Pose pose) {
 
         List<Vector3> points = pointCloudManager.get2DPointArrayList();
-        supportingPoints = new ArrayList<>();
+        synchronized (supportingPoints) {
+            supportingPoints.clear();
+        }
+
         Stack<Vector3> hullVertices = new Stack<>();
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 5; i++) {
 
             // skip iterating when enough points are matched
             if (points.size() < 10) {
@@ -124,7 +133,7 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
             int sufficientSupport = (int) (points.size() * 0.30);
 
             // detect plane in hesse normal form
-            RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.03f, 10, sufficientSupport);
+            RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.04f, 10, sufficientSupport);
             points = RANSAC.notSupportingPoints;
             Log.d(tag, "Found potential Plane :" + hessePlane.toString());
 
@@ -153,13 +162,15 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
                     continue;
                 }
                 Point3d[] innerHullPoints = new Point3d[c.getPoints().size()];
-                for (int j = 0; j < c.getPoints().size(); j++) {
-                    Vector3 point = c.getPoints().get(j);
-                    supportingPoints.add(point.clone());
+                synchronized (supportingPoints) {
+                    for (int j = 0; j < c.getPoints().size(); j++) {
+                        Vector3 point = c.getPoints().get(j);
 
-                    Vector3 transformedPoint = point.clone();
-                    transformedPoint.multiply(transformation);
-                    innerHullPoints[j] = new Point3d(transformedPoint.x, transformedPoint.y, transformedPoint.z);
+                        Vector3 transformedPoint = point.clone();
+                        transformedPoint.multiply(transformation);
+                        supportingPoints.add(transformedPoint.clone());
+                        innerHullPoints[j] = new Point3d(transformedPoint.x, transformedPoint.y, transformedPoint.z);
+                    }
                 }
 
                 QuickHull3D hull = new QuickHull3D();

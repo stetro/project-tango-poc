@@ -2,6 +2,7 @@ package de.stetro.master.construct.rendering;
 
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
+import org.rajawali3d.materials.plugins.DepthMaterialPlugin;
 
 
 public class Materials {
@@ -16,6 +17,8 @@ public class Materials {
     private static Material yellowPointCloud;
     private static Material yellowMaterial;
     private static Material yellow;
+    private static Material transparentClippingMaterial;
+    private static Material whitePointCloudMaterial;
 
     private static Material createLambertMaterial(float[] color) {
         Material material = new Material();
@@ -60,7 +63,6 @@ public class Materials {
     private static Material createMaterial(float[] color) {
         Material material = new Material();
         material.setColor(color);
-
         return material;
     }
 
@@ -102,5 +104,21 @@ public class Materials {
             yellow = createLambertMaterial(color);
         }
         return yellow;
+    }
+
+    public static Material getTransparentClippingMaterial() {
+        if (transparentClippingMaterial == null) {
+            float[] color = {0.0f, 0.0f, 0.0f, 0.15f};
+            transparentClippingMaterial = createMaterial(color);
+        }
+        return transparentClippingMaterial;
+    }
+
+    public static Material getWhitePointCloudMaterial() {
+        if (whitePointCloudMaterial == null) {
+            float[] color = {1.0f, 1.0f, 1.0f, 0.2f};
+            whitePointCloudMaterial = createMaterial(color);
+        }
+        return whitePointCloudMaterial;
     }
 }
