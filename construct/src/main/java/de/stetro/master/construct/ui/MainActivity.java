@@ -2,7 +2,6 @@ package de.stetro.master.construct.ui;
 
 
 import android.content.Intent;
-import android.opengl.GLES10;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;

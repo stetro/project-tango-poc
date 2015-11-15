@@ -133,7 +133,7 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
             int sufficientSupport = (int) (points.size() * 0.30);
 
             // detect plane in hesse normal form
-            RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.04f, 10, sufficientSupport);
+            RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.05f, 10, sufficientSupport);
             points = RANSAC.notSupportingPoints;
             Log.d(tag, "Found potential Plane :" + hessePlane.toString());
 
