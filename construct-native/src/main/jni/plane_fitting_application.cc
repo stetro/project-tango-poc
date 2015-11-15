@@ -17,11 +17,45 @@
 #include "tango-plane-fitting/plane_fitting_application.h"
 #include "tango-plane-fitting/plane_fitting.h"
 
+#include <vector>
+
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <tango-gl/camera.h>
 #include <tango-gl/conversions.h>
 #include <tango-gl/util.h>
+#include <tango-gl/mesh.h>
+
+volatile bool newData = false;
+
+std::vector <GLfloat> vertices_;
+std::vector <GLushort> indices_;
+
+void ExtractMesh(void *context, const int num_meshes, const TangoMesh_Experimental *mesh_segments);
+
+void ExtractMesh(void *context, const int num_meshes, const TangoMesh_Experimental *mesh_segments) {
+    LOGE("extracted %d vertices and %d faces", mesh_segments->num_vertices,
+         mesh_segments->num_faces);
+
+    int shift = 0;
+    vertices_.clear();
+    indices_.clear();
+
+    for (int i = 0; i < mesh_segments->num_vertices; i++) {
+        vertices_.push_back(mesh_segments->vertices[i][0]);
+        vertices_.push_back(mesh_segments->vertices[i][1]);
+        vertices_.push_back(mesh_segments->vertices[i][2]);
+    }
+    LOGE("converting to vectors - vertices DONE");
+
+    for (int i = 0; i < mesh_segments->num_faces; i++) {
+        indices_.push_back(mesh_segments->faces[i][0] + shift);
+        indices_.push_back(mesh_segments->faces[i][1] + shift);
+        indices_.push_back(mesh_segments->faces[i][2] + shift);
+    }
+    LOGE("converting to vectors - indices DONE");
+    newData = true;
+}
 
 namespace tango_plane_fitting {
 
@@ -91,6 +125,15 @@ namespace tango_plane_fitting {
         TangoErrorType ret = TangoConfig_setBool(tango_config_, "config_enable_depth", true);
         if (ret != TANGO_SUCCESS) {
             LOGE("Failed to enable depth.");
+            return ret;
+        }
+
+        // Enable scene reconstruction
+        ret = TangoConfig_setBool(tango_config_, "config_experimental_enable_scene_reconstruction",
+                                  true);
+        if (ret != TANGO_SUCCESS) {
+            LOGE("config_experimental_enable_scene_reconstruction() failed with error code: %d",
+                 ret);
             return ret;
         }
 
@@ -197,6 +240,17 @@ namespace tango_plane_fitting {
         device_T_depth_ = glm::inverse(IMU_T_device) * IMU_T_depth;
         device_T_color_ = glm::inverse(IMU_T_device) * IMU_T_color;
 
+        if (TangoService_Experimental_startSceneReconstruction() == TANGO_SUCCESS) {
+            LOGE("Reconstruction started ...");
+            if (TangoService_Experimental_connectOnMeshVectorAvailable(ExtractMesh) ==
+                TANGO_SUCCESS) {
+                LOGE("Registered Callback ...");
+            }
+        } else {
+            LOGE("Could not start Reconstruction");
+            return ret;
+        }
+
         return ret;
     }
 
@@ -214,10 +268,17 @@ namespace tango_plane_fitting {
         }
 
         video_overlay_ = new tango_gl::VideoOverlay();
+
         point_cloud_ = new PointCloud(max_point_cloud_elements);
+
         cube_ = new tango_gl::Cube();
         cube_->SetScale(glm::vec3(kCubeScale, kCubeScale, kCubeScale));
         cube_->SetColor(0.2f, 0.8f, 0.2f);
+
+        mesh_ = new tango_gl::Mesh();
+        mesh_->SetColor(0.2f, 0.8f, 0.3f);
+        mesh_->SetShader(false);
+
 
         // The Tango service allows you to connect an OpenGL texture directly to its
         // RGB and fisheye cameras. This is the most efficient way of receiving
@@ -276,6 +337,7 @@ namespace tango_plane_fitting {
         } else {
             LOGE("Invalid pose for gpu color image at time: %lf", color_gpu_timestamp);
         }
+
     }
 
     void PlaneFittingApplication::GLRender(const glm::mat4 &start_service_T_color_camera) {
@@ -300,15 +362,25 @@ namespace tango_plane_fitting {
         glm::mat4 opengl_camera_T_opengl_world = opengl_camera_T_ss * glm::inverse(
                 tango_gl::conversions::opengl_world_T_tango_world());
         cube_->Render(projection_matrix_ar_, opengl_camera_T_opengl_world);
+
+        if (newData) {
+            mesh_->SetVertices(vertices_, indices_);
+            newData = false;
+        } else {
+            mesh_->Render(projection_matrix_ar_, opengl_camera_T_ss);
+        }
+
     }
 
     void PlaneFittingApplication::FreeGLContent() {
         delete video_overlay_;
         delete point_cloud_;
         delete cube_;
+        delete mesh_;
         video_overlay_ = nullptr;
         point_cloud_ = nullptr;
         cube_ = nullptr;
+        mesh_ = nullptr;
     }
 
 // We assume the Java layer ensures this function is called on the GL thread.
@@ -319,8 +391,7 @@ namespace tango_plane_fitting {
         const TangoXYZij *current_cloud = point_cloud_->GetCurrentPointData();
         // This transform relates the point cloud at acquisition time (t0) to the
         // start of service.
-        const glm::mat4 start_service_T_device_t0 =
-                point_cloud_->GetCurrentTransform();
+        const glm::mat4 start_service_T_device_t0 = point_cloud_->GetCurrentTransform();
 
         TangoCoordinateFramePair frame_pair;
         frame_pair.base = TANGO_COORDINATE_FRAME_START_OF_SERVICE;
