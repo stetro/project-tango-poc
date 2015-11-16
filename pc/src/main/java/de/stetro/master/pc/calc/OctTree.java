@@ -217,4 +217,8 @@ public class OctTree {
             }
         }
     }
+
+    public void clear() {
+
+    }
 }

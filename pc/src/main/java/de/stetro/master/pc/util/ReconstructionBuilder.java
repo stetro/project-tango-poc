@@ -54,7 +54,7 @@ public class ReconstructionBuilder {
             }
 
             PointCollection pointCollection = params[0];
-            List<OctTree> cluster = pointCollection.getOctTree().getCluster(8);
+            List<OctTree> cluster = pointCollection.getOctTree().getCluster(7);
             Log.d(tag, "found " + cluster.size() + " spartial clusters inside octtree");
             dialog.setMaxProgress(cluster.size());
 
@@ -87,7 +87,7 @@ public class ReconstructionBuilder {
         }
 
         private void detectPlanesAndGeneratePolygons(Stack<Vector3> stack, List<Vector3> points) {
-            for (int i = 0; i < 30; i++) {
+            for (int i = 0; i < 3; i++) {
                 // skip iterating when enough points are matched
                 if (points.size() < 10) {
                     break;
@@ -97,7 +97,7 @@ public class ReconstructionBuilder {
                 int sufficientSupport = (int) (points.size() * 0.30);
 
                 // detect plane in hesse normal form
-                RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.04f, 10, sufficientSupport);
+                RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.05f, 10, sufficientSupport);
                 Log.d(tag, "Found potential Plane :" + hessePlane.toString());
                 points = RANSAC.notSupportingPoints;
 

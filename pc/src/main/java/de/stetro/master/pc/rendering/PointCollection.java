@@ -17,13 +17,13 @@ import java.nio.FloatBuffer;
 import de.stetro.master.pc.calc.OctTree;
 
 public class PointCollection extends Object3D {
-    private final OctTree octTree;
-    private int mMaxNumberofVertices;
+    private OctTree octTree;
+    private int mMaxNumberOfVertices;
     private int count = 0;
 
     public PointCollection(int numberOfPoints) {
         super();
-        mMaxNumberofVertices = numberOfPoints;
+        mMaxNumberOfVertices = numberOfPoints;
         init(true);
         Material m = new Material();
         m.setColor(Color.GREEN);
@@ -32,8 +32,8 @@ public class PointCollection extends Object3D {
     }
 
     protected void init(boolean createVBOs) {
-        float[] vertices = new float[mMaxNumberofVertices * 3];
-        int[] indices = new int[mMaxNumberofVertices];
+        float[] vertices = new float[mMaxNumberOfVertices * 3];
+        int[] indices = new int[mMaxNumberOfVertices];
         for (int i = 0; i < indices.length; ++i) {
             indices[i] = i;
         }
@@ -46,7 +46,7 @@ public class PointCollection extends Object3D {
     }
 
     public void updatePoints(FloatBuffer pointCloudBuffer, int pointCount, Pose pose) {
-        if (count + pointCount < mMaxNumberofVertices) {
+        if (count + pointCount < mMaxNumberOfVertices) {
             pointCloudBuffer.position(0);
             FloatBuffer transformedPoints = FloatBuffer.allocate(pointCount * 3);
             for (int i = 0; i < pointCount; i++) {
@@ -88,6 +88,13 @@ public class PointCollection extends Object3D {
 
     public OctTree getOctTree() {
         return octTree;
+    }
+
+    public void clear() {
+        octTree = new OctTree(new Vector3(-20, -20, -20), 40.0, 12);
+        mGeometry.setNumVertices(0);
+        mGeometry.getVertices().clear();
+        count = 0;
     }
 }
 

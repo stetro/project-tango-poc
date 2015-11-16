@@ -48,7 +48,7 @@ mdicons {
             densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'
             colors 'white'
             sizes '24dp'
-            names 'archive', 'blur_linear', 'visibility', 'visibility_off'
+            names 'archive', 'blur_linear', 'visibility', 'visibility_off', 'delete'
         }
         appIcon {
             densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'

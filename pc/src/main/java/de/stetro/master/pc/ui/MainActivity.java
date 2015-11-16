@@ -147,6 +147,9 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
             case R.id.activity_main_menu_toggle_pointcloud:
                 renderer.togglePointCloudVisibility();
                 return true;
+            case R.id.activity_main_menu_delete:
+                renderer.clearPoints();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

@@ -21,4 +21,10 @@
         android:title="@string/toggle_pointcloud"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/activity_main_menu_delete"
+        android:icon="@mipmap/ic_delete_white_24dp"
+        android:title="@string/delete_objects"
+        app:showAsAction="ifRoom" />
+
 </menu>

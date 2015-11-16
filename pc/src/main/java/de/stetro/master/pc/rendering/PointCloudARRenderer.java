@@ -20,7 +20,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
     private static final int MAX_POINTS = 100000;
     private static final int MAX_COLLECTED_POINTS = 300000;
     private Points currentPoints;
-    private PointCollection collectedPoints;
+    private PointCollection pointCollection;
     private PointCloudManager pointCloudManager;
     private boolean collectPoints;
     private Stack<Vector3> faces;
@@ -44,10 +44,10 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
 
         getCurrentScene().addChild(currentPoints);
 
-        collectedPoints = new PointCollection(MAX_COLLECTED_POINTS);
-        collectedPoints.setMaterial(Materials.getBluePointCloudMaterial());
+        pointCollection = new PointCollection(MAX_COLLECTED_POINTS);
+        pointCollection.setMaterial(Materials.getBluePointCloudMaterial());
 
-        getCurrentScene().addChild(collectedPoints);
+        getCurrentScene().addChild(pointCollection);
     }
 
     public void capturePoints() {
@@ -71,7 +71,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
             Pose pose = mScenePoseCalcuator.toOpenGLPointCloudPose(pointCloudManager.getDevicePoseAtCloudTime());
             if (collectPoints) {
                 collectPoints = false;
-                pointCloudManager.fillCollectedPoints(collectedPoints, pose);
+                pointCloudManager.fillCollectedPoints(pointCollection, pose);
             }
             pointCloudManager.fillCurrentPoints(currentPoints, pose);
         }
@@ -88,12 +88,12 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
     }
 
     public void exportPointCloud(MainActivity mainActivity) {
-        PointCloudExporter exporter = new PointCloudExporter(mainActivity, collectedPoints);
+        PointCloudExporter exporter = new PointCloudExporter(mainActivity, pointCollection);
         exporter.export();
     }
 
     public void reconstruct(MainActivity mainActivity) {
-        ReconstructionBuilder builder = new ReconstructionBuilder(mainActivity, collectedPoints, this);
+        ReconstructionBuilder builder = new ReconstructionBuilder(mainActivity, pointCollection, this);
         builder.reconstruct();
     }
 
@@ -104,6 +104,13 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
 
     public void togglePointCloudVisibility() {
         currentPoints.setVisible(!currentPoints.isVisible());
-        collectedPoints.setVisible(!collectedPoints.isVisible());
+        pointCollection.setVisible(!pointCollection.isVisible());
+    }
+
+    public void clearPoints() {
+        pointCollection.clear();
+        if (polygon != null) {
+            getCurrentScene().removeChild(polygon);
+        }
     }
 }
