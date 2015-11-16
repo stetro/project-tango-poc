@@ -1,4 +1,4 @@
-package de.stetro.master.construct.calc;
+package de.stetro.master.construct.calculation.clustering.kmean;
 
 
 import org.rajawali3d.math.vector.Vector3;
@@ -11,12 +11,12 @@ public class KMeans {
 
 
     private List<Vector3> points;
-    private List<Cluster> clusters;
+    private List<KMeansCluster> KMeansClusters;
     private int clusterCount;
 
     public KMeans() {
         this.points = new ArrayList<>();
-        this.clusters = new ArrayList<>();
+        this.KMeansClusters = new ArrayList<>();
     }
 
     public void init(List<Vector3> points) {
@@ -25,10 +25,10 @@ public class KMeans {
 
         // create cluster with random centroid
         for (int i = 0; i < clusterCount; i++) {
-            Cluster cluster = new Cluster(i);
+            KMeansCluster KMeansCluster = new KMeansCluster(i);
             Vector3 centroid = points.get((int) (Math.random() * points.size()));
-            cluster.setCentroid(centroid);
-            clusters.add(cluster);
+            KMeansCluster.setCentroid(centroid);
+            KMeansClusters.add(KMeansCluster);
         }
     }
 
@@ -68,15 +68,15 @@ public class KMeans {
     }
 
     private void clearClusters() {
-        for (Cluster cluster : clusters) {
-            cluster.clear();
+        for (KMeansCluster KMeansCluster : KMeansClusters) {
+            KMeansCluster.clear();
         }
     }
 
     private List<Vector3> getCentroids() {
         List<Vector3> centroids = new ArrayList<>(clusterCount);
-        for (Cluster cluster : clusters) {
-            Vector3 aux = cluster.getCentroid();
+        for (KMeansCluster KMeansCluster : KMeansClusters) {
+            Vector3 aux = KMeansCluster.getCentroid();
             Vector3 point = aux.clone();
             centroids.add(point);
         }
@@ -92,22 +92,22 @@ public class KMeans {
         for (Vector3 point : points) {
             min = max;
             for (int i = 0; i < clusterCount; i++) {
-                Cluster c = clusters.get(i);
+                KMeansCluster c = KMeansClusters.get(i);
                 distance = point.distanceTo(c.getCentroid());
                 if (distance < min) {
                     min = distance;
                     cluster = i;
                 }
             }
-            clusters.get(cluster).addPoint(point);
+            KMeansClusters.get(cluster).addPoint(point);
         }
     }
 
     private void calculateCentroids() {
-        for (Cluster cluster : clusters) {
+        for (KMeansCluster KMeansCluster : KMeansClusters) {
             Vector3 sum = new Vector3();
 
-            List<Vector3> list = cluster.getPoints();
+            List<Vector3> list = KMeansCluster.getPoints();
             int n_points = list.size();
 
             if (n_points > 0) {
@@ -115,12 +115,12 @@ public class KMeans {
                     sum.add(point);
                 }
                 sum.divide(n_points);
-                cluster.centroid = sum;
+                KMeansCluster.centroid = sum;
             }
         }
     }
 
-    public List<Cluster> getClusters() {
-        return clusters;
+    public List<KMeansCluster> getKMeansClusters() {
+        return KMeansClusters;
     }
 }

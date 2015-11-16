@@ -1,4 +1,4 @@
-package de.stetro.master.construct.calc.agglomerative;
+package de.stetro.master.construct.calculation.clustering.agglomerative;
 
 
 import org.rajawali3d.math.vector.Vector3;
@@ -6,8 +6,6 @@ import org.rajawali3d.math.vector.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.stetro.master.construct.calc.agglomerative.cluster.AgglomerativeCluster;
-import de.stetro.master.construct.calc.agglomerative.cluster.EuclideanCentroidCluster;
 
 public class AgglomerativeClustering {
     private static final String tag = AgglomerativeClustering.class.getSimpleName();

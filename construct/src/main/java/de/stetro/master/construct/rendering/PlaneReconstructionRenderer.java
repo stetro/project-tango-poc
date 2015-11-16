@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import de.stetro.master.construct.calc.Cluster;
-import de.stetro.master.construct.calc.KMeans;
-import de.stetro.master.construct.calc.RANSAC;
+import de.stetro.master.construct.calculation.clustering.kmean.KMeansCluster;
+import de.stetro.master.construct.calculation.clustering.kmean.KMeans;
+import de.stetro.master.construct.calculation.RANSAC;
 import de.stetro.master.construct.util.PointCloudManager;
 
 public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
@@ -151,12 +151,12 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
             KMeans kMeans = new KMeans();
             kMeans.init(RANSAC.supportingPoints);
             kMeans.calculate();
-            List<Cluster> clusters = kMeans.getClusters();
+            List<KMeansCluster> KMeansClusters = kMeans.getKMeansClusters();
 
-            Log.d(tag, "found " + clusters.size() + " clusters in a plane with " + RANSAC.supportingPoints.size() + " points");
+            Log.d(tag, "found " + KMeansClusters.size() + " KMeansClusters in a plane with " + RANSAC.supportingPoints.size() + " points");
 
             // calculate convex hull and vertices for supporting points
-            for (Cluster c : clusters) {
+            for (KMeansCluster c : KMeansClusters) {
                 Log.d(tag, "iterate over cluster with " + c.getPoints().size() + " points");
                 if (c.getPoints().size() < 5) {
                     continue;

@@ -2,6 +2,7 @@ include ':ar'
 include ':pc'
 include ':construct'
 include ':utils'
-
-// Native Project
-include ':construct-native'
+if (!System.getenv("CI")) {
+    // Native Project
+    include ':construct-native'
+}

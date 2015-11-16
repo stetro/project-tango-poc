@@ -1,4 +1,4 @@
-package de.stetro.master.construct.calc;
+package de.stetro.master.construct.calculation;
 
 import org.apache.commons.math3.util.FastMath;
 import org.rajawali3d.math.vector.Vector3;

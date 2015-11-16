@@ -1,4 +1,4 @@
-package de.stetro.master.construct.calc;
+package de.stetro.master.construct.calculation.clustering.kmean;
 
 
 import org.rajawali3d.math.vector.Vector3;
@@ -6,13 +6,13 @@ import org.rajawali3d.math.vector.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Cluster {
+public class KMeansCluster {
 
     public List<Vector3> points;
     public Vector3 centroid;
     public int id;
 
-    public Cluster(int id) {
+    public KMeansCluster(int id) {
         this.id = id;
         this.points = new ArrayList<>();
         this.centroid = null;
@@ -47,7 +47,7 @@ public class Cluster {
     }
 
     public void plotCluster() {
-        System.out.println("[Cluster: " + id + "]");
+        System.out.println("[KMeansCluster: " + id + "]");
         System.out.println("[Centroid: " + centroid + "]");
         System.out.println("[Points: \n");
         for (Vector3 p : points) {

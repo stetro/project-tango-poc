@@ -1,4 +1,4 @@
-package de.stetro.master.construct.calc.agglomerative.cluster;
+package de.stetro.master.construct.calculation.clustering.agglomerative;
 
 
 import org.rajawali3d.math.vector.Vector3;
