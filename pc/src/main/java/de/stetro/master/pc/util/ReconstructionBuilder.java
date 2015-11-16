@@ -10,14 +10,13 @@ import com.github.quickhull3d.QuickHull3D;
 
 import org.rajawali3d.math.vector.Vector3;
 
-import java.nio.FloatBuffer;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
 import de.stetro.master.pc.R;
 import de.stetro.master.pc.calc.Cluster;
 import de.stetro.master.pc.calc.KMeans;
+import de.stetro.master.pc.calc.OctTree;
 import de.stetro.master.pc.calc.RANSAC;
 import de.stetro.master.pc.rendering.PointCloudARRenderer;
 import de.stetro.master.pc.rendering.PointCollection;
@@ -45,6 +44,7 @@ public class ReconstructionBuilder {
         new ReconstructionAsyncTask().execute(collectedPoints);
     }
 
+
     private class ReconstructionAsyncTask extends AsyncTask<PointCollection, Integer, Stack<Vector3>> {
 
         @Override
@@ -52,22 +52,42 @@ public class ReconstructionBuilder {
             if (params.length == 0) {
                 return null;
             }
-            Stack<Vector3> stack = new Stack<>();
+
             PointCollection pointCollection = params[0];
-            dialog.setMaxProgress(30);
+            List<OctTree> cluster = pointCollection.getOctTree().getCluster(8);
+            Log.d(tag, "found " + cluster.size() + " spartial clusters inside octtree");
+            dialog.setMaxProgress(cluster.size());
 
             Log.d(tag, "moving points to listable data structure");
-            List<Vector3> points = new LinkedList<>();
-            FloatBuffer vertices = pointCollection.getBuffer();
-            vertices.position(0);
-            for (int i = 0; i < pointCollection.getCount(); i++) {
-                points.add(new Vector3(vertices.get(), vertices.get(), vertices.get()));
-            }
-
-            Log.d(tag, "starting RANSAC with " + points.size() + " points");
-            for (int i = 0; i < 30; i++) {
+            Stack<Vector3> stack = new Stack<>();
+            for (int i = 0; i < cluster.size(); i++) {
                 dialog.setProgress(i);
+                List<Vector3> points = cluster.get(i).getPointList();
+                detectPlanesAndGeneratePolygons(stack, points);
+            }
+            return stack;
+        }
 
+        @Override
+        protected void onPreExecute() {
+            dialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Stack<Vector3> points) {
+            dialog.dismiss();
+            if (points != null) {
+                renderer.setFaces(points);
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            dialog.setProgress(values[0]);
+        }
+
+        private void detectPlanesAndGeneratePolygons(Stack<Vector3> stack, List<Vector3> points) {
+            for (int i = 0; i < 30; i++) {
                 // skip iterating when enough points are matched
                 if (points.size() < 10) {
                     break;
@@ -106,7 +126,6 @@ public class ReconstructionBuilder {
                         innerHullPoints[j] = new Point3d(point.x, point.y, point.z);
                     }
 
-
                     QuickHull3D hull = new QuickHull3D();
                     hull.build(innerHullPoints);
                     Point3d[] hullVertices = hull.getVertices();
@@ -119,26 +138,7 @@ public class ReconstructionBuilder {
                     }
                 }
             }
-
-            return stack;
         }
 
-        @Override
-        protected void onPreExecute() {
-            dialog.show();
-        }
-
-        @Override
-        protected void onPostExecute(Stack<Vector3> points) {
-            dialog.dismiss();
-            if (points != null) {
-                renderer.setFaces(points);
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            dialog.setProgress(values[0]);
-        }
     }
 }

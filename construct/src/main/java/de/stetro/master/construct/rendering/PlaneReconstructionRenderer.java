@@ -13,16 +13,15 @@ import com.projecttango.rajawali.renderables.primitives.Points;
 import org.rajawali3d.lights.DirectionalLight;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.vector.Vector3;
-import org.rajawali3d.primitives.Cube;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import de.stetro.master.construct.calculation.clustering.kmean.KMeansCluster;
-import de.stetro.master.construct.calculation.clustering.kmean.KMeans;
 import de.stetro.master.construct.calculation.RANSAC;
+import de.stetro.master.construct.calculation.clustering.kmean.KMeans;
+import de.stetro.master.construct.calculation.clustering.kmean.KMeansCluster;
 import de.stetro.master.construct.util.PointCloudManager;
 
 public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
@@ -30,18 +29,15 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
     private static final String tag = PlaneReconstructionRenderer.class.getSimpleName();
     private final PointCloudManager pointCloudManager;
     private final ArrayList<Vector3> supportingPoints = new ArrayList<>();
-    private boolean willCalculatePlanes;
     private Points polygonPoints;
     private Polygon polygon;
     private boolean shouldUpdatePolygon = false;
     private Stack<Vector3> newHullVertices;
-    private Cube cube;
 
     public PlaneReconstructionRenderer(Context context, PointCloudManager pointCloudManager) {
         super(context);
         this.pointCloudManager = pointCloudManager;
     }
-
 
     @Override
     protected void initScene() {

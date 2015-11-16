@@ -14,19 +14,21 @@ import org.rajawali3d.math.vector.Vector3;
 
 import java.nio.FloatBuffer;
 
+import de.stetro.master.pc.calc.OctTree;
+
 public class PointCollection extends Object3D {
-    private final FloatBuffer buffer;
+    private final OctTree octTree;
     private int mMaxNumberofVertices;
     private int count = 0;
 
     public PointCollection(int numberOfPoints) {
         super();
-        buffer = FloatBuffer.allocate(numberOfPoints * 3);
         mMaxNumberofVertices = numberOfPoints;
         init(true);
         Material m = new Material();
         m.setColor(Color.GREEN);
         setMaterial(m);
+        octTree = new OctTree(new Vector3(-20, -20, -20), 40.0, 12);
     }
 
     protected void init(boolean createVBOs) {
@@ -57,9 +59,7 @@ public class PointCollection extends Object3D {
                 transformedPoints.put((float) v.x);
                 transformedPoints.put((float) v.y);
                 transformedPoints.put((float) v.z);
-                buffer.put((float) v.x);
-                buffer.put((float) v.y);
-                buffer.put((float) v.z);
+                octTree.put(v);
             }
 
             mGeometry.setNumIndices(pointCount + count);
@@ -80,7 +80,14 @@ public class PointCollection extends Object3D {
     }
 
     public FloatBuffer getBuffer() {
+        int size = octTree.getSize();
+        FloatBuffer buffer = FloatBuffer.allocate(size * 3);
+        octTree.fill(buffer);
         return buffer;
+    }
+
+    public OctTree getOctTree() {
+        return octTree;
     }
 }
 
