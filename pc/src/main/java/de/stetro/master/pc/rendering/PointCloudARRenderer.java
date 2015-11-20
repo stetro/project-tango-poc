@@ -9,10 +9,11 @@ import com.projecttango.rajawali.renderables.primitives.Points;
 
 import org.rajawali3d.math.vector.Vector3;
 
-import java.util.ArrayList;
+import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Stack;
 
+import de.stetro.master.pc.calc.OctTree;
 import de.stetro.master.pc.marchingcubes.Cube;
 import de.stetro.master.pc.ui.MainActivity;
 import de.stetro.master.pc.util.PointCloudExporter;
@@ -52,14 +53,27 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
         pointCollection.setMaterial(Materials.getBluePointCloudMaterial());
         getCurrentScene().addChild(pointCollection);
 
-//        List<Vector3> neighbours = new ArrayList<>();
-//        neighbours.add(new Vector3(0.5, 0.0, -1.0));
-//        Cube c = new Cube(new Vector3(0, 0, -1.0), 0.5, neighbours);
-//        Stack<Vector3> facesPointsStack = new Stack<>();
-//        c.getFaces(facesPointsStack);
-//        Polygon p = new Polygon(facesPointsStack);
-//        p.setMaterial(Materials.getGreenMaterial());
-//        getCurrentScene().addChild(p);
+        OctTree ot = new OctTree(new Vector3(-2.0, -2.0, -2.0), 4.0, 8);
+        ot.put(new Vector3(0.0, 0.0, 0.0));
+        List<Cube> cubes = ot.getCubes(0);
+        Stack<Vector3> faces = new Stack<>();
+        for (Cube cube : cubes) {
+            cube.getFaces(faces);
+        }
+        Points points = new Points(1000);
+        FloatBuffer f = FloatBuffer.allocate(1000 * 3);
+        for (Vector3 face : faces) {
+            f.put((float) face.x);
+            f.put((float) face.y);
+            f.put((float) face.z);
+        }
+        points.updatePoints(f, faces.size());
+        points.setMaterial(Materials.getBlueMaterial());
+        Polygon p = new Polygon(faces);
+        p.setTransparent(true);
+        p.setMaterial(Materials.getRedMaterial());
+        getCurrentScene().addChild(points);
+        getCurrentScene().addChild(p);
     }
 
     public void capturePoints() {

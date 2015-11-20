@@ -2,6 +2,7 @@ package de.stetro.master.pc.util;
 
 
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -18,6 +19,7 @@ import de.stetro.master.pc.calc.Cluster;
 import de.stetro.master.pc.calc.KMeans;
 import de.stetro.master.pc.calc.OctTree;
 import de.stetro.master.pc.calc.RANSAC;
+import de.stetro.master.pc.marchingcubes.Cube;
 import de.stetro.master.pc.rendering.PointCloudARRenderer;
 import de.stetro.master.pc.rendering.PointCollection;
 import de.stetro.master.pc.ui.MainActivity;
@@ -47,6 +49,7 @@ public class ReconstructionBuilder {
 
     private class ReconstructionAsyncTask extends AsyncTask<PointCollection, Integer, Stack<Vector3>> {
 
+        @SuppressWarnings("UnnecessaryLocalVariable")
         @Override
         protected Stack<Vector3> doInBackground(PointCollection... params) {
             if (params.length == 0) {
@@ -54,6 +57,24 @@ public class ReconstructionBuilder {
             }
 
             PointCollection pointCollection = params[0];
+//            Stack<Vector3> stack = createPlanarReconstruction(pointCollection);
+            Stack<Vector3> stack = createMarchingCubeReconstruction(pointCollection);
+            return stack;
+        }
+
+        private Stack<Vector3> createMarchingCubeReconstruction(PointCollection pointCollection) {
+            Stack<Vector3> stack = new Stack<>();
+            List<Cube> cubes = pointCollection.getOctTree().getCubes(0);
+            Log.d(tag, "found " + cubes.size() + " cubes");
+            for (Cube c : cubes) {
+                c.getFaces(stack);
+            }
+            Log.d(tag, "got " + stack.size() / 3 + " faces");
+            return stack;
+        }
+
+        @NonNull
+        private Stack<Vector3> createPlanarReconstruction(PointCollection pointCollection) {
             List<OctTree> cluster = pointCollection.getOctTree().getCluster(7);
             Log.d(tag, "found " + cluster.size() + " spartial clusters inside octtree");
             dialog.setMaxProgress(cluster.size());
