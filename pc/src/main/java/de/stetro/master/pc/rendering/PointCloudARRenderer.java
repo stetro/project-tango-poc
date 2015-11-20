@@ -9,8 +9,11 @@ import com.projecttango.rajawali.renderables.primitives.Points;
 
 import org.rajawali3d.math.vector.Vector3;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
+import de.stetro.master.pc.marchingcubes.Cube;
 import de.stetro.master.pc.ui.MainActivity;
 import de.stetro.master.pc.util.PointCloudExporter;
 import de.stetro.master.pc.util.PointCloudManager;
@@ -19,6 +22,7 @@ import de.stetro.master.pc.util.ReconstructionBuilder;
 public class PointCloudARRenderer extends TangoRajawaliRenderer {
     private static final int MAX_POINTS = 100000;
     private static final int MAX_COLLECTED_POINTS = 300000;
+    private static final String tag = PointCloudARRenderer.class.getSimpleName();
     private Points currentPoints;
     private PointCollection pointCollection;
     private PointCloudManager pointCloudManager;
@@ -46,8 +50,16 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
 
         pointCollection = new PointCollection(MAX_COLLECTED_POINTS);
         pointCollection.setMaterial(Materials.getBluePointCloudMaterial());
-
         getCurrentScene().addChild(pointCollection);
+
+//        List<Vector3> neighbours = new ArrayList<>();
+//        neighbours.add(new Vector3(0.5, 0.0, -1.0));
+//        Cube c = new Cube(new Vector3(0, 0, -1.0), 0.5, neighbours);
+//        Stack<Vector3> facesPointsStack = new Stack<>();
+//        c.getFaces(facesPointsStack);
+//        Polygon p = new Polygon(facesPointsStack);
+//        p.setMaterial(Materials.getGreenMaterial());
+//        getCurrentScene().addChild(p);
     }
 
     public void capturePoints() {
