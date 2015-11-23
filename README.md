@@ -4,7 +4,7 @@
 
 ### Aktuelles Featureset
 
-#### Augmented Reality (ar)
+#### Augmented Reality (ar/)
 * Augmented Reality Kamera mit passenden Intrinsics
 * Motion Tracking mit korrekter GL Positionierung
 * Darstellung der aktuellen PointCloud Scene
@@ -14,14 +14,16 @@
 
 ![AR Screenshot](img/ar.png)
 
-#### Pointcloud App (pc)
+#### Pointcloud App (pc/)
 * Exporter der aufgenommenen PointCloud
 * Sammeln von PointCloud ausschnitten in einem OctTree
+* Reconstruction der OctTree Points mit der Methode aus 'construct'
+* Reconstruction der OctTree Points durch Marching Cubes
 
 ![PointCloud Screenshot](img/pc.png)
 ![PointCloud Screenshot 2](img/pc2.png)
 
-#### Einfache Ebenen Erkennung (construct)
+#### Einfache Ebenen Erkennung (construct/)
 * RANSAC Ebenen Suche in Pointcloud
 * Feststellung der korellierenden Punkte
 * KMean Cluster Extraction
@@ -29,6 +31,18 @@
 * Mesh generierung der convexen Hülle
 
 ![AR Screenshot](img/construct.png)
+![AR Screenshot](img/marchingcube.png)
+
+#### Native Implementierung (construct-native/)
+* Ansprache der undokumentierten Experimental API aus der ProjectTango C API
+
+#### Unity Implementierung (unity/)
+* Kombination der Experimental Beispiel aus Meshing und AR
+* Implementierung von Clipping Depth Shader
+* Einfaches Interaktives Beispiel zum Steuern eines Balls
+
+![Unity Screenshot 1](img/unity1.png)
+![Unity Screenshot 1](img/unity2.png)
 
 ### Verwendete Librarys
 * [Rajawali](https://github.com/Rajawali/Rajawali)
