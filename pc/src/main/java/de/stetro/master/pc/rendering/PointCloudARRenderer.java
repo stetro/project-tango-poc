@@ -60,19 +60,35 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
         for (Cube cube : cubes) {
             cube.getFaces(faces);
         }
-        Points points = new Points(1000);
-        FloatBuffer f = FloatBuffer.allocate(1000 * 3);
-        for (Vector3 face : faces) {
-            f.put((float) face.x);
-            f.put((float) face.y);
-            f.put((float) face.z);
+        Points edges = new Points(10000);
+        Points vertices = new Points(10000);
+        FloatBuffer edgeBuffer = FloatBuffer.allocate(10000 * 3);
+        FloatBuffer vertexBuffer = FloatBuffer.allocate(10000 * 3);
+        int edgeCount = 0;
+        int vertexCount = 0;
+        for (Cube cube : cubes) {
+            for (Vector3 vertex : cube.getVertices()) {
+                vertexBuffer.put((float) vertex.x);
+                vertexBuffer.put((float) vertex.y);
+                vertexBuffer.put((float) vertex.z);
+                vertexCount++;
+            }
+            for (Vector3 edge : cube.getEdges()) {
+                edgeBuffer.put((float) edge.x);
+                edgeBuffer.put((float) edge.y);
+                edgeBuffer.put((float) edge.z);
+                edgeCount++;
+            }
         }
-        points.updatePoints(f, faces.size());
-        points.setMaterial(Materials.getBlueMaterial());
+        edges.updatePoints(edgeBuffer, edgeCount);
+        edges.setMaterial(Materials.getBlueMaterial());
+        vertices.updatePoints(vertexBuffer, vertexCount);
+        vertices.setMaterial(Materials.getGreenMaterial());
         Polygon p = new Polygon(faces);
         p.setTransparent(true);
         p.setMaterial(Materials.getRedMaterial());
-        getCurrentScene().addChild(points);
+        getCurrentScene().addChild(edges);
+        getCurrentScene().addChild(vertices);
         getCurrentScene().addChild(p);
     }
 
@@ -107,8 +123,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
                 getCurrentScene().removeChild(polygon);
             }
             polygon = new Polygon(faces);
-            polygon.setMaterial(Materials.getTransparentClippingMaterial());
-            polygon.setTransparent(true);
+            polygon.setMaterial(Materials.getRedMaterial());
             getCurrentScene().addChild(polygon);
         }
     }

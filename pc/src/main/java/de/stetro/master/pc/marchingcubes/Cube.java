@@ -9,6 +9,7 @@ public class Cube {
     private final static String tag = Cube.class.getSimpleName();
     private final Vector3[] edges;
     private final boolean[] vertexWeights;
+    private final Vector3[] vertices;
     int triTable[][] = new int[][]{
             {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
             {0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -274,7 +275,7 @@ public class Cube {
      */
     public Cube(Vector3 position, double range, boolean[] vertexWeights) {
         this.vertexWeights = vertexWeights;
-        Vector3[] vertices = new Vector3[]{
+        vertices = new Vector3[]{
                 new Vector3(position.x, position.y, position.z),
                 new Vector3(position.x + range, position.y, position.z),
                 new Vector3(position.x + range, position.y + range, position.z),
@@ -334,5 +335,13 @@ public class Cube {
                 index += 3;
             }
         }
+    }
+
+    public Vector3[] getEdges() {
+        return edges;
+    }
+
+    public Vector3[] getVertices() {
+        return vertices;
     }
 }

@@ -11,7 +11,12 @@ import com.github.quickhull3d.QuickHull3D;
 
 import org.rajawali3d.math.vector.Vector3;
 
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import de.stetro.master.pc.R;
@@ -20,6 +25,7 @@ import de.stetro.master.pc.calc.KMeans;
 import de.stetro.master.pc.calc.OctTree;
 import de.stetro.master.pc.calc.RANSAC;
 import de.stetro.master.pc.marchingcubes.Cube;
+import de.stetro.master.pc.marchingcubes.HVector3;
 import de.stetro.master.pc.rendering.PointCloudARRenderer;
 import de.stetro.master.pc.rendering.PointCollection;
 import de.stetro.master.pc.ui.MainActivity;
@@ -34,7 +40,7 @@ public class ReconstructionBuilder {
         this.collectedPoints = collectedPoints;
         this.renderer = renderer;
         dialog = new MaterialDialog.Builder(context)
-                .title(R.string.exporting_pointcloud)
+                .title(R.string.calculating_mesh)
                 .content(R.string.please_wait)
                 .progress(false, 100, true)
                 .widgetColor(context.getResources().getColor(R.color.colorPrimary))
