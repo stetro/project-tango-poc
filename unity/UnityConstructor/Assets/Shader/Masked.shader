@@ -7,7 +7,7 @@ SubShader {
  
 		// Don't draw in the RGBA channels; just the depth buffer
  
-		ColorMask 0
+		ColorMask RGBA
 		ZWrite On
  
 		// Do nothing specific in the pass:

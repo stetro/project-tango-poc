@@ -16,14 +16,19 @@ LOCAL_PATH := $(call my-dir)
 PROJECT_ROOT_FROM_JNI := ../../../../..
 PROJECT_ROOT := $(LOCAL_PATH)/$(PROJECT_ROOT_FROM_JNI)
 MY_SOURCE_DIR := /home/stetro/Source/tango-examples-c
-
+PCL_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/pcl-android
+BOOST_ANDROID_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/boost-android
+EIGEN_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/eigen
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := plane_fitting_jni_example
 LOCAL_SHARED_LIBRARIES := tango_client_api tango_support_api
 LOCAL_CFLAGS := -std=c++11
 LOCAL_C_INCLUDES := $(MY_SOURCE_DIR)/tango-gl/include \
-                    $(MY_SOURCE_DIR)/third-party/glm
+                    $(MY_SOURCE_DIR)/third-party/glm \
+                    $(PCL_INCLUDE)/include/pcl-1.6 \
+                    $(BOOST_ANDROID_INCLUDE)/include \
+                    $(EIGEN_INCLUDE)
 LOCAL_SRC_FILES := jni_interface.cc \
                    plane_fitting.cc \
                    plane_fitting_application.cc \
@@ -38,7 +43,7 @@ LOCAL_SRC_FILES := jni_interface.cc \
                    $(MY_SOURCE_DIR)/tango-gl/transform.cpp \
                    $(MY_SOURCE_DIR)/tango-gl/util.cpp \
                    $(MY_SOURCE_DIR)/tango-gl/video_overlay.cpp
-LOCAL_LDLIBS := -lGLESv2 -llog -L$(SYSROOT)/usr/lib
+LOCAL_LDLIBS := -lGLESv2 -llog -L$(SYSROOT)/usr/lib -L$(PCL_INCLUDE)/lib -L$(BOOST_ANDROID_INCLUDE)/lib
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-add-path,$(MY_SOURCE_DIR))

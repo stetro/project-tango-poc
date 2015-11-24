@@ -8,3 +8,4 @@
 *.iml
 ar/src/main/res-mdicons/
 pc/src/main/res-mdicons/
+native-libraries/

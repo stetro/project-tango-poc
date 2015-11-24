@@ -25,6 +25,8 @@
 #include <tango-gl/conversions.h>
 #include <tango-gl/util.h>
 #include <tango-gl/mesh.h>
+#include <pcl/pcl_base.h>
+#include <pcl/point_types.h>
 
 volatile bool newData = false;
 
@@ -389,98 +391,100 @@ namespace tango_plane_fitting {
         // been recently updated on the render thread and does not attempt to update
         // again here.
         const TangoXYZij *current_cloud = point_cloud_->GetCurrentPointData();
-        // This transform relates the point cloud at acquisition time (t0) to the
-        // start of service.
-        const glm::mat4 start_service_T_device_t0 = point_cloud_->GetCurrentTransform();
 
-        TangoCoordinateFramePair frame_pair;
-        frame_pair.base = TANGO_COORDINATE_FRAME_START_OF_SERVICE;
-        frame_pair.target = TANGO_COORDINATE_FRAME_DEVICE;
-        // t1 is the current time that the measurement was acquired.  This is slightly
-        // later than the point cloud acquisition time t0, and we will compute the
-        // relative transform between the depth acquisition and measurement in the camera
-        // frame.
-        TangoPoseData pose_start_service_T_device_t1;
 
-        // A time of 0.0 is used to obtain the latest available pose.
-        if (TangoService_getPoseAtTime(
-                0.0, frame_pair, &pose_start_service_T_device_t1) != TANGO_SUCCESS) {
-            LOGE("PlaneFittingApplication: Could not get current pose.");
-            return;
-        }
-
-        const glm::mat4 start_service_T_device_t1 = tango_gl::conversions::TransformFromArrays(
-                pose_start_service_T_device_t1.translation,
-                pose_start_service_T_device_t1.orientation);
-
-        // This transform maps from the depth camera at acquisition time to the color
-        // camera at current time.
-        const glm::mat4 color_camera_t1_T_depth_camera_t0 =
-                glm::inverse(device_T_color_) * glm::inverse(start_service_T_device_t1) *
-                start_service_T_device_t0 * device_T_depth_;
-
-        // This transform is converted to a translation/orientation pair for the support library.
-        const glm::quat camera_T_depth_rotation(glm::toQuat(color_camera_t1_T_depth_camera_t0));
-        const glm::vec3 translation(glm::column(color_camera_t1_T_depth_camera_t0, 3));
-
-        TangoPoseData pose_color_camera_t1_T_depth_camera_t0;
-        pose_color_camera_t1_T_depth_camera_t0.translation[0] = translation[0];
-        pose_color_camera_t1_T_depth_camera_t0.translation[1] = translation[1];
-        pose_color_camera_t1_T_depth_camera_t0.translation[2] = translation[2];
-
-        pose_color_camera_t1_T_depth_camera_t0.orientation[0] = camera_T_depth_rotation.x;
-        pose_color_camera_t1_T_depth_camera_t0.orientation[1] = camera_T_depth_rotation.y;
-        pose_color_camera_t1_T_depth_camera_t0.orientation[2] = camera_T_depth_rotation.z;
-        pose_color_camera_t1_T_depth_camera_t0.orientation[3] = camera_T_depth_rotation.w;
-
-        glm::vec2 uv(x / screen_width_, y / screen_height_);
-
-        glm::dvec3 double_depth_position;
-        glm::dvec4 double_depth_plane_equation;
-        if (TangoSupport_fitPlaneModelNearClick(
-                current_cloud, &color_camera_intrinsics_,
-                &pose_color_camera_t1_T_depth_camera_t0, glm::value_ptr(uv),
-                glm::value_ptr(double_depth_position),
-                glm::value_ptr(double_depth_plane_equation)) !=
-            TANGO_SUCCESS) {
-            return;  // Assume error has already been reported.
-        }
-
-        const glm::vec3 depth_position = static_cast<glm::vec3>(double_depth_position);
-        const glm::vec4 depth_plane_equation = static_cast<glm::vec4>(double_depth_plane_equation);
-        const glm::mat4 opengl_world_T_depth =
-                opengl_world_T_start_service_ * start_service_T_device_t0 * device_T_depth_;
-
-        // Transform to world coordinates
-        const glm::vec4 world_position = opengl_world_T_depth * glm::vec4(depth_position, 1.0f);
-
-        glm::vec4 world_plane_equation;
-        PlaneTransform(depth_plane_equation, opengl_world_T_depth, &world_plane_equation);
-
-        point_cloud_->SetPlaneEquation(world_plane_equation);
-
-        const glm::vec3 plane_normal(world_plane_equation);
-
-        // Use world up as the second vector, unless they are nearly parallel.
-        // In that case use world +Z.
-        glm::vec3 normal_Y = glm::vec3(0.0f, 1.0f, 0.0f);
-        const glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
-        const float kWorldUpThreshold = 0.5f;
-        if (glm::dot(plane_normal, world_up) > kWorldUpThreshold) {
-            normal_Y = glm::vec3(0.0f, 0.0f, 1.0f);
-        }
-
-        const glm::vec3 normal_Z = glm::normalize(glm::cross(plane_normal, normal_Y));
-        normal_Y = glm::normalize(glm::cross(normal_Z, plane_normal));
-
-        glm::mat3 rotation_matrix;
-        rotation_matrix[0] = plane_normal;
-        rotation_matrix[1] = normal_Y;
-        rotation_matrix[2] = normal_Z;
-        const glm::quat rotation = glm::toQuat(rotation_matrix);
-
-        cube_->SetRotation(rotation);
-        cube_->SetPosition(glm::vec3(world_position) + plane_normal * kCubeScale);
+//        // This transform relates the point cloud at acquisition time (t0) to the
+//        // start of service.
+//        const glm::mat4 start_service_T_device_t0 = point_cloud_->GetCurrentTransform();
+//
+//        TangoCoordinateFramePair frame_pair;
+//        frame_pair.base = TANGO_COORDINATE_FRAME_START_OF_SERVICE;
+//        frame_pair.target = TANGO_COORDINATE_FRAME_DEVICE;
+//        // t1 is the current time that the measurement was acquired.  This is slightly
+//        // later than the point cloud acquisition time t0, and we will compute the
+//        // relative transform between the depth acquisition and measurement in the camera
+//        // frame.
+//        TangoPoseData pose_start_service_T_device_t1;
+//
+//        // A time of 0.0 is used to obtain the latest available pose.
+//        if (TangoService_getPoseAtTime(
+//                0.0, frame_pair, &pose_start_service_T_device_t1) != TANGO_SUCCESS) {
+//            LOGE("PlaneFittingApplication: Could not get current pose.");
+//            return;
+//        }
+//
+//        const glm::mat4 start_service_T_device_t1 = tango_gl::conversions::TransformFromArrays(
+//                pose_start_service_T_device_t1.translation,
+//                pose_start_service_T_device_t1.orientation);
+//
+//        // This transform maps from the depth camera at acquisition time to the color
+//        // camera at current time.
+//        const glm::mat4 color_camera_t1_T_depth_camera_t0 =
+//                glm::inverse(device_T_color_) * glm::inverse(start_service_T_device_t1) *
+//                start_service_T_device_t0 * device_T_depth_;
+//
+//        // This transform is converted to a translation/orientation pair for the support library.
+//        const glm::quat camera_T_depth_rotation(glm::toQuat(color_camera_t1_T_depth_camera_t0));
+//        const glm::vec3 translation(glm::column(color_camera_t1_T_depth_camera_t0, 3));
+//
+//        TangoPoseData pose_color_camera_t1_T_depth_camera_t0;
+//        pose_color_camera_t1_T_depth_camera_t0.translation[0] = translation[0];
+//        pose_color_camera_t1_T_depth_camera_t0.translation[1] = translation[1];
+//        pose_color_camera_t1_T_depth_camera_t0.translation[2] = translation[2];
+//
+//        pose_color_camera_t1_T_depth_camera_t0.orientation[0] = camera_T_depth_rotation.x;
+//        pose_color_camera_t1_T_depth_camera_t0.orientation[1] = camera_T_depth_rotation.y;
+//        pose_color_camera_t1_T_depth_camera_t0.orientation[2] = camera_T_depth_rotation.z;
+//        pose_color_camera_t1_T_depth_camera_t0.orientation[3] = camera_T_depth_rotation.w;
+//
+//        glm::vec2 uv(x / screen_width_, y / screen_height_);
+//
+//        glm::dvec3 double_depth_position;
+//        glm::dvec4 double_depth_plane_equation;
+//        if (TangoSupport_fitPlaneModelNearClick(
+//                current_cloud, &color_camera_intrinsics_,
+//                &pose_color_camera_t1_T_depth_camera_t0, glm::value_ptr(uv),
+//                glm::value_ptr(double_depth_position),
+//                glm::value_ptr(double_depth_plane_equation)) !=
+//            TANGO_SUCCESS) {
+//            return;  // Assume error has already been reported.
+//        }
+//
+//        const glm::vec3 depth_position = static_cast<glm::vec3>(double_depth_position);
+//        const glm::vec4 depth_plane_equation = static_cast<glm::vec4>(double_depth_plane_equation);
+//        const glm::mat4 opengl_world_T_depth =
+//                opengl_world_T_start_service_ * start_service_T_device_t0 * device_T_depth_;
+//
+//        // Transform to world coordinates
+//        const glm::vec4 world_position = opengl_world_T_depth * glm::vec4(depth_position, 1.0f);
+//
+//        glm::vec4 world_plane_equation;
+//        PlaneTransform(depth_plane_equation, opengl_world_T_depth, &world_plane_equation);
+//
+//        point_cloud_->SetPlaneEquation(world_plane_equation);
+//
+//        const glm::vec3 plane_normal(world_plane_equation);
+//
+//        // Use world up as the second vector, unless they are nearly parallel.
+//        // In that case use world +Z.
+//        glm::vec3 normal_Y = glm::vec3(0.0f, 1.0f, 0.0f);
+//        const glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
+//        const float kWorldUpThreshold = 0.5f;
+//        if (glm::dot(plane_normal, world_up) > kWorldUpThreshold) {
+//            normal_Y = glm::vec3(0.0f, 0.0f, 1.0f);
+//        }
+//
+//        const glm::vec3 normal_Z = glm::normalize(glm::cross(plane_normal, normal_Y));
+//        normal_Y = glm::normalize(glm::cross(normal_Z, plane_normal));
+//
+//        glm::mat3 rotation_matrix;
+//        rotation_matrix[0] = plane_normal;
+//        rotation_matrix[1] = normal_Y;
+//        rotation_matrix[2] = normal_Z;
+//        const glm::quat rotation = glm::toQuat(rotation_matrix);
+//
+//        cube_->SetRotation(rotation);
+//        cube_->SetPosition(glm::vec3(world_position) + plane_normal * kCubeScale);
     }
 
 }  // namespace tango_plane_fitting
