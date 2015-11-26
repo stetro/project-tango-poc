@@ -25,8 +25,12 @@
 #include <tango-gl/conversions.h>
 #include <tango-gl/util.h>
 #include <tango-gl/mesh.h>
-#include <pcl/pcl_base.h>
+
 #include <pcl/point_types.h>
+#include <pcl/search/search.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
 
 volatile bool newData = false;
 
@@ -391,6 +395,61 @@ namespace tango_plane_fitting {
         // been recently updated on the render thread and does not attempt to update
         // again here.
         const TangoXYZij *current_cloud = point_cloud_->GetCurrentPointData();
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+        cloud->points.resize(current_cloud->xyz_count);
+        for (int i = 0; i < current_cloud->xyz_count; ++i) {
+            pcl::PointXYZ point;
+            point.x = current_cloud->xyz[i][0];
+            point.y = current_cloud->xyz[i][1];
+            point.z = current_cloud->xyz[i][2];
+            cloud->points[i] = point;
+        }
+
+        LOGE("PointCloud has %d points", cloud->points.size());
+
+        // Normal estimation*
+        pcl::NormalEstimation <pcl::PointXYZ, pcl::Normal> n;
+//        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud <pcl::Normal>);
+//        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree <pcl::PointXYZ>);
+//        tree->setInputCloud(cloud);
+//        n.setInputCloud(cloud);
+//        n.setSearchMethod(tree);
+//        n.setKSearch(20);
+//        n.compute(*normals);
+        //* normals should not contain the point normals + surface curvatures
+
+//        // Concatenate the XYZ and normal fields*
+//        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(
+//                new pcl::PointCloud <pcl::PointNormal>);
+//        pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
+//        //* cloud_with_normals = cloud + normals
+//
+//        // Create search tree*
+//        pcl::search::KdTree<pcl::PointNormal>::Ptr tree2(
+//                new pcl::search::KdTree <pcl::PointNormal>);
+//        tree2->setInputCloud(cloud_with_normals);
+
+//        // Initialize objects
+//        pcl::GreedyProjectionTriangulation <pcl::PointNormal> gp3;
+//        pcl::PolygonMesh triangles;
+//
+//        // Set the maximum distance between connected points (maximum edge length)
+//        gp3.setSearchRadius(0.025);
+//
+//        // Set typical values for the parameters
+//        gp3.setMu(2.5);
+//        gp3.setMaximumNearestNeighbors(100);
+//        gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
+//        gp3.setMinimumAngle(M_PI / 18); // 10 degrees
+//        gp3.setMaximumAngle(2 * M_PI / 3); // 120 degrees
+//        gp3.setNormalConsistency(false);
+//
+//        // Get result
+//        gp3.setInputCloud(cloud_with_normals);
+//        gp3.setSearchMethod(tree2);
+//        gp3.reconstruct(triangles);
+
+//        LOGE("Reconstructed %d polygons", triangles.polygons.size());
 
 
 //        // This transform relates the point cloud at acquisition time (t0) to the
