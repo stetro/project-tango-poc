@@ -4,10 +4,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 
 public class MainActivity extends Activity {
@@ -24,10 +30,28 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        loadAssetLibrary("libflann.so.1.8");
+        loadAssetLibrary("libflann_cpp.so.1.8");
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         initializeTango();
         setContentView(R.layout.activity_main);
         configureGlSurfaceView();
+    }
+
+    private void loadAssetLibrary(String libraryName) {
+        try {
+            InputStream in = getAssets().open(libraryName);
+            File file = new File(Environment.getExternalStorageDirectory(), libraryName);
+            FileOutputStream outputStream = new FileOutputStream(file);
+            int read = 0;
+            byte[] bytes = new byte[1024];
+            while ((read = in.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, read);
+            }
+            System.load(file.getPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

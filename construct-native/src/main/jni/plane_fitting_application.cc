@@ -27,41 +27,18 @@
 #include <tango-gl/mesh.h>
 
 #include <pcl/point_types.h>
-#include <pcl/search/search.h>
-#include <pcl/features/normal_3d.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/features/normal_3d.h>
+#include <pcl/surface/gp3.h>
+#include <pcl/surface/marching_cubes_rbf.h>
 
 volatile bool newData = false;
 
 std::vector <GLfloat> vertices_;
 std::vector <GLushort> indices_;
 
-void ExtractMesh(void *context, const int num_meshes, const TangoMesh_Experimental *mesh_segments);
-
-void ExtractMesh(void *context, const int num_meshes, const TangoMesh_Experimental *mesh_segments) {
-    LOGE("extracted %d vertices and %d faces", mesh_segments->num_vertices,
-         mesh_segments->num_faces);
-
-    int shift = 0;
-    vertices_.clear();
-    indices_.clear();
-
-    for (int i = 0; i < mesh_segments->num_vertices; i++) {
-        vertices_.push_back(mesh_segments->vertices[i][0]);
-        vertices_.push_back(mesh_segments->vertices[i][1]);
-        vertices_.push_back(mesh_segments->vertices[i][2]);
-    }
-    LOGE("converting to vectors - vertices DONE");
-
-    for (int i = 0; i < mesh_segments->num_faces; i++) {
-        indices_.push_back(mesh_segments->faces[i][0] + shift);
-        indices_.push_back(mesh_segments->faces[i][1] + shift);
-        indices_.push_back(mesh_segments->faces[i][2] + shift);
-    }
-    LOGE("converting to vectors - indices DONE");
-    newData = true;
-}
+double timestamp = 0.0;
 
 namespace tango_plane_fitting {
 
@@ -79,6 +56,7 @@ namespace tango_plane_fitting {
          */
         void OnXYZijAvailableRouter(void *context, const TangoXYZij *xyz_ij) {
             PlaneFittingApplication *app = static_cast<PlaneFittingApplication *>(context);
+            timestamp = xyz_ij->timestamp;
             app->OnXYZijAvailable(xyz_ij);
         }
 
@@ -246,16 +224,16 @@ namespace tango_plane_fitting {
         device_T_depth_ = glm::inverse(IMU_T_device) * IMU_T_depth;
         device_T_color_ = glm::inverse(IMU_T_device) * IMU_T_color;
 
-        if (TangoService_Experimental_startSceneReconstruction() == TANGO_SUCCESS) {
-            LOGE("Reconstruction started ...");
-            if (TangoService_Experimental_connectOnMeshVectorAvailable(ExtractMesh) ==
-                TANGO_SUCCESS) {
-                LOGE("Registered Callback ...");
-            }
-        } else {
-            LOGE("Could not start Reconstruction");
-            return ret;
-        }
+//        if (TangoService_Experimental_startSceneReconstruction() == TANGO_SUCCESS) {
+//            LOGE("Reconstruction started ...");
+//            if (TangoService_Experimental_connectOnMeshVectorAvailable(ExtractMesh) ==
+//                TANGO_SUCCESS) {
+//                LOGE("Registered Callback ...");
+//            }
+//        } else {
+//            LOGE("Could not start Reconstruction");
+//            return ret;
+//        }
 
         return ret;
     }
@@ -373,7 +351,7 @@ namespace tango_plane_fitting {
             mesh_->SetVertices(vertices_, indices_);
             newData = false;
         } else {
-            mesh_->Render(projection_matrix_ar_, opengl_camera_T_ss);
+            mesh_->Render(projection_matrix_ar_, opengl_camera_T_opengl_world);
         }
 
     }
@@ -391,17 +369,26 @@ namespace tango_plane_fitting {
 
 // We assume the Java layer ensures this function is called on the GL thread.
     void PlaneFittingApplication::OnTouchEvent(float x, float y) {
+
+        const glm::mat4 depth_camera_T_opengl_camera = tango_gl::conversions::depth_camera_T_opengl_camera();
+
         // Get the current point cloud data and transform.  This assumes the data has
         // been recently updated on the render thread and does not attempt to update
         // again here.
         const TangoXYZij *current_cloud = point_cloud_->GetCurrentPointData();
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud <pcl::PointXYZ>);
         cloud->points.resize(current_cloud->xyz_count);
         for (int i = 0; i < current_cloud->xyz_count; ++i) {
+            glm::vec4 originalPoint = glm::vec4(
+                    glm::vec3(current_cloud->xyz[i][0],
+                              current_cloud->xyz[i][1],
+                              current_cloud->xyz[i][2]), 1.0);
+            glm::vec4 transformedPoint = (originalPoint * depth_camera_T_opengl_camera);
+
             pcl::PointXYZ point;
-            point.x = current_cloud->xyz[i][0];
-            point.y = current_cloud->xyz[i][1];
-            point.z = current_cloud->xyz[i][2];
+            point.x = transformedPoint[0];
+            point.y = transformedPoint[1];
+            point.z = transformedPoint[2];
             cloud->points[i] = point;
         }
 
@@ -409,141 +396,71 @@ namespace tango_plane_fitting {
 
         // Normal estimation*
         pcl::NormalEstimation <pcl::PointXYZ, pcl::Normal> n;
-//        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud <pcl::Normal>);
-//        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree <pcl::PointXYZ>);
-//        tree->setInputCloud(cloud);
-//        n.setInputCloud(cloud);
-//        n.setSearchMethod(tree);
-//        n.setKSearch(20);
-//        n.compute(*normals);
+        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud <pcl::Normal>);
+        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree <pcl::PointXYZ>);
+        tree->setInputCloud(cloud);
+        n.setInputCloud(cloud);
+        n.setSearchMethod(tree);
+        n.setKSearch(20);
+        n.compute(*normals);
         //* normals should not contain the point normals + surface curvatures
 
-//        // Concatenate the XYZ and normal fields*
-//        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(
-//                new pcl::PointCloud <pcl::PointNormal>);
-//        pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
-//        //* cloud_with_normals = cloud + normals
-//
-//        // Create search tree*
-//        pcl::search::KdTree<pcl::PointNormal>::Ptr tree2(
-//                new pcl::search::KdTree <pcl::PointNormal>);
-//        tree2->setInputCloud(cloud_with_normals);
+        // Concatenate the XYZ and normal fields*
+        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(
+                new pcl::PointCloud <pcl::PointNormal>);
+        pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
+        //* cloud_with_normals = cloud + normals
 
-//        // Initialize objects
-//        pcl::GreedyProjectionTriangulation <pcl::PointNormal> gp3;
-//        pcl::PolygonMesh triangles;
-//
-//        // Set the maximum distance between connected points (maximum edge length)
-//        gp3.setSearchRadius(0.025);
-//
-//        // Set typical values for the parameters
-//        gp3.setMu(2.5);
-//        gp3.setMaximumNearestNeighbors(100);
-//        gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
-//        gp3.setMinimumAngle(M_PI / 18); // 10 degrees
-//        gp3.setMaximumAngle(2 * M_PI / 3); // 120 degrees
-//        gp3.setNormalConsistency(false);
-//
-//        // Get result
-//        gp3.setInputCloud(cloud_with_normals);
-//        gp3.setSearchMethod(tree2);
-//        gp3.reconstruct(triangles);
+        // Create search tree*
+        pcl::search::KdTree<pcl::PointNormal>::Ptr tree2(
+                new pcl::search::KdTree <pcl::PointNormal>);
+        tree2->setInputCloud(cloud_with_normals);
 
-//        LOGE("Reconstructed %d polygons", triangles.polygons.size());
+        pcl::PolygonMesh triangles;
+        // Initialize objects
+        pcl::GreedyProjectionTriangulation <pcl::PointNormal> gp3;
+
+        // Set the maximum distance between connected points (maximum edge length)
+        gp3.setSearchRadius(0.4);
+
+        // Set typical values for the parameters
+        gp3.setMu(2.5);
+        gp3.setMaximumNearestNeighbors (100);
+        gp3.setMaximumSurfaceAngle(M_PI);
+        gp3.setMinimumAngle(M_PI/4);
+        gp3.setMaximumAngle(M_PI/2.0);
+        gp3.setNormalConsistency(false);
+        gp3.setConsistentVertexOrdering(true);
+
+        // Get result
+        gp3.setInputCloud(cloud_with_normals);
+        gp3.setSearchMethod(tree2);
+        gp3.reconstruct(triangles);
 
 
-//        // This transform relates the point cloud at acquisition time (t0) to the
-//        // start of service.
-//        const glm::mat4 start_service_T_device_t0 = point_cloud_->GetCurrentTransform();
-//
-//        TangoCoordinateFramePair frame_pair;
-//        frame_pair.base = TANGO_COORDINATE_FRAME_START_OF_SERVICE;
-//        frame_pair.target = TANGO_COORDINATE_FRAME_DEVICE;
-//        // t1 is the current time that the measurement was acquired.  This is slightly
-//        // later than the point cloud acquisition time t0, and we will compute the
-//        // relative transform between the depth acquisition and measurement in the camera
-//        // frame.
-//        TangoPoseData pose_start_service_T_device_t1;
-//
-//        // A time of 0.0 is used to obtain the latest available pose.
-//        if (TangoService_getPoseAtTime(
-//                0.0, frame_pair, &pose_start_service_T_device_t1) != TANGO_SUCCESS) {
-//            LOGE("PlaneFittingApplication: Could not get current pose.");
-//            return;
-//        }
-//
-//        const glm::mat4 start_service_T_device_t1 = tango_gl::conversions::TransformFromArrays(
-//                pose_start_service_T_device_t1.translation,
-//                pose_start_service_T_device_t1.orientation);
-//
-//        // This transform maps from the depth camera at acquisition time to the color
-//        // camera at current time.
-//        const glm::mat4 color_camera_t1_T_depth_camera_t0 =
-//                glm::inverse(device_T_color_) * glm::inverse(start_service_T_device_t1) *
-//                start_service_T_device_t0 * device_T_depth_;
-//
-//        // This transform is converted to a translation/orientation pair for the support library.
-//        const glm::quat camera_T_depth_rotation(glm::toQuat(color_camera_t1_T_depth_camera_t0));
-//        const glm::vec3 translation(glm::column(color_camera_t1_T_depth_camera_t0, 3));
-//
-//        TangoPoseData pose_color_camera_t1_T_depth_camera_t0;
-//        pose_color_camera_t1_T_depth_camera_t0.translation[0] = translation[0];
-//        pose_color_camera_t1_T_depth_camera_t0.translation[1] = translation[1];
-//        pose_color_camera_t1_T_depth_camera_t0.translation[2] = translation[2];
-//
-//        pose_color_camera_t1_T_depth_camera_t0.orientation[0] = camera_T_depth_rotation.x;
-//        pose_color_camera_t1_T_depth_camera_t0.orientation[1] = camera_T_depth_rotation.y;
-//        pose_color_camera_t1_T_depth_camera_t0.orientation[2] = camera_T_depth_rotation.z;
-//        pose_color_camera_t1_T_depth_camera_t0.orientation[3] = camera_T_depth_rotation.w;
-//
-//        glm::vec2 uv(x / screen_width_, y / screen_height_);
-//
-//        glm::dvec3 double_depth_position;
-//        glm::dvec4 double_depth_plane_equation;
-//        if (TangoSupport_fitPlaneModelNearClick(
-//                current_cloud, &color_camera_intrinsics_,
-//                &pose_color_camera_t1_T_depth_camera_t0, glm::value_ptr(uv),
-//                glm::value_ptr(double_depth_position),
-//                glm::value_ptr(double_depth_plane_equation)) !=
-//            TANGO_SUCCESS) {
-//            return;  // Assume error has already been reported.
-//        }
-//
-//        const glm::vec3 depth_position = static_cast<glm::vec3>(double_depth_position);
-//        const glm::vec4 depth_plane_equation = static_cast<glm::vec4>(double_depth_plane_equation);
-//        const glm::mat4 opengl_world_T_depth =
-//                opengl_world_T_start_service_ * start_service_T_device_t0 * device_T_depth_;
-//
-//        // Transform to world coordinates
-//        const glm::vec4 world_position = opengl_world_T_depth * glm::vec4(depth_position, 1.0f);
-//
-//        glm::vec4 world_plane_equation;
-//        PlaneTransform(depth_plane_equation, opengl_world_T_depth, &world_plane_equation);
-//
-//        point_cloud_->SetPlaneEquation(world_plane_equation);
-//
-//        const glm::vec3 plane_normal(world_plane_equation);
-//
-//        // Use world up as the second vector, unless they are nearly parallel.
-//        // In that case use world +Z.
-//        glm::vec3 normal_Y = glm::vec3(0.0f, 1.0f, 0.0f);
-//        const glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
-//        const float kWorldUpThreshold = 0.5f;
-//        if (glm::dot(plane_normal, world_up) > kWorldUpThreshold) {
-//            normal_Y = glm::vec3(0.0f, 0.0f, 1.0f);
-//        }
-//
-//        const glm::vec3 normal_Z = glm::normalize(glm::cross(plane_normal, normal_Y));
-//        normal_Y = glm::normalize(glm::cross(normal_Z, plane_normal));
-//
-//        glm::mat3 rotation_matrix;
-//        rotation_matrix[0] = plane_normal;
-//        rotation_matrix[1] = normal_Y;
-//        rotation_matrix[2] = normal_Z;
-//        const glm::quat rotation = glm::toQuat(rotation_matrix);
-//
-//        cube_->SetRotation(rotation);
-//        cube_->SetPosition(glm::vec3(world_position) + plane_normal * kCubeScale);
+        LOGE("Reconstructed %d polygons", triangles.polygons.size());
+
+
+        vertices_.clear();
+        indices_.clear();
+
+        for (int i = 0; i < cloud->points.size(); i++) {
+            vertices_.push_back(cloud->points[i].x);
+            vertices_.push_back(cloud->points[i].y);
+            vertices_.push_back(cloud->points[i].z);
+        }
+        LOGE("converting to vectors - vertices DONE");
+
+        for (int i = 0; i < triangles.polygons.size(); i++) {
+            indices_.push_back(triangles.polygons[i].vertices[0]);
+            indices_.push_back(triangles.polygons[i].vertices[1]);
+            indices_.push_back(triangles.polygons[i].vertices[2]);
+            if(triangles.polygons[i].vertices.size()>3){
+                LOGE("Matrix is Broken!!");
+            }
+        }
+        LOGE("converting to vectors - indices DONE");
+        newData = true;
     }
 
 }  // namespace tango_plane_fitting

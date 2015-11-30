@@ -36,81 +36,84 @@ namespace tango_plane_fitting {
  * service. Primarily, this involves registering for callbacks and passing on
  * the necessary information to stored objects.
  */
-class PlaneFittingApplication {
- public:
-  PlaneFittingApplication();
-  ~PlaneFittingApplication();
+    class PlaneFittingApplication {
+    public:
+        PlaneFittingApplication();
 
-  // Initialize the Project Tango service.
-  int TangoInitialize(JNIEnv* env, jobject caller_activity);
-  // Setup configuration options for Project Tango service, register
-  // for callbacks, and connect to the Project Tango service.
-  int TangoSetupAndConnect();
+        ~PlaneFittingApplication();
 
-  // Disconnect from the Project Tango service.
-  void TangoDisconnect();
+        // Initialize the Project Tango service.
+        int TangoInitialize(JNIEnv *env, jobject caller_activity);
 
-  // Create OpenGL state and connect to the color camera texture.
-  int InitializeGLContent();
+        // Setup configuration options for Project Tango service, register
+        // for callbacks, and connect to the Project Tango service.
+        int TangoSetupAndConnect();
 
-  // Configure whether to display depth data for debugging.
-  void SetRenderDebugPointCloud(bool on);
+        // Disconnect from the Project Tango service.
+        void TangoDisconnect();
 
-  // Configure the viewport of the GL view.
-  void SetViewPort(int width, int height);
+        // Create OpenGL state and connect to the color camera texture.
+        int InitializeGLContent();
 
-  // Get current camera position and render.
-  void Render();
+        // Configure whether to display depth data for debugging.
+        void SetRenderDebugPointCloud(bool on);
 
-  // Free the GL context when the context is deleted.
-  void FreeGLContent();
+        // Configure the viewport of the GL view.
+        void SetViewPort(int width, int height);
 
-  //
-  // Callback for point clouds that come in from the Tango service.
-  //
-  // @param xyz_ij The point cloud returned by the service.
-  //
-  void OnXYZijAvailable(const TangoXYZij* xyz_ij);
+        // Get current camera position and render.
+        void Render();
 
-  //
-  // Callback for touch events to fit a plane and place an object.  The Java
-  // layer should ensure this is only called from the GL thread.
-  //
-  // @param x The requested x coordinate in screen space of the window.
-  // @param y The requested y coordinate in screen space of the window.
-  void OnTouchEvent(float x, float y);
+        // Free the GL context when the context is deleted.
+        void FreeGLContent();
 
- private:
-  // Details of rendering to OpenGL after determining transforms.
-  void GLRender(const glm::mat4& w_T_cc);
+        //
+        // Callback for point clouds that come in from the Tango service.
+        //
+        // @param xyz_ij The point cloud returned by the service.
+        //
+        void OnXYZijAvailable(const TangoXYZij *xyz_ij);
 
-  TangoConfig tango_config_;
-  TangoCameraIntrinsics color_camera_intrinsics_;
+        //
+        // Callback for touch events to fit a plane and place an object.  The Java
+        // layer should ensure this is only called from the GL thread.
+        //
+        // @param x The requested x coordinate in screen space of the window.
+        // @param y The requested y coordinate in screen space of the window.
+        void OnTouchEvent(float x, float y);
 
-  // Render objects
-  tango_gl::VideoOverlay* video_overlay_;
-  PointCloud* point_cloud_;
-  tango_gl::Cube* cube_;
-  tango_gl::Mesh* mesh_;
+    private:
+        // Details of rendering to OpenGL after determining transforms.
+        void GLRender(const glm::mat4 &w_T_cc);
 
-  // The dimensions of the render window.
-  float screen_width_;
-  float screen_height_;
+        TangoConfig tango_config_;
+        TangoCameraIntrinsics color_camera_intrinsics_;
 
-  bool point_cloud_debug_render_;
+        // Render objects
+        tango_gl::VideoOverlay *video_overlay_;
+        PointCloud *point_cloud_;
+        tango_gl::Cube *cube_;
+        tango_gl::Mesh *mesh_;
 
-  // Cached transforms
-  // Pose of color camera with respect to device.
-  glm::mat4 device_T_color_;
-  // Pose of depth camera with respect to device.
-  glm::mat4 device_T_depth_;
-  // Start of service with respect to OpenGL world.
-  glm::mat4 opengl_world_T_start_service_;
-  // OpenGL camera with respect to color camera.
-  glm::mat4 color_camera_T_opengl_camera_;
-  // OpenGL projection matrix.
-  glm::mat4 projection_matrix_ar_;
-};
+        // The dimensions of the render window.
+        float screen_width_;
+        float screen_height_;
+
+        bool point_cloud_debug_render_;
+
+        // Cached transforms
+        // Pose of color camera with respect to device.
+        glm::mat4 device_T_color_;
+        // Pose of depth camera with respect to device.
+        glm::mat4 device_T_depth_;
+        // Start of service with respect to OpenGL world.
+        glm::mat4 opengl_world_T_start_service_;
+        // OpenGL camera with respect to color camera.
+        glm::mat4 color_camera_T_opengl_camera_;
+        // OpenGL projection matrix.
+        glm::mat4 projection_matrix_ar_;
+
+    };
 
 }  // namespace tango_plane_fitting
 
