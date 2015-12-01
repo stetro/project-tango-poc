@@ -27,7 +27,5 @@ public class JNIInterface {
     }
 
     public static native float[] reconstruct(float[] vertices);
-
-    public static native void freeArray();
-
+    
 }

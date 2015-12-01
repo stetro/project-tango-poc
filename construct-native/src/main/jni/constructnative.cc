@@ -31,15 +31,17 @@ namespace constructnative {
             point.z = verticesData[i * 3 + 2];
             cloud->points[i] = point;
         }
+        LOGE("PointCloud has %d points", cloud->points.size());
 
         // filter with voxel grid
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered(new pcl::PointCloud <pcl::PointXYZ>);
         pcl::VoxelGrid <pcl::PointXYZ> sor;
         sor.setInputCloud(cloud);
-        sor.setLeafSize(0.03f, 0.03f, 0.03f);
+        float leafSize = 0.05f;
+        sor.setLeafSize(leafSize, leafSize, leafSize);
         sor.filter(*cloud_filtered);
 
-        LOGE("PointCloud has %d points", cloud->points.size());
+        LOGE("filtered PointCloud has %d points", cloud_filtered->points.size());
 
         // Normal estimation*
         pcl::NormalEstimation <pcl::PointXYZ, pcl::Normal> n;
@@ -87,7 +89,7 @@ namespace constructnative {
         int polygonCount = triangles.polygons.size();
         LOGE("Reconstructed %d polygons", polygonCount);
 
-        array = env->NewFloatArray(polygonCount * 9);
+        jfloatArray array = env->NewFloatArray(polygonCount * 9);
         for (int i = 0; i < polygonCount; i++) {
             float vertex[9] = {
                     cloud_filtered->points[triangles.polygons[i].vertices[0]].x,
@@ -102,15 +104,9 @@ namespace constructnative {
             };
             env->SetFloatArrayRegion(array, i * 9, 9, vertex);
         }
-
         return array;
     }
 
-    void Application::freeArray(JNIEnv * env) {
-        if (env->GetArrayLength(array) > 0) {
-            env->DeleteGlobalRef(array);
-        }
-    }
 
     Application::Application() {
     }

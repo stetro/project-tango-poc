@@ -56,20 +56,26 @@ public class ReconstructionBuilder {
         private Stack<Vector3> createJniReconstruction(PointCollection pointCollection) {
             Stack<Vector3> stack = new Stack<>();
             OctTree octTree = pointCollection.getOctTree();
-            int size = octTree.getSize();
-            float[] array = new float[size * 3];
-            List<Vector3> pointList = octTree.getPointList();
-            for (int i = 0; i < size; i++) {
-                array[i * 3] = (float) pointList.get(i).x;
-                array[i * 3 + 1] = (float) pointList.get(i).y;
-                array[i * 3 + 2] = (float) pointList.get(i).z;
+            List<OctTree> clusters = octTree.getCluster(9);
+            Log.d(tag, " Found " + clusters.size() + " cluster");
+            dialog.setMaxProgress(clusters.size());
+            for (OctTree tree : clusters) {
+                dialog.setProgress(clusters.indexOf(tree));
+                int size = tree.getSize();
+                float[] array = new float[size * 3];
+                List<Vector3> pointList = tree.getPointList();
+                for (int i = 0; i < size; i++) {
+                    array[i * 3] = (float) pointList.get(i).x;
+                    array[i * 3 + 1] = (float) pointList.get(i).y;
+                    array[i * 3 + 2] = (float) pointList.get(i).z;
+                }
+                float[] faces = JNIInterface.reconstruct(array);
+                Log.e("Java", "got " + faces.length / 9 + " faces");
+                for (int i = 0; i < (faces.length / 3); i++) {
+                    stack.add(new Vector3(faces[i * 3], faces[i * 3 + 1], faces[i * 3 + 2]));
+                }
             }
-            float[] faces = JNIInterface.reconstruct(array);
-            Log.e("Java", "got " + faces.length / 3 + " faces");
-//            JNIInterface.freeArray();
-            for (int i = 0; i < (faces.length / 3); i++) {
-                stack.add(new Vector3(faces[i * 3], faces[i * 3 + 1], faces[i * 3 + 2]));
-            }
+            Log.e("Java", "finished with " + stack.size() + " faces");
             return stack;
         }
 

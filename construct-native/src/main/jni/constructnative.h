@@ -25,10 +25,6 @@ namespace constructnative {
 
         jfloatArray reconstruct(JNIEnv *env, jfloatArray vertices);
 
-        void freeArray(JNIEnv *env);
-
-    private:
-        jfloatArray array;
     };
 }
 

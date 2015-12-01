@@ -30,12 +30,6 @@ Java_de_stetro_master_constructnative_JNIInterface_reconstruct(
   return app.reconstruct(env, vertices);
 }
 
-JNIEXPORT void JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_freeArray(
-        JNIEnv* env, jobject /*obj*/) {
-    app.freeArray(env);
-}
-
 #ifdef __cplusplus
 }
 #endif
