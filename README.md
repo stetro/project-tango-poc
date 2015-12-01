@@ -34,7 +34,7 @@
 ![AR Screenshot](img/marchingcube.png)
 
 #### Native Implementierung (construct-native/)
-* Krosskompilierte [PCL]{http://pointclouds.org/} Anbindung 
+* Crosscompiling von [PCL](http://pointclouds.org/) 
 * Voxel Grid downsampling
 * Greedy Triangulation mit PCL
 
@@ -56,4 +56,8 @@
 * [commons-math3](https://commons.apache.org/math/)
 * [jama](http://math.nist.gov/javanumerics/jama/)
 * [QuickHull](https://github.com/Quickhull3d/quickhull3d)
+* [PCL](http://pointclouds.org/)
+* [Unity Engine](https://unity3d.com/)
+* [tango-examples-unity](https://github.com/googlesamples/tango-examples-unity)
+
 
