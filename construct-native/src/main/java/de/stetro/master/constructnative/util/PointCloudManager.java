@@ -1,4 +1,4 @@
-package de.stetro.master.pc.util;
+package de.stetro.master.constructnative.util;
 
 
 import com.google.atap.tangoservice.TangoCameraIntrinsics;
@@ -10,7 +10,7 @@ import com.projecttango.rajawali.renderables.primitives.Points;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import de.stetro.master.pc.rendering.PointCollection;
+import de.stetro.master.constructnative.rendering.PointCollection;
 
 
 public class PointCloudManager {

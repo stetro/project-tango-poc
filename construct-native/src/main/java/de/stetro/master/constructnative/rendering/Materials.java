@@ -1,4 +1,4 @@
-package de.stetro.master.pc.rendering;
+package de.stetro.master.constructnative.rendering;
 
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;

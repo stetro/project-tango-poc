@@ -1,4 +1,4 @@
-package de.stetro.master.pc.ui;
+package de.stetro.master.constructnative.ui;
 
 
 import android.content.Intent;
@@ -28,8 +28,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 import de.stetro.master.constructnative.R;
-import de.stetro.master.pc.rendering.PointCloudARRenderer;
-import de.stetro.master.pc.util.PointCloudManager;
+import de.stetro.master.constructnative.rendering.PointCloudARRenderer;
+import de.stetro.master.constructnative.util.PointCloudManager;
 
 public class MainActivity extends BaseActivity implements View.OnTouchListener {
     private static final String tag = MainActivity.class.getSimpleName();

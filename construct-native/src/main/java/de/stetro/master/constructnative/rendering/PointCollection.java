@@ -1,4 +1,4 @@
-package de.stetro.master.pc.rendering;
+package de.stetro.master.constructnative.rendering;
 
 
 import android.graphics.Color;
@@ -14,7 +14,7 @@ import org.rajawali3d.math.vector.Vector3;
 
 import java.nio.FloatBuffer;
 
-import de.stetro.master.pc.calc.OctTree;
+import de.stetro.master.constructnative.calc.OctTree;
 
 public class PointCollection extends Object3D {
     private OctTree octTree;

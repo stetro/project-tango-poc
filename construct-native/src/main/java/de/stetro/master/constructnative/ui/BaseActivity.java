@@ -1,4 +1,4 @@
-package de.stetro.master.pc.ui;
+package de.stetro.master.constructnative.ui;
 
 
 import android.support.v7.app.AppCompatActivity;

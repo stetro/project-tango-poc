@@ -1,4 +1,4 @@
-package de.stetro.master.pc.util;
+package de.stetro.master.constructnative.util;
 
 
 import android.os.AsyncTask;
@@ -13,10 +13,10 @@ import java.util.Stack;
 
 import de.stetro.master.constructnative.JNIInterface;
 import de.stetro.master.constructnative.R;
-import de.stetro.master.pc.calc.OctTree;
-import de.stetro.master.pc.rendering.PointCloudARRenderer;
-import de.stetro.master.pc.rendering.PointCollection;
-import de.stetro.master.pc.ui.MainActivity;
+import de.stetro.master.constructnative.calc.OctTree;
+import de.stetro.master.constructnative.rendering.PointCloudARRenderer;
+import de.stetro.master.constructnative.rendering.PointCollection;
+import de.stetro.master.constructnative.ui.MainActivity;
 
 public class ReconstructionBuilder {
     private final static String tag = ReconstructionBuilder.class.getSimpleName();

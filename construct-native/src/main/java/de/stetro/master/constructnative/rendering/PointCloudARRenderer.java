@@ -1,4 +1,4 @@
-package de.stetro.master.pc.rendering;
+package de.stetro.master.constructnative.rendering;
 
 import android.content.Context;
 import android.view.MotionEvent;
@@ -11,10 +11,10 @@ import org.rajawali3d.math.vector.Vector3;
 
 import java.util.Stack;
 
-import de.stetro.master.pc.ui.MainActivity;
-import de.stetro.master.pc.util.PointCloudExporter;
-import de.stetro.master.pc.util.PointCloudManager;
-import de.stetro.master.pc.util.ReconstructionBuilder;
+import de.stetro.master.constructnative.ui.MainActivity;
+import de.stetro.master.constructnative.util.PointCloudExporter;
+import de.stetro.master.constructnative.util.PointCloudManager;
+import de.stetro.master.constructnative.util.ReconstructionBuilder;
 
 public class PointCloudARRenderer extends TangoRajawaliRenderer {
     private static final int MAX_POINTS = 100000;

@@ -68,7 +68,7 @@ namespace constructnative {
         pcl::GreedyProjectionTriangulation <pcl::PointNormal> gp3;
 
         // Set the maximum distance between connected points (maximum edge length)
-        gp3.setSearchRadius(0.4);
+        gp3.setSearchRadius(0.2);
 
         // Set typical values for the parameters
         gp3.setMu(3.0);

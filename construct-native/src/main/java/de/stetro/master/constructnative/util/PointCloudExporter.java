@@ -1,4 +1,4 @@
-package de.stetro.master.pc.util;
+package de.stetro.master.constructnative.util;
 
 
 import android.content.Context;
@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import de.stetro.master.constructnative.R;
-import de.stetro.master.pc.rendering.PointCollection;
+import de.stetro.master.constructnative.rendering.PointCollection;
 
 public class PointCloudExporter {
     private final Context context;
