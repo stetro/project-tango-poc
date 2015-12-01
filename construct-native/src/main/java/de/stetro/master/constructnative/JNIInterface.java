@@ -23,38 +23,11 @@ import android.app.Activity;
  */
 public class JNIInterface {
     static {
-        System.loadLibrary("plane_fitting_jni_example");
+        System.loadLibrary("constructnative");
     }
 
-    // Initialize the Tango Service, this function starts the communication
-    // between the application and the Tango Service. The activity object is
-    // used for checking if the API version is outdated.
-    public static native int tangoInitialize(Activity activity);
+    public static native float[] reconstruct(float[] vertices);
 
-    // Set up the configuration, callbacks, and connect to the Tango Service.
-    public static native int tangoSetupAndConnect();
-
-    // Disconnect from the Tango Service, release all the resources that
-    // the app is holding from the Tango Service.
-    public static native void tangoDisconnect();
-
-    // Allocate OpenGL resources for rendering and register the color
-    // camera texture.
-    public static native int initializeGLContent();
-
-    // Release all the OpenGL resources that are allocated.
-    public static native void freeGLContent();
-
-    // Display debug colors on point cloud.
-    public static native void setRenderDebugPointCloud(boolean debugRender);
-
-    // Setup the view port width and height.
-    public static native void setViewPort(int width, int height);
-
-    // Main render loop.
-    public static native void render();
-
-    // Respond to a touch event.
-    public static native void onTouchEvent(float x, float y);
+    public static native void freeArray();
 
 }

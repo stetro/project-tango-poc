@@ -34,7 +34,11 @@
 ![AR Screenshot](img/marchingcube.png)
 
 #### Native Implementierung (construct-native/)
-* Ansprache der undokumentierten Experimental API aus der ProjectTango C API
+* Krosskompilierte [PCL]{http://pointclouds.org/} Anbindung 
+* Voxel Grid downsampling
+* Greedy Triangulation mit PCL
+
+![Unity Screenshot 1](img/native.png)
 
 #### Unity Implementierung (unity/)
 * Kombination der Experimental Beispiel aus Meshing und AR

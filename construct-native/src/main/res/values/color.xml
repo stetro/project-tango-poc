@@ -23,4 +23,7 @@
     <color name="tango_yellow">#febd2c</color>
     <color name="text_drawer_header_label">#a8c7fa</color>
     <color name="text_primary">#232323</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
 </resources>

@@ -15,10 +15,21 @@
   limitations under the License.
 -->
 <resources>
-    <string name="app_name">PlaneConstruct</string>
+    <string name="app_name">ConstructNative</string>
     <string name="drawer_header">Main panel header</string>
     <string name="key_debug_point_cloud">key_debug_point_cloud</string>
     <string name="menu_name">PlaneConstruct</string>
     <string name="open_drawer_button">Open drawer button</string>
     <string name="settings">Settings</string>
+    <string name="toggle_pointcloud">Pointcloud Sichtbarkeit</string>
+    <string name="toggle_pointcloud_capturing">Pointcloud Aufnahme</string>
+    <string name="delete_objects">Objekte zurücksetzen</string>
+    <string name="take_snapshot">Snapshot machen</string>
+    <string name="show_infos">Infos anzeigen</string>
+    <string name="export_pointcloud">Pointcloud exportieren</string>
+    <string name="exporting_pointcloud">Pointcloud wird exportiert</string>
+    <string name="please_wait">Bitte warten …</string>
+    <string name="reconstruct">Rekonstruieren</string>
+    <string name="export_pointcloud_failure">Fehler beim Pointscloud Export!</string>
+    <string name="calculating_mesh">Rekonstruktion wird berechnet …</string>
 </resources>

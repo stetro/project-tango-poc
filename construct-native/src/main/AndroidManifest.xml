@@ -14,13 +14,12 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_blur_linear_red_48dp"
         android:label="@string/app_name"
-        android:supportsRtl="false"
         android:theme="@style/AppTheme">
         <uses-library
             android:name="com.projecttango.libtango_device"
             android:required="true" />
         <activity
-            android:name=".MainActivity"
+            android:name="de.stetro.master.pc.ui.MainActivity"
             android:label="@string/menu_name"
             android:screenOrientation="landscape">
             <intent-filter>

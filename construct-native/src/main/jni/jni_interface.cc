@@ -16,66 +16,24 @@
 
 #include <jni.h>
 
-#include "tango-plane-fitting/plane_fitting_application.h"
+#include "constructnative.h"
 
-static tango_plane_fitting::PlaneFittingApplication app;
+static constructnative::Application app;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-JNIEXPORT jint JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_tangoInitialize(
-    JNIEnv* env, jobject /*obj*/, jobject activity) {
-  return app.TangoInitialize(env, activity);
-}
-
-JNIEXPORT jint JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_tangoSetupAndConnect(
-    JNIEnv* /*env*/, jobject /*obj*/) {
-  return app.TangoSetupAndConnect();
+JNIEXPORT jfloatArray JNICALL
+Java_de_stetro_master_constructnative_JNIInterface_reconstruct(
+    JNIEnv* env, jobject /*obj*/, jfloatArray vertices) {
+  return app.reconstruct(env, vertices);
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_tangoDisconnect(
-    JNIEnv* /*env*/, jobject /*obj*/) {
-  app.TangoDisconnect();
-}
-
-JNIEXPORT jint JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_initializeGLContent(
-    JNIEnv* /*env*/, jobject /*obj*/) {
-  return app.InitializeGLContent();
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_setRenderDebugPointCloud(
-    JNIEnv* /*env*/, jobject /*obj*/, jboolean on) {
-  app.SetRenderDebugPointCloud(on);
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_setViewPort(
-    JNIEnv* /*env*/, jobject /*obj*/, jint width, jint height) {
-  app.SetViewPort(width, height);
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_render(
-    JNIEnv* /*env*/, jobject /*obj*/) {
-  app.Render();
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_freeGLContent(
-    JNIEnv* /*env*/, jobject /*obj*/) {
-  app.FreeGLContent();
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_onTouchEvent(
-    JNIEnv* /*env*/, jobject /*obj*/, jfloat x, jfloat y) {
-  app.OnTouchEvent(x, y);
+Java_de_stetro_master_constructnative_JNIInterface_freeArray(
+        JNIEnv* env, jobject /*obj*/) {
+    app.freeArray(env);
 }
 
 #ifdef __cplusplus
