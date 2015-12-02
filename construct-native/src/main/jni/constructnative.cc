@@ -93,7 +93,7 @@ namespace constructnative {
         return array;
     }
 
-    jfloatArray Application::reconstruct(JNIEnv *env, jfloatArray vertices) {
+    jfloatArray GreedyApplication::reconstruct(JNIEnv *env, jfloatArray vertices) {
 
         // transform jfloatArray vertices to pcl::PointCloud
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud <pcl::PointXYZ>);
@@ -120,9 +120,47 @@ namespace constructnative {
         return array;
     }
 
-    Application::Application() {
+    GreedyApplication::GreedyApplication() {
     }
 
-    Application::~Application() {
+    GreedyApplication::~GreedyApplication() {
+    }
+
+
+
+
+
+
+    jfloatArray PlaneApplication::reconstruct(JNIEnv *env, jfloatArray vertices) {
+
+        // transform jfloatArray vertices to pcl::PointCloud
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud <pcl::PointXYZ>);
+        verticesToPointCloud(vertices, cloud, env);
+        LOGE("PointCloud has %d points", cloud->points.size());
+
+        // filter with voxel grid
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud <pcl::PointXYZ>);
+        voxelGridDownSampling(cloud, filtered_cloud, 0.025f);
+        LOGE("filtered PointCloud has %d points", filtered_cloud->points.size());
+
+        // Normal estimation
+        pcl::PointCloud<pcl::PointNormal>::Ptr filtered_cloud_with_normals(
+                new pcl::PointCloud <pcl::PointNormal>);
+        estimateNormals(filtered_cloud, filtered_cloud_with_normals, 10);
+
+        // Triangulate with Greedy Triangulation
+        pcl::PolygonMesh triangles = greedyTriangulationReconstruction(filtered_cloud_with_normals);
+        LOGE("Reconstructed %d polygons", triangles.polygons.size());
+
+        // transform pcl::PolygonMesh to jfloatArray vertices
+        jfloatArray array = polygonMeshToVertices(triangles, filtered_cloud, env);
+
+        return array;
+    }
+
+    PlaneApplication::PlaneApplication() {
+    }
+
+    PlaneApplication::~PlaneApplication() {
     }
 }

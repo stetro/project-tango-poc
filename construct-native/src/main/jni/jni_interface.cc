@@ -18,16 +18,23 @@
 
 #include "constructnative.h"
 
-static constructnative::Application app;
+static constructnative::GreedyApplication greedyApp;
+static constructnative::PlaneApplication planeApp;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 JNIEXPORT jfloatArray JNICALL
-Java_de_stetro_master_constructnative_JNIInterface_reconstruct(
+Java_de_stetro_master_constructnative_JNIInterface_reconstructWithGreedy(
     JNIEnv* env, jobject /*obj*/, jfloatArray vertices) {
-  return app.reconstruct(env, vertices);
+  return greedyApp.reconstruct(env, vertices);
+}
+
+JNIEXPORT jfloatArray JNICALL
+Java_de_stetro_master_constructnative_JNIInterface_reconstructPiecewisePlanes(
+        JNIEnv* env, jobject /*obj*/, jfloatArray vertices) {
+    return planeApp.reconstruct(env, vertices);
 }
 
 #ifdef __cplusplus

@@ -18,11 +18,21 @@
 
 namespace constructnative {
 
-    class Application {
+    class GreedyApplication {
     public:
-        Application();
+        GreedyApplication();
 
-        ~Application();
+        ~GreedyApplication();
+
+        jfloatArray reconstruct(JNIEnv *env, jfloatArray vertices);
+
+    };
+
+    class PlaneApplication {
+    public:
+        PlaneApplication();
+
+        ~PlaneApplication();
 
         jfloatArray reconstruct(JNIEnv *env, jfloatArray vertices);
 

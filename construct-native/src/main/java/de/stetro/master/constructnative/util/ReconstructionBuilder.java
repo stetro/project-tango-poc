@@ -69,7 +69,7 @@ public class ReconstructionBuilder {
                     array[i * 3 + 1] = (float) pointList.get(i).y;
                     array[i * 3 + 2] = (float) pointList.get(i).z;
                 }
-                float[] faces = JNIInterface.reconstruct(array);
+                float[] faces = JNIInterface.reconstructPiecewisePlanes(array);
                 Log.e("Java", "got " + faces.length / 9 + " faces");
                 for (int i = 0; i < (faces.length / 3); i++) {
                     stack.add(new Vector3(faces[i * 3], faces[i * 3 + 1], faces[i * 3 + 2]));

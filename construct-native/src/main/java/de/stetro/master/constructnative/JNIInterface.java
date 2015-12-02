@@ -26,6 +26,8 @@ public class JNIInterface {
         System.loadLibrary("constructnative");
     }
 
-    public static native float[] reconstruct(float[] vertices);
-    
+    public static native float[] reconstructWithGreedy(float[] vertices);
+
+    public static native float[] reconstructPiecewisePlanes(float[] vertices);
+
 }
