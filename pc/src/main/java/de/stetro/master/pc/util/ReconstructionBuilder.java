@@ -63,8 +63,8 @@ public class ReconstructionBuilder {
             }
 
             PointCollection pointCollection = params[0];
-//            Stack<Vector3> stack = createPlanarReconstruction(pointCollection);
-            Stack<Vector3> stack = createMarchingCubeReconstruction(pointCollection);
+            Stack<Vector3> stack = createPlanarReconstruction(pointCollection);
+//            Stack<Vector3> stack = createMarchingCubeReconstruction(pointCollection);
             return stack;
         }
 
@@ -114,7 +114,7 @@ public class ReconstructionBuilder {
         }
 
         private void detectPlanesAndGeneratePolygons(Stack<Vector3> stack, List<Vector3> points) {
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 10; i++) {
                 // skip iterating when enough points are matched
                 if (points.size() < 10) {
                     break;

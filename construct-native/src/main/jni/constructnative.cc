@@ -9,20 +9,57 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/surface/gp3.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/surface/simplification_remove_unused_vertices.h>
 
 namespace constructnative {
 
-    jfloatArray Application::reconstruct(JNIEnv *env, jfloatArray vertices) {
+    void voxelGridDownSampling(const pcl::PointCloud<pcl::PointXYZ>::Ptr source,
+                               const pcl::PointCloud<pcl::PointXYZ>::Ptr target,
+                               float leafSize) {
+        pcl::VoxelGrid <pcl::PointXYZ> sor;
+        sor.setInputCloud(source);
+        sor.setLeafSize(leafSize, leafSize, leafSize);
+        sor.filter(*target);
+    }
 
+    void estimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr source,
+                         const pcl::PointCloud<pcl::PointNormal>::Ptr target,
+                         int kSearch) {
+        pcl::NormalEstimation <pcl::PointXYZ, pcl::Normal> n;
+        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud <pcl::Normal>);
+        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree <pcl::PointXYZ>);
+        tree->setInputCloud(source);
+        n.setInputCloud(source);
+        n.setSearchMethod(tree);
+        n.setKSearch(kSearch);
+        n.compute(*normals);
+        pcl::concatenateFields(*source, *normals, *target);
+    }
+
+    pcl::PolygonMesh greedyTriangulationReconstruction(
+            const pcl::PointCloud<pcl::PointNormal>::Ptr source) {
+        pcl::PolygonMesh triangles;
+        pcl::search::KdTree<pcl::PointNormal>::Ptr tree(new pcl::search::KdTree <pcl::PointNormal>);
+        tree->setInputCloud(source);
+        pcl::GreedyProjectionTriangulation <pcl::PointNormal> gp3;
+        gp3.setSearchRadius(0.2);
+        gp3.setMu(3.0);
+        gp3.setMaximumNearestNeighbors(100);
+        gp3.setMaximumSurfaceAngle(M_PI);
+        gp3.setMinimumAngle(M_PI / 10);
+        gp3.setMaximumAngle(2 * M_PI / 3.0);
+        gp3.setNormalConsistency(false);
+        gp3.setConsistentVertexOrdering(true);
+        gp3.setInputCloud(source);
+        gp3.setSearchMethod(tree);
+        gp3.reconstruct(triangles);
+        return triangles;
+    }
+
+    int verticesToPointCloud(jfloatArray vertices,
+                             const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, JNIEnv *env) {
         int vertexCount = env->GetArrayLength(vertices) / 3;
         jfloat *verticesData = env->GetFloatArrayElements(vertices, NULL);
-        LOGE("got vertices : %d", vertexCount);
-
-        // Get the current point cloud data and transform.  This assumes the data has
-        // been recently updated on the render thread and does not attempt to update
-        // again here.
-
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud <pcl::PointXYZ>);
         cloud->points.resize(vertexCount);
         for (int i = 0; i < vertexCount; ++i) {
             pcl::PointXYZ point;
@@ -31,82 +68,57 @@ namespace constructnative {
             point.z = verticesData[i * 3 + 2];
             cloud->points[i] = point;
         }
-        LOGE("PointCloud has %d points", cloud->points.size());
+        return vertexCount;
+    }
 
-        // filter with voxel grid
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered(new pcl::PointCloud <pcl::PointXYZ>);
-        pcl::VoxelGrid <pcl::PointXYZ> sor;
-        sor.setInputCloud(cloud);
-        float leafSize = 0.05f;
-        sor.setLeafSize(leafSize, leafSize, leafSize);
-        sor.filter(*cloud_filtered);
-
-        LOGE("filtered PointCloud has %d points", cloud_filtered->points.size());
-
-        // Normal estimation*
-        pcl::NormalEstimation <pcl::PointXYZ, pcl::Normal> n;
-        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud <pcl::Normal>);
-        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree <pcl::PointXYZ>);
-        tree->setInputCloud(cloud_filtered);
-        n.setInputCloud(cloud_filtered);
-        n.setSearchMethod(tree);
-        n.setKSearch(10);
-        n.compute(*normals);
-        //* normals should not contain the point normals + surface curvatures
-
-        // Concatenate the XYZ and normal fields*
-        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(
-                new pcl::PointCloud <pcl::PointNormal>);
-        pcl::concatenateFields(*cloud_filtered, *normals, *cloud_with_normals);
-        //* cloud_with_normals = cloud + normals
-
-        // Create search tree*
-        pcl::search::KdTree<pcl::PointNormal>::Ptr tree2(
-                new pcl::search::KdTree <pcl::PointNormal>);
-        tree2->setInputCloud(cloud_with_normals);
-
-        pcl::PolygonMesh triangles;
-        // Initialize objects
-        pcl::GreedyProjectionTriangulation <pcl::PointNormal> gp3;
-
-        // Set the maximum distance between connected points (maximum edge length)
-        gp3.setSearchRadius(0.2);
-
-        // Set typical values for the parameters
-        gp3.setMu(3.0);
-        gp3.setMaximumNearestNeighbors(100);
-        gp3.setMaximumSurfaceAngle(M_PI);
-        gp3.setMinimumAngle(M_PI / 10);
-        gp3.setMaximumAngle(2 * M_PI / 3.0);
-        gp3.setNormalConsistency(false  );
-        gp3.setConsistentVertexOrdering(true);
-
-        // Get result
-        gp3.setInputCloud(cloud_with_normals);
-        gp3.setSearchMethod(tree2);
-        gp3.reconstruct(triangles);
-
+    jfloatArray polygonMeshToVertices(pcl::PolygonMesh triangles,
+                                      const pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud,
+                                      JNIEnv *env) {
         int polygonCount = triangles.polygons.size();
-        LOGE("Reconstructed %d polygons", polygonCount);
-
         jfloatArray array = env->NewFloatArray(polygonCount * 9);
         for (int i = 0; i < polygonCount; i++) {
             float vertex[9] = {
-                    cloud_filtered->points[triangles.polygons[i].vertices[0]].x,
-                    cloud_filtered->points[triangles.polygons[i].vertices[0]].y,
-                    cloud_filtered->points[triangles.polygons[i].vertices[0]].z,
-                    cloud_filtered->points[triangles.polygons[i].vertices[1]].x,
-                    cloud_filtered->points[triangles.polygons[i].vertices[1]].y,
-                    cloud_filtered->points[triangles.polygons[i].vertices[1]].z,
-                    cloud_filtered->points[triangles.polygons[i].vertices[2]].x,
-                    cloud_filtered->points[triangles.polygons[i].vertices[2]].y,
-                    cloud_filtered->points[triangles.polygons[i].vertices[2]].z
+                    filtered_cloud->points[triangles.polygons[i].vertices[0]].x,
+                    filtered_cloud->points[triangles.polygons[i].vertices[0]].y,
+                    filtered_cloud->points[triangles.polygons[i].vertices[0]].z,
+                    filtered_cloud->points[triangles.polygons[i].vertices[1]].x,
+                    filtered_cloud->points[triangles.polygons[i].vertices[1]].y,
+                    filtered_cloud->points[triangles.polygons[i].vertices[1]].z,
+                    filtered_cloud->points[triangles.polygons[i].vertices[2]].x,
+                    filtered_cloud->points[triangles.polygons[i].vertices[2]].y,
+                    filtered_cloud->points[triangles.polygons[i].vertices[2]].z
             };
             env->SetFloatArrayRegion(array, i * 9, 9, vertex);
         }
         return array;
     }
 
+    jfloatArray Application::reconstruct(JNIEnv *env, jfloatArray vertices) {
+
+        // transform jfloatArray vertices to pcl::PointCloud
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud <pcl::PointXYZ>);
+        verticesToPointCloud(vertices, cloud, env);
+        LOGE("PointCloud has %d points", cloud->points.size());
+
+        // filter with voxel grid
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud <pcl::PointXYZ>);
+        voxelGridDownSampling(cloud, filtered_cloud, 0.025f);
+        LOGE("filtered PointCloud has %d points", filtered_cloud->points.size());
+
+        // Normal estimation
+        pcl::PointCloud<pcl::PointNormal>::Ptr filtered_cloud_with_normals(
+                new pcl::PointCloud <pcl::PointNormal>);
+        estimateNormals(filtered_cloud, filtered_cloud_with_normals, 10);
+
+        // Triangulate with Greedy Triangulation
+        pcl::PolygonMesh triangles = greedyTriangulationReconstruction(filtered_cloud_with_normals);
+        LOGE("Reconstructed %d polygons", triangles.polygons.size());
+
+        // transform pcl::PolygonMesh to jfloatArray vertices
+        jfloatArray array = polygonMeshToVertices(triangles, filtered_cloud, env);
+
+        return array;
+    }
 
     Application::Application() {
     }

@@ -75,7 +75,7 @@ public class ReconstructionBuilder {
                     stack.add(new Vector3(faces[i * 3], faces[i * 3 + 1], faces[i * 3 + 2]));
                 }
             }
-            Log.e("Java", "finished with " + stack.size() + " faces");
+            Log.e("Java", "finished with " + (stack.size() / 3) + " faces");
             return stack;
         }
 

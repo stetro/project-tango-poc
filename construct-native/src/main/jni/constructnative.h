@@ -7,6 +7,7 @@
 
 #include <jni.h>
 #include <cstdlib>
+#include <pcl/point_types.h>
 #include <android/log.h>
 
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Native",__VA_ARGS__)

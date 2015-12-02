@@ -28,7 +28,7 @@ public class PointCollection extends Object3D {
         Material m = new Material();
         m.setColor(Color.GREEN);
         setMaterial(m);
-        octTree = new OctTree(new Vector3(-20, -20, -20), 40.0, 8);
+        octTree = new OctTree(new Vector3(-20, -20, -20), 40.0, 11);
     }
 
     protected void init(boolean createVBOs) {
