@@ -6,10 +6,15 @@
 #include <pcl/point_types.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/search/search.h>
+#include <pcl/search/kdtree.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/surface/gp3.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/surface/simplification_remove_unused_vertices.h>
+#include <pcl/filters/filter.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/segmentation/region_growing.h>
+
 
 namespace constructnative {
 
@@ -34,6 +39,18 @@ namespace constructnative {
         n.setKSearch(kSearch);
         n.compute(*normals);
         pcl::concatenateFields(*source, *normals, *target);
+    }
+
+    void estimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr source,
+                         const pcl::PointCloud<pcl::Normal>::Ptr normals,
+                         int kSearch) {
+        pcl::NormalEstimation <pcl::PointXYZ, pcl::Normal> n;
+        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree <pcl::PointXYZ>);
+        tree->setInputCloud(source);
+        n.setInputCloud(source);
+        n.setSearchMethod(tree);
+        n.setKSearch(kSearch);
+        n.compute(*normals);
     }
 
     pcl::PolygonMesh greedyTriangulationReconstruction(
@@ -102,7 +119,7 @@ namespace constructnative {
 
         // filter with voxel grid
         pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud <pcl::PointXYZ>);
-        voxelGridDownSampling(cloud, filtered_cloud, 0.025f);
+        voxelGridDownSampling(cloud, filtered_cloud, 0.03f);
         LOGE("filtered PointCloud has %d points", filtered_cloud->points.size());
 
         // Normal estimation
@@ -127,10 +144,6 @@ namespace constructnative {
     }
 
 
-
-
-
-
     jfloatArray PlaneApplication::reconstruct(JNIEnv *env, jfloatArray vertices) {
 
         // transform jfloatArray vertices to pcl::PointCloud
@@ -140,13 +153,25 @@ namespace constructnative {
 
         // filter with voxel grid
         pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud <pcl::PointXYZ>);
-        voxelGridDownSampling(cloud, filtered_cloud, 0.025f);
+        voxelGridDownSampling(cloud, filtered_cloud, 0.03f);
         LOGE("filtered PointCloud has %d points", filtered_cloud->points.size());
 
         // Normal estimation
-        pcl::PointCloud<pcl::PointNormal>::Ptr filtered_cloud_with_normals(
-                new pcl::PointCloud <pcl::PointNormal>);
-        estimateNormals(filtered_cloud, filtered_cloud_with_normals, 10);
+        pcl::PointCloud<pcl::Normal>::Ptr filtered_cloud_normals(
+                new pcl::PointCloud <pcl::Normal>);
+        estimateNormals(filtered_cloud, filtered_cloud_normals, 10);
+
+
+        pcl::RegionGrowing<pcl::PointXYZ> reg;
+        reg.setMinClusterSize(50);
+        reg.setMaxClusterSize(1000000);
+        reg.setSearchMethod (tree);
+        reg.setNumberOfNeighbours (30);
+        reg.setInputCloud (filtered_cloud);
+        //reg.setIndices (indices);
+        reg.setInputNormals (filtered_cloud_normals);
+        reg.setSmoothnessThreshold (3.0 / 180.0 * M_PI);
+        reg.setCurvatureThreshold (1.0);
 
         // Triangulate with Greedy Triangulation
         pcl::PolygonMesh triangles = greedyTriangulationReconstruction(filtered_cloud_with_normals);
