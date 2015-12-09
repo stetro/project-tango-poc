@@ -4,6 +4,7 @@ package de.stetro.master.pc.rendering;
 import android.graphics.Color;
 import android.opengl.GLES10;
 import android.opengl.GLES20;
+import android.util.Log;
 
 import com.projecttango.rajawali.Pose;
 
@@ -13,11 +14,12 @@ import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.vector.Vector3;
 
 import java.nio.FloatBuffer;
-
-import de.stetro.master.pc.calc.OctTree;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PointCollection extends Object3D {
-    private OctTree octTree;
+    private static final String tag = PointCollection.class.getSimpleName();
+    private MeshTree meshTree;
     private int mMaxNumberOfVertices;
     private int count = 0;
 
@@ -28,7 +30,7 @@ public class PointCollection extends Object3D {
         Material m = new Material();
         m.setColor(Color.GREEN);
         setMaterial(m);
-        octTree = new OctTree(new Vector3(-20, -20, -20), 40.0, 11);
+        meshTree = new MeshTree(new Vector3(-20, -20, -20), 40.0, 11, 5);
     }
 
     protected void init(boolean createVBOs) {
@@ -46,26 +48,23 @@ public class PointCollection extends Object3D {
     }
 
     public void updatePoints(FloatBuffer pointCloudBuffer, int pointCount, Pose pose) {
-        if (count + pointCount < mMaxNumberOfVertices) {
-            pointCloudBuffer.position(0);
-            FloatBuffer transformedPoints = FloatBuffer.allocate(pointCount * 3);
-            for (int i = 0; i < pointCount; i++) {
-                double x = pointCloudBuffer.get();
-                double y = pointCloudBuffer.get();
-                double z = pointCloudBuffer.get();
-                Vector3 v = new Vector3(x, y, z);
-                Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
-                v.multiply(transformation);
-                transformedPoints.put((float) v.x);
-                transformedPoints.put((float) v.y);
-                transformedPoints.put((float) v.z);
-                octTree.put(v);
-            }
-
-            mGeometry.setNumIndices(pointCount + count);
-            mGeometry.getVertices().position(0);
-            mGeometry.changeBufferData(mGeometry.getVertexBufferInfo(), transformedPoints, count * 3, pointCount * 3);
-            count += pointCount;
+        pointCloudBuffer.position(0);
+        long startTime = System.currentTimeMillis();
+        List<Vector3> points = new ArrayList<>();
+        Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
+        for (int i = 0; i < pointCount; i++) {
+            double x = pointCloudBuffer.get();
+            double y = pointCloudBuffer.get();
+             double z = pointCloudBuffer.get();
+            points.add(new Vector3(x, y, z).multiply(transformation));
+        }
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        Log.d(tag, "first converting took " + estimatedTime);
+        for (int i = 0; i < 3; i++) {
+            Vector3 random = points.get((int) (Math.random() * points.size()));
+            meshTree.putPoints(random, points);
+            estimatedTime = System.currentTimeMillis() - startTime;
+            Log.d(tag, "added points to random point number " + i + " took until now " + estimatedTime);
         }
     }
 
@@ -80,18 +79,18 @@ public class PointCollection extends Object3D {
     }
 
     public FloatBuffer getBuffer() {
-        int size = octTree.getSize();
+        int size = meshTree.getSize();
         FloatBuffer buffer = FloatBuffer.allocate(size * 3);
-        octTree.fill(buffer);
+        meshTree.fill(buffer);
         return buffer;
     }
 
-    public OctTree getOctTree() {
-        return octTree;
+    public MeshTree getMeshTree() {
+        return meshTree;
     }
 
     public void clear() {
-        octTree = new OctTree(new Vector3(-20, -20, -20), 40.0, 12);
+        meshTree = new MeshTree(new Vector3(-20, -20, -20), 40.0, 12, 5);
         mGeometry.setNumVertices(0);
         mGeometry.getVertices().clear();
         count = 0;

@@ -9,12 +9,8 @@ import com.projecttango.rajawali.renderables.primitives.Points;
 
 import org.rajawali3d.math.vector.Vector3;
 
-import java.nio.FloatBuffer;
-import java.util.List;
 import java.util.Stack;
 
-import de.stetro.master.pc.calc.OctTree;
-import de.stetro.master.pc.marchingcubes.Cube;
 import de.stetro.master.pc.ui.MainActivity;
 import de.stetro.master.pc.util.PointCloudExporter;
 import de.stetro.master.pc.util.PointCloudManager;
@@ -31,6 +27,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
     private Stack<Vector3> faces;
     private boolean updateFaces;
     private Polygon polygon;
+    private MeshTree meshTree;
 
 
     public PointCloudARRenderer(Context context) {
@@ -53,43 +50,6 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
         pointCollection.setMaterial(Materials.getBluePointCloudMaterial());
         getCurrentScene().addChild(pointCollection);
 
-        OctTree ot = new OctTree(new Vector3(-2.0, -2.0, -2.0), 4.0, 8);
-        ot.put(new Vector3(0.0, 0.0, 0.0));
-        List<Cube> cubes = ot.getCubes(0);
-        Stack<Vector3> faces = new Stack<>();
-        for (Cube cube : cubes) {
-            cube.getFaces(faces);
-        }
-        Points edges = new Points(10000);
-        Points vertices = new Points(10000);
-        FloatBuffer edgeBuffer = FloatBuffer.allocate(10000 * 3);
-        FloatBuffer vertexBuffer = FloatBuffer.allocate(10000 * 3);
-        int edgeCount = 0;
-        int vertexCount = 0;
-        for (Cube cube : cubes) {
-            for (Vector3 vertex : cube.getVertices()) {
-                vertexBuffer.put((float) vertex.x);
-                vertexBuffer.put((float) vertex.y);
-                vertexBuffer.put((float) vertex.z);
-                vertexCount++;
-            }
-            for (Vector3 edge : cube.getEdges()) {
-                edgeBuffer.put((float) edge.x);
-                edgeBuffer.put((float) edge.y);
-                edgeBuffer.put((float) edge.z);
-                edgeCount++;
-            }
-        }
-        edges.updatePoints(edgeBuffer, edgeCount);
-        edges.setMaterial(Materials.getBlueMaterial());
-        vertices.updatePoints(vertexBuffer, vertexCount);
-        vertices.setMaterial(Materials.getGreenMaterial());
-        Polygon p = new Polygon(faces);
-        p.setTransparent(true);
-        p.setMaterial(Materials.getRedMaterial());
-        getCurrentScene().addChild(edges);
-        getCurrentScene().addChild(vertices);
-        getCurrentScene().addChild(p);
     }
 
     public void capturePoints() {
@@ -111,19 +71,21 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
         super.onRender(ellapsedRealtime, deltaTime);
         if (pointCloudManager != null && pointCloudManager.hasNewPoints()) {
             Pose pose = mScenePoseCalcuator.toOpenGLPointCloudPose(pointCloudManager.getDevicePoseAtCloudTime());
-            if (collectPoints) {
-                collectPoints = false;
+            if (true) {
+                collectPoints = true;
                 pointCloudManager.fillCollectedPoints(pointCollection, pose);
             }
-            pointCloudManager.fillCurrentPoints(currentPoints, pose);
         }
-        if (updateFaces) {
-            updateFaces = false;
+        if (true) {
+//            updateFaces = false;
             if (polygon != null) {
                 getCurrentScene().removeChild(polygon);
             }
+            Stack<Vector3> faces = new Stack<>();
+            pointCollection.getMeshTree().fillPolygons(faces);
             polygon = new Polygon(faces);
-            polygon.setMaterial(Materials.getRedMaterial());
+            polygon.setTransparent(true);
+            polygon.setMaterial(Materials.getTransparentRed());
             getCurrentScene().addChild(polygon);
         }
     }

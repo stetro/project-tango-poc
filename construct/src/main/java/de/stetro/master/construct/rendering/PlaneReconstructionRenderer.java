@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import de.stetro.master.construct.calculation.Plane;
 import de.stetro.master.construct.calculation.RANSAC;
 import de.stetro.master.construct.calculation.clustering.kmean.KMeans;
 import de.stetro.master.construct.calculation.clustering.kmean.KMeansCluster;
@@ -129,9 +130,9 @@ public class PlaneReconstructionRenderer extends TangoRajawaliRenderer {
             int sufficientSupport = (int) (points.size() * 0.30);
 
             // detect plane in hesse normal form
-            RANSAC.HessePlane hessePlane = RANSAC.detectPlane(points, 0.05f, 10, sufficientSupport);
+            Plane plane = RANSAC.detectPlane(points, 0.05f, 10, sufficientSupport);
             points = RANSAC.notSupportingPoints;
-            Log.d(tag, "Found potential Plane :" + hessePlane.toString());
+            Log.d(tag, "Found potential Plane :" + plane.toString());
 
             // skip plane if not sufficient support by points
             if (RANSAC.supportingPoints.size() < sufficientSupport || RANSAC.supportingPoints.size() < 4) {

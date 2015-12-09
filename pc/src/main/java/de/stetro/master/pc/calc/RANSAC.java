@@ -24,7 +24,7 @@ public class RANSAC {
      * @param sufficientSupport stop criteria for sufficient plane support
      * @return a plane defined in hesse normal form
      */
-    public static HessePlane detectPlane(List<Vector3> points, float distanceThresh, int numIterations, int sufficientSupport) {
+    public static Plane detectPlane(List<Vector3> points, float distanceThresh, int numIterations, int sufficientSupport) {
         int pointCount = points.size();
         boolean[] picked = new boolean[pointCount];
         List<Vector3> supportPointsMax = new LinkedList<>();
@@ -52,7 +52,7 @@ public class RANSAC {
             Vector3 p0 = points.get(randomPointIndices[0]);
             Vector3 p1 = points.get(randomPointIndices[1]);
             Vector3 p2 = points.get(randomPointIndices[2]);
-            HessePlane plane = HessePlane.createHessePlane(p0, p1, p2); // returns {n0,n1,n2,d}
+            Plane plane = Plane.createHessePlane(p0, p1, p2); // returns {n0,n1,n2,d}
 
             // (3) compute support
             computeSupport(plane, points, distanceThresh);
@@ -74,7 +74,7 @@ public class RANSAC {
         // use max. set of supporting points to re-compute the plane and support
         // pointlist and flag array (fields) are re-computed.
         // this method returns the plane in hesse form
-        HessePlane plane = planeRegression(supportPointsMax);
+        Plane plane = planeRegression(supportPointsMax);
         computeSupport(plane, points, distanceThresh);
         return (plane);
     }
@@ -82,7 +82,7 @@ public class RANSAC {
     // -------------------------------------------------------------------------
     // returns optimal (=> mean square error)  plane in Hesse Normal Form
     // hnf = {nx,ny,nz,d}
-    private static HessePlane planeRegression(List<Vector3> pts) {
+    private static Plane planeRegression(List<Vector3> pts) {
         int numPoints = pts.size();
         // compute mean
         Vector3 mean = new Vector3();
@@ -146,7 +146,7 @@ public class RANSAC {
 
         // distance: n*mean
         double d = nx * mean.x + ny * mean.y + nz * mean.z;
-        return new HessePlane(normal, d);
+        return new Plane(normal, d);
     }
 
 
@@ -157,7 +157,7 @@ public class RANSAC {
      * @param points          list of all points
      * @param minimumDistance minimum distance between point and plane to determine support of a point
      */
-    private static void computeSupport(HessePlane plane, List<Vector3> points, double minimumDistance) {
+    private static void computeSupport(Plane plane, List<Vector3> points, double minimumDistance) {
         supportingPoints = new LinkedList<>();
         notSupportingPoints = new LinkedList<>();
         for (Vector3 point : points) {
@@ -170,46 +170,4 @@ public class RANSAC {
         }
     }
 
-    public static class HessePlane {
-        public final Vector3 normal;
-        public final double distance;
-
-        public HessePlane(Vector3 normal, double distance) {
-            this.normal = normal;
-            this.distance = distance;
-        }
-
-        /**
-         * create Hesse Normal Plane from 3 points
-         *
-         * @param p0 point 1
-         * @param p1 point 2
-         * @param p2 point 3
-         * @return returns plane in following form {nx,ny,nz,d}
-         */
-        private static HessePlane createHessePlane(Vector3 p0, Vector3 p1, Vector3 p2) {
-            // Vector3s
-            Vector3 a = p1.clone().subtract(p0);
-            Vector3 b = p2.clone().subtract(p0);
-
-            // cross product -> normal Vector3
-            Vector3 normal = a.cross(b);
-            normal.normalize();
-
-            // distance to origin
-            Vector3 scale = p0.clone().multiply(normal);
-            double distance = scale.x + scale.y + scale.z;
-
-            return new HessePlane(normal, distance);
-        }
-
-        public double distanceTo(Vector3 point) {
-            return point.x * normal.x + point.y * normal.y + point.z * normal.z - distance;
-        }
-
-        @Override
-        public String toString() {
-            return "distance: " + distance + " normal: " + String.valueOf(normal);
-        }
-    }
 }

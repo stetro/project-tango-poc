@@ -78,7 +78,10 @@ LOCAL_SRC_FILES := jni_interface.cc \
 
 
 LOCAL_LDLIBS := -lstdc++ -lc -lm -llog -landroid -ldl -lGLESv2 -lEGL \
-                -lflann -lflann_cpp -lpcl_kdtree -lpcl_features
+				-lpcl_common -lpcl_geometry -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_sample_consensus \
+				-lpcl_surface -lpcl_features -lpcl_filters -lpcl_keypoints -lpcl_tracking -lpcl_ml \
+				-lpcl_registration -lpcl_segmentation \
+                -lflann -lflann_cpp
 
 
 LOCAL_CFLAGS += -mfloat-abi=softfp -mfpu=neon -march=armv7 -mthumb -O3

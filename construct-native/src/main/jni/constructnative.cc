@@ -13,7 +13,12 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/ModelCoefficients.h>
 #include <pcl/segmentation/region_growing.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/extract_indices.h>
 
 
 namespace constructnative {
@@ -151,34 +156,40 @@ namespace constructnative {
         verticesToPointCloud(vertices, cloud, env);
         LOGE("PointCloud has %d points", cloud->points.size());
 
-        // filter with voxel grid
-        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud <pcl::PointXYZ>);
-        voxelGridDownSampling(cloud, filtered_cloud, 0.03f);
-        LOGE("filtered PointCloud has %d points", filtered_cloud->points.size());
+        // RANSAC Segmentation
+        pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+        pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+        // Create the segmentation object
+        pcl::SACSegmentation<pcl::PointXYZ> seg;
+        // Optional
+        seg.setOptimizeCoefficients (true);
+        // Mandatory
+        seg.setModelType(pcl::SACMODEL_PLANE);
+        seg.setMethodType(pcl::SAC_RANSAC);
+        seg.setDistanceThreshold (0.02);
+        seg.setInputCloud(cloud);
+        seg.segment(*inliers, *coefficients);
+
+        LOGE("Found %d that supports the plane %lf %lf %lf %lf", inliers->indices.size(), coefficients->values[0], coefficients->values[1], coefficients->values[2], coefficients->values[3]);
+
+        // Get Plane related points in Pointcloud
+        pcl::PointCloud<pcl::PointXYZ>::Ptr plane_cloud(new pcl::PointCloud <pcl::PointXYZ>);
+        pcl::ExtractIndices<pcl::PointXYZ> extract;
+        extract.setInputCloud(cloud);
+        extract.setIndices(inliers);
+        extract.setNegative(false);
+        extract.filter(*plane_cloud);
 
         // Normal estimation
-        pcl::PointCloud<pcl::Normal>::Ptr filtered_cloud_normals(
-                new pcl::PointCloud <pcl::Normal>);
-        estimateNormals(filtered_cloud, filtered_cloud_normals, 10);
-
-
-        pcl::RegionGrowing<pcl::PointXYZ> reg;
-        reg.setMinClusterSize(50);
-        reg.setMaxClusterSize(1000000);
-        reg.setSearchMethod (tree);
-        reg.setNumberOfNeighbours (30);
-        reg.setInputCloud (filtered_cloud);
-        //reg.setIndices (indices);
-        reg.setInputNormals (filtered_cloud_normals);
-        reg.setSmoothnessThreshold (3.0 / 180.0 * M_PI);
-        reg.setCurvatureThreshold (1.0);
+        pcl::PointCloud<pcl::PointNormal>::Ptr plane_cloud_with_normals(new pcl::PointCloud <pcl::PointNormal>);
+        estimateNormals(plane_cloud, plane_cloud_with_normals, 10);
 
         // Triangulate with Greedy Triangulation
-        pcl::PolygonMesh triangles = greedyTriangulationReconstruction(filtered_cloud_with_normals);
+        pcl::PolygonMesh triangles = greedyTriangulationReconstruction(plane_cloud_with_normals);
         LOGE("Reconstructed %d polygons", triangles.polygons.size());
 
         // transform pcl::PolygonMesh to jfloatArray vertices
-        jfloatArray array = polygonMeshToVertices(triangles, filtered_cloud, env);
+        jfloatArray array = polygonMeshToVertices(triangles, plane_cloud, env);
 
         return array;
     }

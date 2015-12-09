@@ -19,9 +19,9 @@ public class KMeans {
         this.clusters = new ArrayList<>();
     }
 
-    public void init(List<Vector3> points) {
+    public void init(List<Vector3> points, int clusterCount) {
         this.points = points;
-        this.clusterCount = (points.size() / 400) + 2;
+        this.clusterCount = clusterCount;
 
         // create cluster with random centroid
         for (int i = 0; i < clusterCount; i++) {

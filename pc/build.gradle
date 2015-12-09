@@ -33,6 +33,7 @@ dependencies {
     compile 'com.github.erz05:JoyStick:fcd19c2704'
     compile('com.afollestad.material-dialogs:core:0.8.4.2@aar') {
         transitive = true
+
     }
     compile 'com.github.quickhull3d:quickhull3d:1.0.0'
 }

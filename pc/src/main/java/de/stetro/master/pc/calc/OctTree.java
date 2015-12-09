@@ -1,18 +1,13 @@
 package de.stetro.master.pc.calc;
 
 
-import android.util.Log;
-
 import org.rajawali3d.math.vector.Vector3;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.stetro.master.pc.marchingcubes.Cube;
 import de.stetro.master.pc.marchingcubes.HVector3;
 
 
@@ -22,12 +17,12 @@ import de.stetro.master.pc.marchingcubes.HVector3;
 public class OctTree {
     private final static String tag = OctTree.class.getSimpleName();
 
-    private final double range;
-    private final double halfRange;
-    private final int depth;
-    private final Vector3 position;
-    private Vector3 point;
-    private OctTree[] children;
+    public final double range;
+    public final double halfRange;
+    public final int depth;
+    public final Vector3 position;
+    public Vector3 point;
+    public OctTree[] children;
 
     public OctTree(Vector3 position, double range, int depth) {
         this.position = position;
@@ -109,6 +104,16 @@ public class OctTree {
                 }
             }
         }
+    }
+
+    public boolean inside(Vector3 point) {
+        return (point.x >= position.x &&
+                point.y >= position.y &&
+                point.z >= position.z &&
+                point.x < position.x + range &&
+                point.y < position.y + range &&
+                point.z < position.z + range
+        );
     }
 
     private void put(Vector3 point, int clusterIndex, double x, double y, double z) {
@@ -231,106 +236,7 @@ public class OctTree {
 
     }
 
-    public List<Cube> getCubes(int depthLimit) {
-        HashMap<HVector3, Cube> cubes = new HashMap<>();
-        getCubes(cubes, depthLimit, this);
-        return new ArrayList<>(cubes.values());
-    }
-
-    private void getCubes(HashMap<HVector3, Cube> cubes, int depthLimit, OctTree root) {
-        if (depth == depthLimit) {
-            fillCubes(new HVector3(position.x, position.y, position.z), cubes, depthLimit, root, true);
-        } else {
-            for (OctTree child : children) {
-                if (child != null) {
-                    child.getCubes(cubes, depthLimit, root);
-                }
-            }
-        }
-    }
-    private static int[][] vertexNeighbours = new int[][]{
-            {1, 2, 5, 6},
-            {1, 5},
-            {2, 6},
-            {5, 6},
-            {5},
-            {6},
-            {1, 2},
-            {1},
-            {2},
-
-            {0, 3, 4, 7},
-            {0, 4},
-            {3, 7},
-            {4, 7},
-            {4},
-            {7},
-            {0, 3},
-            {0},
-            {4},
-
-            {0, 1, 4, 5},
-            {2, 3, 6, 7},
-            {4, 5, 6, 7},
-            {4, 5},
-            {6, 7},
-            {0, 1, 2, 3},
-            {0, 1},
-            {2, 3},
-
-    };
-    private void fillCubes(HVector3 pos, HashMap<HVector3, Cube> cubes, int depthLimit, OctTree root, boolean center) {
-        if (!cubes.containsKey(pos)) {
-            HVector3[] potentialNeighbours = new HVector3[]{
-                    new HVector3(pos.x + range, pos.y, pos.z),
-                    new HVector3(pos.x + range, pos.y - range, pos.z),
-                    new HVector3(pos.x + range, pos.y + range, pos.z),
-                    new HVector3(pos.x + range, pos.y, pos.z + range),
-                    new HVector3(pos.x + range, pos.y - range, pos.z + range),
-                    new HVector3(pos.x + range, pos.y + range, pos.z + range),
-                    new HVector3(pos.x + range, pos.y, pos.z - range),
-                    new HVector3(pos.x + range, pos.y - range, pos.z - range),
-                    new HVector3(pos.x + range, pos.y + range, pos.z - range),
-
-                    new HVector3(pos.x - range, pos.y, pos.z),
-                    new HVector3(pos.x - range, pos.y - range, pos.z),
-                    new HVector3(pos.x - range, pos.y + range, pos.z),
-                    new HVector3(pos.x - range, pos.y, pos.z + range),
-                    new HVector3(pos.x - range, pos.y - range, pos.z + range),
-                    new HVector3(pos.x - range, pos.y + range, pos.z + range),
-                    new HVector3(pos.x - range, pos.y, pos.z - range),
-                    new HVector3(pos.x - range, pos.y - range, pos.z - range),
-                    new HVector3(pos.x - range, pos.y + range, pos.z - range),
-
-                    new HVector3(pos.x, pos.y - range, pos.z),
-                    new HVector3(pos.x, pos.y + range, pos.z),
-                    new HVector3(pos.x, pos.y, pos.z + range),
-                    new HVector3(pos.x, pos.y - range, pos.z + range),
-                    new HVector3(pos.x, pos.y + range, pos.z + range),
-                    new HVector3(pos.x, pos.y, pos.z - range),
-                    new HVector3(pos.x, pos.y - range, pos.z - range),
-                    new HVector3(pos.x, pos.y + range, pos.z - range),
-            };
-
-            if (center) {
-                for (HVector3 potentialNeighbour : potentialNeighbours) {
-                    fillCubes(potentialNeighbour, cubes, depthLimit, root, false);
-                }
-            } else {
-                boolean[] weightedVertices = new boolean[8];
-                for (int i = 0; i < potentialNeighbours.length; i++) {
-                    if (root.exists(potentialNeighbours[i], depthLimit)) {
-                        for (int j = 0; j < vertexNeighbours[i].length; j++) {
-                            weightedVertices[vertexNeighbours[i][j]] = true;
-                        }
-                    }
-                }
-                cubes.put(pos, new Cube(new Vector3(pos.x, pos.y, pos.z), range, weightedVertices));
-            }
-        }
-    }
-
-    private boolean exists(HVector3 potentialNeighbour, int depthLimit) {
+    public boolean exists(HVector3 potentialNeighbour, int depthLimit) {
         if (depth == (depthLimit + 1)) {
             for (OctTree child : children) {
                 if (child != null) {
