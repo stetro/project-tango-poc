@@ -60,7 +60,7 @@ public class PointCloudManager {
     public synchronized void fillCurrentPoints(Points currentPoints, Pose pose) {
         currentPoints.updatePoints(xyzIjData.xyz, xyzIjData.xyzCount);
         currentPoints.setPosition(pose.getPosition());
-        currentPoints.setOrientation(pose.getOrientation());
+        currentPoints.setOrientation(pose.getOrientation().clone().inverse());
         lastCloudTime = newCloudTime;
     }
 

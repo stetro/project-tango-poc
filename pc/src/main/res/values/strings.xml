@@ -11,4 +11,5 @@
     <string name="reconstruct">Rekonstruieren</string>
     <string name="export_pointcloud_failure">Fehler beim Pointscloud Export!</string>
     <string name="calculating_mesh">Rekonstruktion wird berechnet ...</string>
+    <string name="pause">Pause</string>
 </resources>

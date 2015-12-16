@@ -60,7 +60,7 @@ public class GrahamScan {
      *
      * @return the extreme points on the convex hull in counterclockwise order
      */
-    public Iterable<Point2D> hull() {
+    public Stack<Point2D> hull() {
         Stack<Point2D> s = new Stack<Point2D>();
         for (Point2D p : hull) s.push(p);
         return s;

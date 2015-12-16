@@ -21,7 +21,12 @@ import de.stetro.master.pc.calc.hull.Point2D;
 
 public class MeshTree extends OctTree {
 
+    public static final float RANSAC_DISTANCE_THRESH = 0.05f;
+    public static final int RANSAC_ITERATIONS = 8;
+    public static final double RANSAC_SUPPORT = 0.33;
     private static final String tag = MeshTree.class.getSimpleName();
+    private static final int DETECTED_PLANES = 3;
+    //    private Plane[] planes = new Plane[DETECTED_PLANES];
     private Stack<Vector3> polygons;
     private List<Vector3> points;
     private int generatorDepth;
@@ -48,18 +53,18 @@ public class MeshTree extends OctTree {
         }
     }
 
-    public void putPoints(Vector3 randomPoint, List<Vector3> points) {
+    public void putPoints(Vector3 randomPoint, Vector3[] points) {
         if (depth == generatorDepth) {
-            this.points.clear();
+            Vector3 centroid = new Vector3(position.x + halfRange, position.y + halfRange, position.z + halfRange);
             for (Vector3 point : points) {
                 if (inside(point)) {
-                    this.points.add(point);
+
+                    Vector3 scaled = scale(point, centroid, 0.07);
+//                    if (!supportsAndAddToPlane(scaled)) {
+                    this.points.add(scaled);
+//                    }
                 }
             }
-            updateMesh();
-        } else if (randomPoint.x < position.x || randomPoint.x > position.x + range || randomPoint.y < position.y || randomPoint.y > position.y + range || randomPoint.z < position.z || randomPoint.z > position.z + range) {
-            return;
-//            throw new IllegalArgumentException("Outside of range: " + randomPoint.toString() + " does not belong to " + position.toString() + " with range " + range);
         } else {
             if (randomPoint.x < position.x + halfRange) {
                 if (randomPoint.y < position.y + halfRange) {
@@ -93,7 +98,24 @@ public class MeshTree extends OctTree {
         }
     }
 
-    private void putPoints(Vector3 randomPoint, List<Vector3> points, int clusterIndex, double x, double y, double z) {
+//    private boolean supportsAndAddToPlane(Vector3 point) {
+//        for (Plane plane : planes) {
+//            if (plane.distanceTo(point) < RANSAC_DISTANCE_THRESH) {
+//                plane.addPoint(point);
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+
+    private Vector3 scale(Vector3 point, Vector3 centroid, double factor) {
+        Vector3 clone = point.clone();
+        Vector3 centered = clone.subtract(centroid);
+        Vector3 scaled = centered.multiply(1.0 + factor);
+        return scaled.add(centroid);
+    }
+
+    private void putPoints(Vector3 randomPoint, Vector3[] points, int clusterIndex, double x, double y, double z) {
         if (children[clusterIndex] == null) {
             children[clusterIndex] = new MeshTree(new Vector3(x, y, z), halfRange, depth - 1, generatorDepth);
         }
@@ -113,46 +135,77 @@ public class MeshTree extends OctTree {
     }
 
     private void calculatePolygons() {
+        Stack<Vector3> completeHullPoints = new Stack<>();
         polygons.clear();
+        for (int i = 0; i < DETECTED_PLANES; i++) {
 
-        // skip iterating when enough points are matched
-        if (points.size() < 4) {
-            return;
+            // skip iterating when enough points are matched () && plane == null
+            if (points.size() < 3) {
+                continue;
+            }
+            List<Vector3> relevantPoints;
+//            if (planes[i] != null) {
+            // 30% of left points need to be supported
+            int sufficientSupport = (int) (points.size() * RANSAC_SUPPORT);
+
+            // detect plane in hesse normal form
+            Plane plane = RANSAC.detectPlane(points, RANSAC_DISTANCE_THRESH, RANSAC_ITERATIONS, sufficientSupport);
+
+            // skip plane if not sufficient support by points
+            if (RANSAC.supportingPoints.size() < 4 || RANSAC.supportingPoints.size() < sufficientSupport) {
+                plane = null;
+                continue;
+            }
+
+            points = RANSAC.notSupportingPoints;
+            relevantPoints = RANSAC.supportingPoints;
+//            } else {
+//                relevantPoints = planes[i].getPoints();
+//            }
+
+
+            // calculate convex hull and vertices for supporting points with GrahamScan
+            Point2D[] innerHullPoints = new Point2D[relevantPoints.size()];
+            for (int j = 0; j < relevantPoints.size(); j++) {
+                innerHullPoints[j] = plane.transferTo2D(relevantPoints.get(j));
+            }
+            GrahamScan scan = new GrahamScan(innerHullPoints);
+            this.points = RANSAC.notSupportingPoints;
+            // create DelaunayTriangle from convex hull
+            List<TriangulationPoint> hullPoints = new ArrayList<>();
+            Stack<Point2D> hull = scan.hull();
+
+            for (Point2D point2D : hull) {
+                Vector3 vector3 = plane.transferTo3D(point2D);
+                hullPoints.add(new TPoint(vector3.x, vector3.y, vector3.z));
+                completeHullPoints.add(vector3);
+            }
+            PointSet ps = new PointSet(hullPoints);
+            try {
+                Poly2Tri.triangulate(ps);
+                for (DelaunayTriangle delaunayTriangle : ps.getTriangles()) {
+                    polygons.add(new Vector3(delaunayTriangle.points[0].getX(), delaunayTriangle.points[0].getY(), delaunayTriangle.points[0].getZ()));
+                    polygons.add(new Vector3(delaunayTriangle.points[1].getX(), delaunayTriangle.points[1].getY(), delaunayTriangle.points[1].getZ()));
+                    polygons.add(new Vector3(delaunayTriangle.points[2].getX(), delaunayTriangle.points[2].getY(), delaunayTriangle.points[2].getZ()));
+                }
+            } catch (NullPointerException ignored) {
+                Log.e(tag, "failed with hull with " + hull.size() + " points");
+            }
         }
+        points.clear();
+        points.addAll(polygons);
+    }
 
-        // 30% of left points need to be supported
-        int sufficientSupport = (int) (points.size() * 0.30);
-
-        // detect plane in hesse normal form
-        Plane hessePlane = RANSAC.detectPlane(points, 0.06f, 10, sufficientSupport);
-        Log.d(tag, "Found potential Plane :" + hessePlane.toString());
-        points = RANSAC.notSupportingPoints;
-
-        // skip plane if not sufficient support by points
-        if (RANSAC.supportingPoints.size() < sufficientSupport || RANSAC.supportingPoints.size() < 4) {
-            return;
+    public void clear() {
+        if (depth == generatorDepth) {
+            polygons.clear();
+            points.clear();
+        } else {
+            for (OctTree child : children) {
+                if (child != null) {
+                    child.clear();
+                }
+            }
         }
-
-        // calculate convex hull and vertices for supporting points with GrahamScan
-        Point2D[] innerHullPoints = new Point2D[RANSAC.supportingPoints.size()];
-        for (int j = 0; j < RANSAC.supportingPoints.size(); j++) {
-            innerHullPoints[j] = hessePlane.transferTo2D(RANSAC.supportingPoints.get(j));
-        }
-        GrahamScan scan = new GrahamScan(innerHullPoints);
-
-        // create DelaunayTriangle from convex hull
-        List<TriangulationPoint> hullPoints = new ArrayList<>();
-        for (Point2D point2D : scan.hull()) {
-            Vector3 vector3 = hessePlane.transferTo3D(point2D);
-            hullPoints.add(new TPoint(vector3.x, vector3.y, vector3.z));
-        }
-        PointSet ps = new PointSet(hullPoints);
-        Poly2Tri.triangulate(ps);
-        for (DelaunayTriangle delaunayTriangle : ps.getTriangles()) {
-            polygons.add(new Vector3(delaunayTriangle.points[0].getX(), delaunayTriangle.points[0].getY(), delaunayTriangle.points[0].getZ()));
-            polygons.add(new Vector3(delaunayTriangle.points[1].getX(), delaunayTriangle.points[1].getY(), delaunayTriangle.points[1].getZ()));
-            polygons.add(new Vector3(delaunayTriangle.points[2].getX(), delaunayTriangle.points[2].getY(), delaunayTriangle.points[2].getZ()));
-        }
-
     }
 }

@@ -1,9 +1,10 @@
 package de.stetro.master.pc.calc;
 
-import android.util.Log;
-
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import de.stetro.master.pc.calc.hull.Point2D;
 
@@ -14,6 +15,7 @@ public class Plane {
     private final Vector3 planeOrigin;
     private final Quaternion planeZRotation;
     private final Quaternion inversePlaneZRotation;
+    private List<Vector3> points = new ArrayList<>();
 
     public Plane(Vector3 normal, double distance) {
         this.normal = normal;
@@ -21,8 +23,6 @@ public class Plane {
         this.planeOrigin = normal.clone().multiply(distance);
         this.planeZRotation = normal.clone().getRotationTo(new Vector3(0, 0, 1));
         this.inversePlaneZRotation = planeZRotation.clone().inverse();
-        Log.d(tag, "plane Origin " + planeOrigin);
-        Log.d(tag, "plane Rotation to Z" + planeZRotation);
     }
 
     /**
@@ -71,4 +71,13 @@ public class Plane {
         newPoint.add(planeOrigin);
         return newPoint;
     }
+
+    public void addPoint(Vector3 point) {
+        points.add(point);
+    }
+
+    public List<Vector3> getPoints() {
+        return points;
+    }
+
 }
