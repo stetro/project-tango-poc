@@ -26,9 +26,9 @@ public class MeshTree extends OctTree {
     public static final double RANSAC_SUPPORT = 0.33;
     private static final String tag = MeshTree.class.getSimpleName();
     private static final int DETECTED_PLANES = 3;
-    //    private Plane[] planes = new Plane[DETECTED_PLANES];
+    private Plane[] planes = new Plane[DETECTED_PLANES];
     private Stack<Vector3> polygons;
-    private List<Vector3> points;
+    private List<Vector3> newPoints;
     private int generatorDepth;
 
     public MeshTree(Vector3 position, double range, int depth, int generatorDepth) {
@@ -36,7 +36,7 @@ public class MeshTree extends OctTree {
         this.generatorDepth = generatorDepth;
         if (depth == generatorDepth) {
             polygons = new Stack<>();
-            points = new ArrayList<>();
+            newPoints = new ArrayList<>();
         }
     }
 
@@ -58,11 +58,13 @@ public class MeshTree extends OctTree {
             Vector3 centroid = new Vector3(position.x + halfRange, position.y + halfRange, position.z + halfRange);
             for (Vector3 point : points) {
                 if (inside(point)) {
-
                     Vector3 scaled = scale(point, centroid, 0.07);
-//                    if (!supportsAndAddToPlane(scaled)) {
-                    this.points.add(scaled);
-//                    }
+                    Plane plane = getSupportedPlane(scaled);
+                    if (plane == null) {
+                        this.newPoints.add(scaled);
+                    } else {
+                        plane.addPoint(scaled);
+                    }
                 }
             }
         } else {
@@ -98,15 +100,14 @@ public class MeshTree extends OctTree {
         }
     }
 
-//    private boolean supportsAndAddToPlane(Vector3 point) {
-//        for (Plane plane : planes) {
-//            if (plane.distanceTo(point) < RANSAC_DISTANCE_THRESH) {
-//                plane.addPoint(point);
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
+    private Plane getSupportedPlane(Vector3 point) {
+        for (Plane plane : planes) {
+            if (plane != null && plane.distanceTo(point) < RANSAC_DISTANCE_THRESH) {
+                return plane;
+            }
+        }
+        return null;
+    }
 
     private Vector3 scale(Vector3 point, Vector3 centroid, double factor) {
         Vector3 clone = point.clone();
@@ -135,50 +136,48 @@ public class MeshTree extends OctTree {
     }
 
     private void calculatePolygons() {
-        Stack<Vector3> completeHullPoints = new Stack<>();
+
         polygons.clear();
         for (int i = 0; i < DETECTED_PLANES; i++) {
 
-            // skip iterating when enough points are matched () && plane == null
-            if (points.size() < 3) {
+            // skip if size of new Points is to small and there is not already a plane
+            if (newPoints.size() < 3 && planes[i] == null) {
                 continue;
             }
+
             List<Vector3> relevantPoints;
-//            if (planes[i] != null) {
-            // 30% of left points need to be supported
-            int sufficientSupport = (int) (points.size() * RANSAC_SUPPORT);
+            if (planes[i] == null) {
+                int sufficientSupport = (int) (newPoints.size() * RANSAC_SUPPORT);
 
-            // detect plane in hesse normal form
-            Plane plane = RANSAC.detectPlane(points, RANSAC_DISTANCE_THRESH, RANSAC_ITERATIONS, sufficientSupport);
+                // detect plane in hesse normal form
+                planes[i] = RANSAC.detectPlane(newPoints, RANSAC_DISTANCE_THRESH, RANSAC_ITERATIONS, sufficientSupport);
 
-            // skip plane if not sufficient support by points
-            if (RANSAC.supportingPoints.size() < 4 || RANSAC.supportingPoints.size() < sufficientSupport) {
-                plane = null;
-                continue;
+                // skip plane if not sufficient support by newPoints
+                if (RANSAC.supportingPoints.size() < 4 || RANSAC.supportingPoints.size() < sufficientSupport) {
+                    planes[i] = null;
+                    continue;
+                }
+                newPoints = RANSAC.notSupportingPoints;
+                relevantPoints = RANSAC.supportingPoints;
+            } else {
+                relevantPoints = planes[i].getPoints();
             }
 
-            points = RANSAC.notSupportingPoints;
-            relevantPoints = RANSAC.supportingPoints;
-//            } else {
-//                relevantPoints = planes[i].getPoints();
-//            }
 
-
-            // calculate convex hull and vertices for supporting points with GrahamScan
+            // calculate convex hull and vertices for supporting newPoints with GrahamScan
             Point2D[] innerHullPoints = new Point2D[relevantPoints.size()];
             for (int j = 0; j < relevantPoints.size(); j++) {
-                innerHullPoints[j] = plane.transferTo2D(relevantPoints.get(j));
+                innerHullPoints[j] = planes[i].transferTo2D(relevantPoints.get(j));
             }
             GrahamScan scan = new GrahamScan(innerHullPoints);
-            this.points = RANSAC.notSupportingPoints;
             // create DelaunayTriangle from convex hull
             List<TriangulationPoint> hullPoints = new ArrayList<>();
             Stack<Point2D> hull = scan.hull();
-
+            planes[i].getPoints().clear();
             for (Point2D point2D : hull) {
-                Vector3 vector3 = plane.transferTo3D(point2D);
+                Vector3 vector3 = planes[i].transferTo3D(point2D);
+                planes[i].addPoint(vector3);
                 hullPoints.add(new TPoint(vector3.x, vector3.y, vector3.z));
-                completeHullPoints.add(vector3);
             }
             PointSet ps = new PointSet(hullPoints);
             try {
@@ -189,17 +188,17 @@ public class MeshTree extends OctTree {
                     polygons.add(new Vector3(delaunayTriangle.points[2].getX(), delaunayTriangle.points[2].getY(), delaunayTriangle.points[2].getZ()));
                 }
             } catch (NullPointerException ignored) {
-                Log.e(tag, "failed with hull with " + hull.size() + " points");
+                Log.e(tag, "failed with triangulate with " + hull.size() + " hull points");
             }
         }
-        points.clear();
-        points.addAll(polygons);
+        newPoints.clear();
     }
 
     public void clear() {
         if (depth == generatorDepth) {
             polygons.clear();
-            points.clear();
+            newPoints.clear();
+            planes = new Plane[DETECTED_PLANES];
         } else {
             for (OctTree child : children) {
                 if (child != null) {

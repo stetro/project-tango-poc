@@ -58,7 +58,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
                         }
                     }
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         break;
                     }
@@ -93,8 +93,8 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
                 pointCollection.getMeshTree().fillPolygons(faces);
                 polygon = new Polygon(faces);
                 polygon.setTransparent(true);
-                polygon.setDoubleSided(true);
                 polygon.setMaterial(Materials.getTransparentRed());
+                polygon.setDoubleSided(true);
                 getCurrentScene().addChild(polygon);
             }
         }

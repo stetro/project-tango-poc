@@ -16,7 +16,7 @@ import org.rajawali3d.math.vector.Vector3;
 import java.nio.FloatBuffer;
 
 public class PointCollection extends Object3D {
-    public static final int REFRESH_SECTIONS = 10;
+    public static final int REFRESH_SECTIONS = 15;
     private static final String tag = PointCollection.class.getSimpleName();
     private final MeshTree meshTree;
     private int mMaxNumberOfVertices;
@@ -32,7 +32,7 @@ public class PointCollection extends Object3D {
         Material m = new Material();
         m.setColor(Color.GREEN);
         setMaterial(m);
-        meshTree = new MeshTree(new Vector3(-20, -20, -20), 40.0, 11, 4);
+        meshTree = new MeshTree(new Vector3(-20, -20, -20), 40.0, 11, 3);
     }
 
     protected void init(boolean createVBOs) {
