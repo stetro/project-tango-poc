@@ -26,6 +26,8 @@ public class MeshTree extends OctTree {
     public static final double RANSAC_SUPPORT = 0.33;
     private static final String tag = MeshTree.class.getSimpleName();
     private static final int DETECTED_PLANES = 3;
+    public static final double SCALE_FACTOR = 0.08;
+    private final Vector3 centroid;
     private Plane[] planes = new Plane[DETECTED_PLANES];
     private Stack<Vector3> polygons;
     private List<Vector3> newPoints;
@@ -33,6 +35,7 @@ public class MeshTree extends OctTree {
 
     public MeshTree(Vector3 position, double range, int depth, int generatorDepth) {
         super(position, range, depth);
+        centroid = new Vector3(position.x + halfRange, position.y + halfRange, position.z + halfRange);
         this.generatorDepth = generatorDepth;
         if (depth == generatorDepth) {
             polygons = new Stack<>();
@@ -55,10 +58,9 @@ public class MeshTree extends OctTree {
 
     public void putPoints(Vector3 randomPoint, Vector3[] points) {
         if (depth == generatorDepth) {
-            Vector3 centroid = new Vector3(position.x + halfRange, position.y + halfRange, position.z + halfRange);
             for (Vector3 point : points) {
                 if (inside(point)) {
-                    Vector3 scaled = scale(point, centroid, 0.07);
+                    Vector3 scaled = scale(point, centroid, SCALE_FACTOR);
                     Plane plane = getSupportedPlane(scaled);
                     if (plane == null) {
                         this.newPoints.add(scaled);
@@ -205,6 +207,70 @@ public class MeshTree extends OctTree {
                     child.clear();
                 }
             }
+        }
+    }
+
+    public void putPoints(List<Vector3> points) {
+        for (Vector3 point : points) {
+            putPoints(point);
+        }
+    }
+
+    private void putPoints(Vector3 point) {
+        if (depth == generatorDepth) {
+            Vector3 scaled = scale(point, centroid, SCALE_FACTOR);
+            this.newPoints.add(scaled);
+        } else {
+            if (point.x < position.x + halfRange) {
+                if (point.y < position.y + halfRange) {
+                    if (point.z < position.z + halfRange) {
+                        putPoints(point, 0, position.x, position.y, position.z);
+                    } else {
+                        putPoints(point, 1, position.x, position.y, position.z + halfRange);
+                    }
+                } else {
+                    if (point.z < position.z + halfRange) {
+                        putPoints(point, 2, position.x, position.y + halfRange, position.z);
+                    } else {
+                        putPoints(point, 3, position.x, position.y + halfRange, position.z + halfRange);
+                    }
+                }
+            } else {
+                if (point.y < position.y + halfRange) {
+                    if (point.z < position.z + halfRange) {
+                        putPoints(point, 4, position.x + halfRange, position.y, position.z);
+                    } else {
+                        putPoints(point, 5, position.x + halfRange, position.y, position.z + halfRange);
+                    }
+                } else {
+                    if (point.z < position.z + halfRange) {
+                        putPoints(point, 6, position.x + halfRange, position.y + halfRange, position.z);
+                    } else {
+                        putPoints(point, 7, position.x + halfRange, position.y + halfRange, position.z + halfRange);
+                    }
+                }
+            }
+        }
+    }
+
+    private void putPoints(Vector3 point, int clusterIndex, double x, double y, double z) {
+        if (children[clusterIndex] == null) {
+            children[clusterIndex] = new MeshTree(new Vector3(x, y, z), halfRange, depth - 1, generatorDepth);
+        }
+        ((MeshTree) children[clusterIndex]).putPoints(point);
+    }
+
+    public int getNewPointsCount() {
+        if (depth == generatorDepth) {
+            return newPoints.size();
+        } else {
+            int count = 0;
+            for (OctTree child : children) {
+                if (child != null) {
+                    count += ((MeshTree) child).getNewPointsCount();
+                }
+            }
+            return count;
         }
     }
 }

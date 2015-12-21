@@ -32,7 +32,7 @@ public class PointCollection extends Object3D {
         Material m = new Material();
         m.setColor(Color.GREEN);
         setMaterial(m);
-        meshTree = new MeshTree(new Vector3(-20, -20, -20), 40.0, 11, 3);
+        meshTree = new MeshTree(new Vector3(-20, -20, -20), 40.0, 11, 4);
     }
 
     protected void init(boolean createVBOs) {
@@ -51,7 +51,6 @@ public class PointCollection extends Object3D {
 
     public void updatePoints(FloatBuffer pointCloudBuffer, int pointCount, Pose pose) {
         pointCloudBuffer.position(0);
-        long startTime = System.currentTimeMillis();
         Vector3[] points = new Vector3[pointCount];
         final Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
         for (int i = 0; i < pointCount; i++) {
@@ -60,13 +59,9 @@ public class PointCollection extends Object3D {
             double z = pointCloudBuffer.get();
             points[i] = new Vector3(x, y, z).multiply(transformation);
         }
-        long estimatedTime = System.currentTimeMillis() - startTime;
-//        Log.d(tag, "first converting took " + estimatedTime);
         for (int i = 0; i < REFRESH_SECTIONS; i++) {
             Vector3 random = points[(int) (Math.random() * points.length)];
             meshTree.putPoints(random, points);
-            estimatedTime = System.currentTimeMillis() - startTime;
-//            Log.d(tag, "added points to random point number " + i + " took until now " + estimatedTime);
         }
         meshTree.updateMesh();
         if (clearCollectionNextRound) {
@@ -91,7 +86,7 @@ public class PointCollection extends Object3D {
     public FloatBuffer getBuffer() {
         int size = meshTree.getSize();
         FloatBuffer buffer = FloatBuffer.allocate(size * 3);
-        meshTree.fill(buffer);
+        meshTree.   fill(buffer);
         return buffer;
     }
 
