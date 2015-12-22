@@ -4,9 +4,26 @@ package de.stetro.master.construct.ui;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import de.stetro.master.pc.R;
+import de.stetro.master.construct.R;
 
 
 public class BaseActivity extends AppCompatActivity {
 
+    private Toolbar actionBarToolbar;
+
+    public Toolbar getActionBarToolbar() {
+        if (actionBarToolbar == null) {
+            actionBarToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
+            if (actionBarToolbar != null) {
+                setSupportActionBar(actionBarToolbar);
+            }
+        }
+        return actionBarToolbar;
+    }
+
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+        getActionBarToolbar();
+    }
 }

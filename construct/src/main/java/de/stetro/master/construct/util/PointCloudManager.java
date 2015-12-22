@@ -1,29 +1,35 @@
 package de.stetro.master.construct.util;
 
 
+import com.google.atap.tangoservice.TangoCameraIntrinsics;
 import com.google.atap.tangoservice.TangoPoseData;
 import com.google.atap.tangoservice.TangoXyzIjData;
 import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
-import org.rajawali3d.math.vector.Vector3;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
+
+import de.stetro.master.construct.rendering.PointCollection;
 
 
 public class PointCloudManager {
     private static final String tag = PointCloudManager.class.getSimpleName();
 
 
+    private final TangoCameraIntrinsics tangoCameraIntrinsics;
     private final TangoXyzIjData xyzIjData;
     private TangoPoseData devicePoseAtCloudTime;
     private double lastCloudTime = 0;
     private double newCloudTime = 0;
 
-    public PointCloudManager() {
+    public PointCloudManager(TangoCameraIntrinsics intrinsics) {
+        tangoCameraIntrinsics = intrinsics;
         xyzIjData = new TangoXyzIjData();
+    }
+
+    public TangoCameraIntrinsics getTangoCameraIntrinsics() {
+        return tangoCameraIntrinsics;
     }
 
     public TangoPoseData getDevicePoseAtCloudTime() {
@@ -54,24 +60,16 @@ public class PointCloudManager {
     public synchronized void fillCurrentPoints(Points currentPoints, Pose pose) {
         currentPoints.updatePoints(xyzIjData.xyz, xyzIjData.xyzCount);
         currentPoints.setPosition(pose.getPosition());
-        currentPoints.setOrientation(pose.getOrientation());
+        currentPoints.setOrientation(pose.getOrientation().clone().inverse());
         lastCloudTime = newCloudTime;
     }
 
-    public boolean hasNewPoints() {
+    public synchronized void fillCollectedPoints(PointCollection collectedPoints, Pose pose) {
+        collectedPoints.updatePoints(xyzIjData.xyz, xyzIjData.xyzCount, pose);
+    }
+
+    public synchronized boolean hasNewPoints() {
         return newCloudTime != lastCloudTime;
     }
 
-    public synchronized ArrayList<Vector3> get2DPointArrayList() {
-        ArrayList<Vector3> points = new ArrayList<>();
-        xyzIjData.xyz.rewind();
-        for (int i = 0; i < xyzIjData.xyzCount; i++) {
-            points.add(new Vector3(xyzIjData.xyz.get(), xyzIjData.xyz.get(), xyzIjData.xyz.get()));
-        }
-        return points;
-    }
-
-    public TangoXyzIjData getXyzIjData() {
-        return xyzIjData;
-    }
 }

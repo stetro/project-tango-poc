@@ -3,8 +3,12 @@ package de.stetro.master.construct.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.atap.tangoservice.Tango;
@@ -18,13 +22,14 @@ import com.projecttango.rajawali.ar.TangoRajawaliView;
 
 import java.util.ArrayList;
 
-import de.stetro.master.construct.rendering.PlaneReconstructionRenderer;
+import de.stetro.master.construct.R;
+import de.stetro.master.construct.rendering.PointCloudARRenderer;
 import de.stetro.master.construct.util.PointCloudManager;
 
 public class MainActivity extends BaseActivity implements View.OnTouchListener {
     private static final String tag = MainActivity.class.getSimpleName();
     private TangoRajawaliView glView;
-    private PlaneReconstructionRenderer renderer;
+    private PointCloudARRenderer renderer;
     private PointCloudManager pointCloudManager;
     private Tango tango;
     private boolean isConnected;
@@ -34,16 +39,17 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         glView = new TangoRajawaliView(this);
-        pointCloudManager = new PointCloudManager();
-        renderer = new PlaneReconstructionRenderer(this, pointCloudManager);
-        glView.setEGLConfigChooser(8, 8, 8, 8, 0, 0);
+        renderer = new PointCloudARRenderer(this);
         glView.setSurfaceRenderer(renderer);
         glView.setOnTouchListener(this);
+        setContentView(R.layout.activity_main);
+        RelativeLayout wrapper = (RelativeLayout) findViewById(R.id.wrapper_view);
         tango = new Tango(this);
         startActivityForResult(
                 Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING),
                 Tango.TANGO_INTENT_ACTIVITYCODE);
-        setContentView(glView);
+        wrapper.addView(glView);
+
     }
 
     @Override
@@ -99,7 +105,8 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
 
             setupExtrinsic();
 
-
+            pointCloudManager = new PointCloudManager(tango.getCameraIntrinsics(TangoCameraIntrinsics.TANGO_CAMERA_COLOR));
+            renderer.setPointCloudManager(pointCloudManager);
         }
     }
 
@@ -121,6 +128,28 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
         renderer.setupExtrinsics(imuTdevicePose, imuTrgbPose, imuTdepthPose);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.activity_main_toggle_action:
+                renderer.toggleAction();
+                return true;
+            case R.id.activity_main_menu_toggle_pointcloud:
+                renderer.togglePointCloudVisibility();
+                return true;
+            case R.id.activity_main_menu_delete:
+                renderer.clearPoints();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     protected void onPause() {

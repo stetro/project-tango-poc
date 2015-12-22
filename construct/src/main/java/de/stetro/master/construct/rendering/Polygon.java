@@ -45,4 +45,7 @@ public class Polygon extends Object3D {
         setData(vertices, normals, textureCoors, null, indices, false);
     }
 
+    public void clear() {
+
+    }
 }

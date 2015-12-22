@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PlaneConstructor</string>
+    <string name="app_name">PointCloud</string>
     <string name="toggle_pointcloud">Pointcloud Sichtbarkeit</string>
     <string name="toggle_pointcloud_capturing">Pointcloud Aufnahme</string>
     <string name="delete_objects">Objekte zurücksetzen</string>
@@ -8,6 +8,8 @@
     <string name="export_pointcloud">Pointcloud exportieren</string>
     <string name="exporting_pointcloud">Pointcloud wird exportiert</string>
     <string name="please_wait">Bitte warten …</string>
+    <string name="reconstruct">Rekonstruieren</string>
     <string name="export_pointcloud_failure">Fehler beim Pointscloud Export!</string>
-
+    <string name="calculating_mesh">Rekonstruktion wird berechnet ...</string>
+    <string name="pause">Pause</string>
 </resources>
