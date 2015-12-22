@@ -23,13 +23,19 @@
 ![PointCloud Screenshot](img/pc.png)
 ![PointCloud Screenshot 2](img/pc2.png)
 
-#### Einfache Ebenen Erkennung (construct/)
-* RANSAC Ebenen Suche in Pointcloud
-* Feststellung der korellierenden Punkte
-* KMean Cluster Extraction
-* QuickHull für convexe Hüllen Erkennung der korellierenden Punkte eines Clusters
-* Mesh generierung der convexen Hülle
-
+#### Plane Based Reconstruction (construct/)
+```
+1. OctTree clustering of the global pointcloud
+2. on incoming depth frame
+	* update random n global clusters with points from depth frame
+	* use RANSAC to detect 3 planes per cluster
+	* project points from 3D space to 2D space (based on detected planes)
+	* use Graham Scan to compute comvex hull for each plane
+	* use Sweep‐line for triangulation with poly2tri
+	* project polygon vertices back to 3D space (based on detected planes)
+```
+[![Plane Reconstruction Demo](http://img.youtube.com/vi/SMg69wIPoxQ/0.jpg)](https://www.youtube.com/watch?v=SMg69wIPoxQ)
+*Old Screenshots*
 ![AR Screenshot](img/construct.png)
 ![AR Screenshot](img/marchingcube.png)
 
