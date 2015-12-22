@@ -62,7 +62,7 @@ public class Materials {
 
     public static Material getRedMaterial() {
         if (red == null) {
-            float[] color = {0.8f, 0.0f, 0.0f, 0.5f};
+            float[] color = {0.8f, 0.0f, 0.0f, 1.0f};
             red = createLambertMaterial(color);
         }
         return red;

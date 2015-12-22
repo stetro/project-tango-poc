@@ -4,7 +4,6 @@ package de.stetro.master.pc.rendering;
 import android.graphics.Color;
 import android.opengl.GLES10;
 import android.opengl.GLES20;
-import android.util.Log;
 
 import com.projecttango.rajawali.Pose;
 
@@ -16,28 +15,23 @@ import org.rajawali3d.math.vector.Vector3;
 import java.nio.FloatBuffer;
 
 public class PointCollection extends Object3D {
-    public static final int REFRESH_SECTIONS = 15;
-    private static final String tag = PointCollection.class.getSimpleName();
-    private final MeshTree meshTree;
-    private int mMaxNumberOfVertices;
+    private final FloatBuffer buffer;
+    private int mMaxNumberofVertices;
     private int count = 0;
-    private boolean hasNewPolygons;
-    private boolean clearCollectionNextRound = false;
-    private boolean isCalculating;
 
     public PointCollection(int numberOfPoints) {
         super();
-        mMaxNumberOfVertices = numberOfPoints;
+        buffer = FloatBuffer.allocate(numberOfPoints * 3);
+        mMaxNumberofVertices = numberOfPoints;
         init(true);
         Material m = new Material();
         m.setColor(Color.GREEN);
         setMaterial(m);
-        meshTree = new MeshTree(new Vector3(-20, -20, -20), 40.0, 11, 4);
     }
 
     protected void init(boolean createVBOs) {
-        float[] vertices = new float[mMaxNumberOfVertices * 3];
-        int[] indices = new int[mMaxNumberOfVertices];
+        float[] vertices = new float[mMaxNumberofVertices * 3];
+        int[] indices = new int[mMaxNumberofVertices];
         for (int i = 0; i < indices.length; ++i) {
             indices[i] = i;
         }
@@ -50,26 +44,28 @@ public class PointCollection extends Object3D {
     }
 
     public void updatePoints(FloatBuffer pointCloudBuffer, int pointCount, Pose pose) {
-        pointCloudBuffer.position(0);
-        Vector3[] points = new Vector3[pointCount];
-        final Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
-        for (int i = 0; i < pointCount; i++) {
-            double x = pointCloudBuffer.get();
-            double y = pointCloudBuffer.get();
-            double z = pointCloudBuffer.get();
-            points[i] = new Vector3(x, y, z).multiply(transformation);
-        }
-        for (int i = 0; i < REFRESH_SECTIONS; i++) {
-            Vector3 random = points[(int) (Math.random() * points.length)];
-            meshTree.putPoints(random, points);
-        }
-        meshTree.updateMesh();
-        if (clearCollectionNextRound) {
-            clearCollectionNextRound = false;
-            meshTree.clear();
-            hasNewPolygons = false;
-        } else {
-            hasNewPolygons = true;
+        if (count + pointCount < mMaxNumberofVertices) {
+            pointCloudBuffer.position(0);
+            FloatBuffer transformedPoints = FloatBuffer.allocate(pointCount * 3);
+            for (int i = 0; i < pointCount; i++) {
+                double x = pointCloudBuffer.get();
+                double y = pointCloudBuffer.get();
+                double z = pointCloudBuffer.get();
+                Vector3 v = new Vector3(x, y, z);
+                Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
+                v.multiply(transformation);
+                transformedPoints.put((float) v.x);
+                transformedPoints.put((float) v.y);
+                transformedPoints.put((float) v.z);
+                buffer.put((float) v.x);
+                buffer.put((float) v.y);
+                buffer.put((float) v.z);
+            }
+
+            mGeometry.setNumIndices(pointCount + count);
+            mGeometry.getVertices().position(0);
+            mGeometry.changeBufferData(mGeometry.getVertexBufferInfo(), transformedPoints, count * 3, pointCount * 3);
+            count += pointCount;
         }
     }
 
@@ -84,34 +80,7 @@ public class PointCollection extends Object3D {
     }
 
     public FloatBuffer getBuffer() {
-        int size = meshTree.getSize();
-        FloatBuffer buffer = FloatBuffer.allocate(size * 3);
-        meshTree.   fill(buffer);
         return buffer;
-    }
-
-    public MeshTree getMeshTree() {
-        hasNewPolygons = false;
-        return meshTree;
-    }
-
-    public void clear() {
-        clearCollectionNextRound = true;
-        mGeometry.setNumVertices(0);
-        mGeometry.getVertices().clear();
-        count = 0;
-    }
-
-    public boolean hasNewPolygons() {
-        return hasNewPolygons;
-    }
-
-    public boolean isCalculating() {
-        return isCalculating;
-    }
-
-    public void setIsCalculating(boolean isCalculating) {
-        this.isCalculating = isCalculating;
     }
 }
 

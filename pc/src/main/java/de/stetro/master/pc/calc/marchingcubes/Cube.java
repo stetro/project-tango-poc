@@ -1,4 +1,4 @@
-package de.stetro.master.pc.marchingcubes;
+package de.stetro.master.pc.calc.marchingcubes;
 
 
 import org.rajawali3d.math.vector.Vector3;
