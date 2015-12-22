@@ -34,8 +34,12 @@
 	* use Sweep‐line for triangulation with poly2tri
 	* project polygon vertices back to 3D space (based on detected planes)
 ```
+**Video Demonstration**
+
 [![Plane Reconstruction Demo](http://img.youtube.com/vi/SMg69wIPoxQ/0.jpg)](https://www.youtube.com/watch?v=SMg69wIPoxQ)
-*Old Screenshots*
+
+**Old Screenshots**
+
 ![AR Screenshot](img/construct.png)
 ![AR Screenshot](img/marchingcube.png)
 
