@@ -3,11 +3,11 @@
 > Optimierung von Augmented Reality Anwendungen durch die Berücksichtigung von Tiefeninformationen mit Googles Project Tango
 
 ## Table of Content
-* Augmented Reality Demo
-* Pointcloud Extraction
-* Plane based Reconstruction
-* PCL based native Reconstruction (Greedy Projection Triangulation)
-* Unity Marching Cubes AR Demo
+* [Augmented Reality Demo](https://github.com/stetro/project-tango-poc#augmented-reality-ar)
+* [Pointcloud Extraction](https://github.com/stetro/project-tango-poc#pointcloud-app-pc)
+* [Plane based Reconstruction](https://github.com/stetro/project-tango-poc#plane-based-reconstruction-construct)
+* [PCL based native Reconstruction (Greedy Projection Triangulation)](https://github.com/stetro/project-tango-poc#native-implementierung-construct-native)
+* [Unity Marching Cubes AR Demo](https://github.com/stetro/project-tango-poc#unity-implementierung-unity)
 
 
 ## Augmented Reality (ar/)
@@ -65,6 +65,8 @@
 
 [![Instagram Video Demo](https://scontent-ams2-1.cdninstagram.com/hphotos-xpt1/t51.2885-15/e15/12356515_1540820419541546_2101008470_n.jpg)](https://www.instagram.com/p/-9XvFoh_D4/)
 
+**Old Screenshots**
+
 ![Unity Screenshot 1](img/unity1.png)
 ![Unity Screenshot 1](img/unity2.png)
 
@@ -75,7 +77,7 @@
 * [EventBus](https://github.com/greenrobot/EventBus)
 * [commons-math3](https://commons.apache.org/math/)
 * [jama](http://math.nist.gov/javanumerics/jama/)
-* [QuickHull](https://github.com/Quickhull3d/quickhull3d)
+* [Poly2Tri](http://code.google.com/p/poly2tri/)
 * [PCL](http://pointclouds.org/)
 * [Unity Engine](https://unity3d.com/)
 * [tango-examples-unity](https://github.com/googlesamples/tango-examples-unity)
