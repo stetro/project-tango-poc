@@ -2,9 +2,15 @@
 
 > Optimierung von Augmented Reality Anwendungen durch die Berücksichtigung von Tiefeninformationen mit Googles Project Tango
 
-### Aktuelles Featureset
+## Table of Content
+* Augmented Reality Demo
+* Pointcloud Extraction
+* Plane based Reconstruction
+* PCL based native Reconstruction (Greedy Projection Triangulation)
+* Unity Marching Cubes AR Demo
 
-#### Augmented Reality (ar/)
+
+## Augmented Reality (ar/)
 * Augmented Reality Kamera mit passenden Intrinsics
 * Motion Tracking mit korrekter GL Positionierung
 * Darstellung der aktuellen PointCloud Scene
@@ -14,7 +20,7 @@
 
 ![AR Screenshot](img/ar.png)
 
-#### Pointcloud App (pc/)
+## Pointcloud App (pc/)
 * Exporter der aufgenommenen PointCloud
 * Sammeln von PointCloud ausschnitten in einem OctTree
 * Reconstruction der OctTree Points mit der Methode aus 'construct'
@@ -23,7 +29,7 @@
 ![PointCloud Screenshot](img/pc.png)
 ![PointCloud Screenshot 2](img/pc2.png)
 
-#### Plane Based Reconstruction (construct/)
+## Plane Based Reconstruction (construct/)
 ```
 1. OctTree clustering of the global pointcloud
 2. on incoming depth frame
@@ -43,22 +49,26 @@
 ![AR Screenshot](img/construct.png)
 ![AR Screenshot](img/marchingcube.png)
 
-#### Native Implementierung (construct-native/)
+## Native Implementierung (construct-native/)
 * Crosscompiling von [PCL](http://pointclouds.org/) 
 * Voxel Grid downsampling
 * Greedy Triangulation mit PCL
 
 ![Unity Screenshot 1](img/native.png)
 
-#### Unity Implementierung (unity/)
+## Unity Implementierung (unity/)
 * Kombination der Experimental Beispiel aus Meshing und AR
 * Implementierung von Clipping Depth Shader
 * Einfaches Interaktives Beispiel zum Steuern eines Balls
 
+**Video Demonstration**
+
+[![Instagram Video Demo](https://scontent-ams2-1.cdninstagram.com/hphotos-xpt1/t51.2885-15/e15/12356515_1540820419541546_2101008470_n.jpg)](https://www.instagram.com/p/-9XvFoh_D4/)
+
 ![Unity Screenshot 1](img/unity1.png)
 ![Unity Screenshot 1](img/unity2.png)
 
-### Verwendete Librarys
+## Verwendete Librarys
 * [Rajawali](https://github.com/Rajawali/Rajawali)
 * [tango-examples-java](https://github.com/googlesamples/tango-examples-java)
 * [material-dialogs](https://github.com/afollestad/material-dialogs)
