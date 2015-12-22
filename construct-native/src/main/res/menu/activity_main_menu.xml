@@ -3,19 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/activity_main_menu_export_pointcloud"
-        android:icon="@mipmap/ic_archive_white_24dp"
-        android:title="@string/export_pointcloud"
-        app:showAsAction="ifRoom" />
-
-
-    <item
-        android:id="@+id/activity_main_menu_reconstruction"
-        android:icon="@mipmap/ic_blur_linear_white_24dp"
-        android:title="@string/reconstruct"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/activity_main_menu_toggle_pointcloud"
         android:icon="@mipmap/ic_visibility_white_24dp"
         android:title="@string/toggle_pointcloud"

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.stetro.master.construct.marchingcubes.HVector3;
+import de.stetro.master.construct.calc.marchingcubes.HVector3;
 
 
 /**

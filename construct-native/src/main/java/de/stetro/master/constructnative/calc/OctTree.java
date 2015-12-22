@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import de.stetro.master.constructnative.calc.marchingcubes.HVector3;
+
 
 /**
  * @author stetro
@@ -15,12 +17,12 @@ import java.util.List;
 public class OctTree {
     private final static String tag = OctTree.class.getSimpleName();
 
-    private final double range;
-    private final double halfRange;
-    private final int depth;
-    private final Vector3 position;
-    private Vector3 point;
-    private OctTree[] children;
+    public final double range;
+    public final double halfRange;
+    public final int depth;
+    public final Vector3 position;
+    public Vector3 point;
+    public OctTree[] children;
 
     public OctTree(Vector3 position, double range, int depth) {
         this.position = position;
@@ -102,6 +104,16 @@ public class OctTree {
                 }
             }
         }
+    }
+
+    public boolean inside(Vector3 point) {
+        return (point.x >= position.x &&
+                point.y >= position.y &&
+                point.z >= position.z &&
+                point.x < position.x + range &&
+                point.y < position.y + range &&
+                point.z < position.z + range
+        );
     }
 
     private void put(Vector3 point, int clusterIndex, double x, double y, double z) {
@@ -220,4 +232,50 @@ public class OctTree {
         }
     }
 
+    public void clear() {
+
+    }
+
+    public boolean exists(HVector3 potentialNeighbour, int depthLimit) {
+        if (depth == (depthLimit + 1)) {
+            for (OctTree child : children) {
+                if (child != null) {
+                    if (child.position.equals(potentialNeighbour)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } else {
+            if (potentialNeighbour.x < position.x + halfRange) {
+                if (potentialNeighbour.y < position.y + halfRange) {
+                    if (potentialNeighbour.z < position.z + halfRange) {
+                        return children[0] != null && children[0].exists(potentialNeighbour, depthLimit);
+                    } else {
+                        return children[1] != null && children[1].exists(potentialNeighbour, depthLimit);
+                    }
+                } else {
+                    if (potentialNeighbour.z < position.z + halfRange) {
+                        return children[2] != null && children[2].exists(potentialNeighbour, depthLimit);
+                    } else {
+                        return children[3] != null && children[3].exists(potentialNeighbour, depthLimit);
+                    }
+                }
+            } else {
+                if (potentialNeighbour.y < position.y + halfRange) {
+                    if (potentialNeighbour.z < position.z + halfRange) {
+                        return children[4] != null && children[4].exists(potentialNeighbour, depthLimit);
+                    } else {
+                        return children[5] != null && children[5].exists(potentialNeighbour, depthLimit);
+                    }
+                } else {
+                    if (potentialNeighbour.z < position.z + halfRange) {
+                        return children[6] != null && children[6].exists(potentialNeighbour, depthLimit);
+                    } else {
+                        return children[7] != null && children[7].exists(potentialNeighbour, depthLimit);
+                    }
+                }
+            }
+        }
+    }
 }

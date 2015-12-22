@@ -1,4 +1,4 @@
-package de.stetro.master.construct.rendering;
+package de.stetro.master.constructnative.rendering;
 
 import android.util.Log;
 
@@ -13,25 +13,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import de.stetro.master.construct.calc.OctTree;
-import de.stetro.master.construct.calc.Plane;
-import de.stetro.master.construct.calc.RANSAC;
-import de.stetro.master.construct.calc.hull.GrahamScan;
-import de.stetro.master.construct.calc.hull.Point2D;
+import de.stetro.master.constructnative.JNIInterface;
+import de.stetro.master.constructnative.calc.OctTree;
+import de.stetro.master.constructnative.calc.Plane;
+import de.stetro.master.constructnative.calc.RANSAC;
+import de.stetro.master.constructnative.calc.hull.GrahamScan;
+import de.stetro.master.constructnative.calc.hull.Point2D;
+
 
 public class MeshTree extends OctTree {
 
     public static final float RANSAC_DISTANCE_THRESH = 0.05f;
     public static final int RANSAC_ITERATIONS = 8;
     public static final double RANSAC_SUPPORT = 0.33;
+    public static final double SCALE_FACTOR = 0.08;
     private static final String tag = MeshTree.class.getSimpleName();
     private static final int DETECTED_PLANES = 3;
-    public static final double SCALE_FACTOR = 0.08;
     private final Vector3 centroid;
     private Plane[] planes = new Plane[DETECTED_PLANES];
     private Stack<Vector3> polygons;
     private List<Vector3> newPoints;
     private int generatorDepth;
+    private List<Vector3> patches;
 
     public MeshTree(Vector3 position, double range, int depth, int generatorDepth) {
         super(position, range, depth);
@@ -60,12 +63,11 @@ public class MeshTree extends OctTree {
         if (depth == generatorDepth) {
             for (Vector3 point : points) {
                 if (inside(point)) {
-                    Vector3 scaled = scale(point, centroid, SCALE_FACTOR);
-                    Plane plane = getSupportedPlane(scaled);
+                    Plane plane = getSupportedPlane(point);
                     if (plane == null) {
-                        this.newPoints.add(scaled);
+                        this.newPoints.add(point);
                     } else {
-                        plane.addPoint(scaled);
+                        plane.addPoint(point);
                     }
                 }
             }
@@ -165,7 +167,6 @@ public class MeshTree extends OctTree {
                 relevantPoints = planes[i].getPoints();
             }
 
-
             // calculate convex hull and vertices for supporting newPoints with GrahamScan
             Point2D[] innerHullPoints = new Point2D[relevantPoints.size()];
             for (int j = 0; j < relevantPoints.size(); j++) {
@@ -208,6 +209,9 @@ public class MeshTree extends OctTree {
                 }
             }
         }
+        if (patches != null) {
+            patches = null;
+        }
     }
 
     public void putPoints(List<Vector3> points) {
@@ -218,7 +222,8 @@ public class MeshTree extends OctTree {
 
     private void putPoints(Vector3 point) {
         if (depth == generatorDepth) {
-            this.newPoints.add(point);
+            Vector3 scaled = scale(point, centroid, SCALE_FACTOR);
+            this.newPoints.add(scaled);
         } else {
             if (point.x < position.x + halfRange) {
                 if (point.y < position.y + halfRange) {
@@ -271,5 +276,49 @@ public class MeshTree extends OctTree {
             }
             return count;
         }
+    }
+
+    public void reconstructPatches() {
+        List<Vector3> boundaries = new ArrayList<>();
+        collectPlaneBoundaries(boundaries);
+        if (boundaries.size() < 3) {
+            return;
+        }
+        float[] points = new float[boundaries.size() * 3];
+        for (int i = 0; i < boundaries.size(); i++) {
+            Vector3 vector3 = boundaries.get(i);
+            points[i * 3] = (float) vector3.x;
+            points[i * 3 + 1] = (float) vector3.y;
+            points[i * 3 + 2] = (float) vector3.z;
+        }
+        float[] floats = JNIInterface.reconstructWithGreedy(points);
+        if (patches == null) {
+            patches = new ArrayList<>();
+        } else {
+            patches.clear();
+        }
+        for (int i = 0; i < floats.length / 3; i++) {
+            patches.add(new Vector3(floats[i * 3], floats[i * 3 + 1], floats[i * 3 + 2]));
+        }
+    }
+
+    private void collectPlaneBoundaries(List<Vector3> boundaries) {
+        if (depth == generatorDepth) {
+            for (Plane plane : planes) {
+                if (plane != null) {
+                    boundaries.addAll(plane.getPoints());
+                }
+            }
+        } else {
+            for (OctTree child : children) {
+                if (child != null) {
+                    ((MeshTree) child).collectPlaneBoundaries(boundaries);
+                }
+            }
+        }
+    }
+
+    public List<Vector3> getPatches() {
+        return patches;
     }
 }

@@ -1,4 +1,4 @@
-package de.stetro.master.construct.rendering;
+package de.stetro.master.constructnative.calc.marchingcubes;
 
 import org.rajawali3d.math.vector.Vector3;
 
@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import de.stetro.master.construct.calc.OctTree;
-import de.stetro.master.construct.marchingcubes.Cube;
-import de.stetro.master.construct.marchingcubes.HVector3;
+import de.stetro.master.constructnative.calc.OctTree;
 
 
 public class MarchingCubeTree extends OctTree {

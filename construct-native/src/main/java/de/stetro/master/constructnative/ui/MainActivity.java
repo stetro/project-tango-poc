@@ -161,12 +161,6 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.activity_main_menu_export_pointcloud:
-                renderer.exportPointCloud(this);
-                return true;
-            case R.id.activity_main_menu_reconstruction:
-                renderer.reconstruct(this);
-                return true;
             case R.id.activity_main_menu_toggle_pointcloud:
                 renderer.togglePointCloudVisibility();
                 return true;

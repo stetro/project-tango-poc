@@ -64,7 +64,7 @@ namespace constructnative {
         pcl::search::KdTree<pcl::PointNormal>::Ptr tree(new pcl::search::KdTree <pcl::PointNormal>);
         tree->setInputCloud(source);
         pcl::GreedyProjectionTriangulation <pcl::PointNormal> gp3;
-        gp3.setSearchRadius(0.2);
+        gp3.setSearchRadius(0.1);
         gp3.setMu(3.0);
         gp3.setMaximumNearestNeighbors(100);
         gp3.setMaximumSurfaceAngle(M_PI);
