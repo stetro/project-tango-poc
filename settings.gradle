@@ -4,5 +4,8 @@ include ':construct'
 include ':utils'
 if (!System.getenv("CI")) {
     // Native Project
-    include ':construct-native'
+    include ':chisel'
+    if(System.getenv("PCL")){
+    	include ':construct-native'
+    }
 }

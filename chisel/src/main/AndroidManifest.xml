@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="de.stetro.master.chisel">
+
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_fiber_smart_record_red_48dp"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme">
+        <uses-library
+            android:name="com.projecttango.libtango_device"
+            android:required="true" />
+        <activity
+            android:name=".ui.MainActivity"
+            android:label="@string/menu_name"
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
