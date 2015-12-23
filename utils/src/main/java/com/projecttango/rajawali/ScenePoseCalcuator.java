@@ -63,7 +63,7 @@ public class ScenePoseCalcuator {
     private Matrix4 mDeviceTDepthCamera;
 
     // Transformation from the position of the color Camera to the device frame.
-    private Matrix4 mDeviceTColorCamera;
+    public Matrix4 mDeviceTColorCamera;
 
     /**
      * Converts from TangoPoseData to a Matrix4 for transformations.

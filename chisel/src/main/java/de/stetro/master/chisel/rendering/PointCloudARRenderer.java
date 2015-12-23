@@ -4,11 +4,13 @@ import android.content.Context;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import com.google.atap.tangoservice.TangoPoseData;
 import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
 import org.rajawali3d.math.Matrix;
+import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
 
@@ -61,24 +63,12 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
     }
 
     private float[] poseToTransformation(Pose pose) {
-        float qw = (float) pose.getOrientation().w;
-        float qx = (float) pose.getOrientation().x;
-        float qy = (float) pose.getOrientation().y;
-        float qz = (float) pose.getOrientation().z;
-        float n = (float) (1.0f / Math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw));
-        qx *= n;
-        qy *= n;
-        qz *= n;
-        qw *= n;
-        float x = (float) pose.getPosition().x;
-        float y = (float) pose.getPosition().y;
-        float z = (float) pose.getPosition().z;
-        return new float[]{
-                1.0f - 2.0f * qy * qy - 2.0f * qz * qz, 2.0f * qx * qy - 2.0f * qz * qw, 2.0f * qx * qz + 2.0f * qy * qw, x,
-                2.0f * qx * qy + 2.0f * qz * qw, 1.0f - 2.0f * qx * qx - 2.0f * qz * qz, 2.0f * qy * qz - 2.0f * qx * qw, y,
-                2.0f * qx * qz - 2.0f * qy * qw, 2.0f * qy * qz + 2.0f * qx * qw, 1.0f - 2.0f * qx * qx - 2.0f * qy * qy, z,
-                0.0f, 0.0f, 0.0f, 1.0f};
-
+        float[] result = new float[16];
+        Quaternion orientation = pose.getOrientation();
+        orientation.conjugate();
+        Matrix4 translate = Matrix4.createRotationMatrix(orientation).translate(pose.getPosition());
+        translate.toFloatArray(result);
+        return result;
     }
 
     @Override

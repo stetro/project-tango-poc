@@ -33,8 +33,8 @@ namespace chisel {
             extrinsic(j / 4, j % 4) = transformationData[j];
         }
 
-        double truncation = 0.001504;
-        double maxDist = 5.0;
+        double truncation = 0.5;
+        double maxDist = 2.0;
 
         chiselMap->IntegratePointCloud(projectionIntegrator, *lastPointCloud, extrinsic, truncation,
                                        maxDist);
@@ -70,21 +70,21 @@ namespace chisel {
     }
 
     void ChiselApplication::clear(JNIEnv * env) {
-        chiselMap.reset(new chisel::Chisel(Eigen::Vector3i(32, 32, 32), 0.03, false));
+        chiselMap.reset(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.03, false));
     }
 
     ChiselApplication::ChiselApplication() {
-        chiselMap = chisel::ChiselPtr(new chisel::Chisel(Eigen::Vector3i(32, 32, 32), 0.03, false));
+        chiselMap = chisel::ChiselPtr(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.03, false));
 
         float quadratic = 0.0019;
         float linear = 0.00152;
         float constant = 0.001504;
-        float scale = 8.0;
+        float scale = 10.0;
         QuadraticTruncatorPtr truncator(new QuadraticTruncator(quadratic, linear, constant, scale));
 
         ConstantWeighterPtr weighter(new ConstantWeighter(1));
         float carvingDist = 0.05;
-        bool enableCarving = true;
+        bool enableCarving = false;
         Vec3List centroids;
 
         projectionIntegrator = ProjectionIntegrator(truncator, weighter, carvingDist, enableCarving,
