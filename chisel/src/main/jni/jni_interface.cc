@@ -29,6 +29,11 @@ Java_de_stetro_master_chisel_JNIInterface_clear(JNIEnv* env, jobject /*obj*/) {
     chiselApplication.clear(env);
 }
 
+JNIEXPORT void JNICALL
+Java_de_stetro_master_chisel_JNIInterface_update(JNIEnv* env, jobject /*obj*/) {
+chiselApplication.update(env);
+}
+
 JNIEXPORT jfloatArray JNICALL
 Java_de_stetro_master_chisel_JNIInterface_getMesh(
         JNIEnv* env, jobject /*obj*/) {
@@ -36,9 +41,9 @@ Java_de_stetro_master_chisel_JNIInterface_getMesh(
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_chisel_JNIInterface_putPoints(
-        JNIEnv* env, jobject /*obj*/, jfloatArray vertices) {
-chiselApplication.addPoints(env, vertices);
+Java_de_stetro_master_chisel_JNIInterface_addPoints(
+        JNIEnv* env, jobject /*obj*/, jfloatArray vertices, jfloatArray transformation) {
+chiselApplication.addPoints(env, vertices, transformation);
 }
 
 #ifdef __cplusplus

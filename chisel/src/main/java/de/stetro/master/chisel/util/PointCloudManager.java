@@ -58,7 +58,7 @@ public class PointCloudManager {
     public synchronized void fillCurrentPoints(Points currentPoints, Pose pose) {
         currentPoints.updatePoints(xyzIjData.xyz, xyzIjData.xyzCount);
         currentPoints.setPosition(pose.getPosition());
-        currentPoints.setOrientation(pose.getOrientation());
+        currentPoints.setOrientation(pose.getOrientation().clone());
         lastCloudTime = newCloudTime;
     }
 
@@ -66,4 +66,27 @@ public class PointCloudManager {
         return newCloudTime != lastCloudTime;
     }
 
+    public synchronized float[] getPoints(Pose pose) {
+        float[] floats = new float[xyzIjData.xyzCount * 3];
+        xyzIjData.xyz.position(0);
+        for (int i = 0; i < xyzIjData.xyzCount * 3; i++) {
+            floats[i] = xyzIjData.xyz.get();
+        }
+        return floats;
+    }
+
+    /*
+
+    final Matrix4 transformation = Matrix4.createTranslationMatrix(pose.getPosition()).rotate(pose.getOrientation());
+        float[] floats = new float[xyzIjData.xyzCount * 3];
+        xyzIjData.xyz.position(0);
+        for (int i = 0; i < xyzIjData.xyzCount; i++) {
+            Vector3 vector3 = new Vector3(xyzIjData.xyz.get(), xyzIjData.xyz.get(), xyzIjData.xyz.get());
+            vector3.multiply(transformation);
+            floats[i * 3] = (float) vector3.x;
+            floats[i * 3 + 1] = (float) vector3.y;
+            floats[i * 3 + 2] = (float) vector3.z;
+        }
+        return floats;
+     */
 }

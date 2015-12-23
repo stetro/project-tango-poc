@@ -15,10 +15,10 @@
   limitations under the License.
 -->
 <resources>
-    <string name="app_name">chisel</string>
+    <string name="app_name">Chisel</string>
     <string name="drawer_header">Main panel header</string>
     <string name="key_debug_point_cloud">key_debug_point_cloud</string>
-    <string name="menu_name">PlaneConstruct</string>
+    <string name="menu_name">Chisel</string>
     <string name="open_drawer_button">Open drawer button</string>
     <string name="settings">Settings</string>
     <string name="toggle_pointcloud">Pointcloud Sichtbarkeit</string>

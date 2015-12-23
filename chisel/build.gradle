@@ -61,7 +61,7 @@ mdicons {
             densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'
             colors 'red'
             sizes '48dp'
-            names 'fiber_smart_record'
+            names 'nfc'
         }
         toolbarIcons {
             densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'

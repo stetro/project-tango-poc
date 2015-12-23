@@ -128,7 +128,7 @@ public abstract class TangoRajawaliRenderer extends RajawaliRenderer {
                                 mTango.getPoseAtTime(mLastRGBFrameTimestamp, TANGO_WORLD_T_DEVICE);
 
                         if (lastFramePose.statusCode != TangoPoseData.POSE_VALID) {
-                            Log.w(TAG, "Unable to get device pose at camera frame update time = " + mLastRGBFrameTimestamp);
+                            Log.v(TAG, "Unable to get device pose at camera frame update time = " + mLastRGBFrameTimestamp);
                         } else {
                             Pose sceneCameraPose = mScenePoseCalcuator.toOpenGLCameraPose(lastFramePose);
                             updateCameraPose(sceneCameraPose);

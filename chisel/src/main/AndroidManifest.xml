@@ -12,7 +12,7 @@
 
     <application
         android:fullBackupContent="false"
-        android:icon="@mipmap/ic_fiber_smart_record_red_48dp"
+        android:icon="@mipmap/ic_nfc_red_48dp"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <uses-library
