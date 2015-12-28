@@ -29,6 +29,8 @@ Java_de_stetro_master_chisel_JNIInterface_clear(JNIEnv* env, jobject /*obj*/) {
     chiselApplication.clear(env);
 }
 
+
+
 JNIEXPORT void JNICALL
 Java_de_stetro_master_chisel_JNIInterface_update(JNIEnv* env, jobject /*obj*/) {
 chiselApplication.update(env);

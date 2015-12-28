@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 
 import com.google.atap.tangoservice.TangoPoseData;
 import com.projecttango.rajawali.Pose;
+import com.projecttango.rajawali.ScenePoseCalcuator;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 import com.projecttango.rajawali.renderables.primitives.Points;
 
@@ -13,6 +14,7 @@ import org.rajawali3d.math.Matrix;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
+import org.rajawali3d.primitives.Cube;
 
 import java.util.Stack;
 
@@ -30,6 +32,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
     private boolean isRunning = true;
     private float[] mesh;
     private boolean updateMesh;
+    private Cube cube;
 
 
     public PointCloudARRenderer(Context context) {
@@ -45,16 +48,23 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
         super.initScene();
         currentPoints = new Points(MAX_POINTS);
         getCurrentScene().addChild(currentPoints);
+
+        cube = new Cube(0.1f);
+        cube.setMaterial(Materials.getGreenMaterial());
+        getCurrentScene().addChild(cube);
     }
 
     public void capturePoints() {
         if (pointCloudManager != null) {
             long measure = System.currentTimeMillis();
             Pose pose = mScenePoseCalcuator.toOpenGLPointCloudPose(pointCloudManager.getDevicePoseAtCloudTime());
-            float[] points = pointCloudManager.getPoints(pose);
-            double[] translation = new double[16];
-            Matrix.setIdentityM(translation, 0);
-            JNIInterface.addPoints(points, poseToTransformation(pose));
+            float[] points = pointCloudManager.getPoints();
+            Matrix4 transformation = poseToTransformation(pose);
+            Vector3 aPoint = new Vector3(points[0], points[1], points[2]);
+            cube.setPosition(aPoint.multiply(transformation));
+            float[] values = transformation.getFloatValues();
+            float[] copy = swapMatrixFloatRepresentation(values);
+            JNIInterface.addPoints(points, copy);
             JNIInterface.update();
             mesh = JNIInterface.getMesh();
             updateMesh = true;
@@ -62,13 +72,30 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
         }
     }
 
-    private float[] poseToTransformation(Pose pose) {
-        float[] result = new float[16];
-        Quaternion orientation = pose.getOrientation();
-        orientation.conjugate();
-        Matrix4 translate = Matrix4.createRotationMatrix(orientation).translate(pose.getPosition());
-        translate.toFloatArray(result);
-        return result;
+    private float[] swapMatrixFloatRepresentation(float[] values) {
+        float[] copy = new float[16];
+        copy[0] = values[Matrix4.M00];
+        copy[1] = values[Matrix4.M01];
+        copy[2] = values[Matrix4.M02];
+        copy[3] = values[Matrix4.M03];
+        copy[4] = values[Matrix4.M10];
+        copy[5] = values[Matrix4.M11];
+        copy[6] = values[Matrix4.M12];
+        copy[7] = values[Matrix4.M13];
+        copy[8] = values[Matrix4.M20];
+        copy[9] = values[Matrix4.M21];
+        copy[10] = values[Matrix4.M22];
+        copy[11] = values[Matrix4.M23];
+        copy[12] = values[Matrix4.M30];
+        copy[13] = values[Matrix4.M31];
+        copy[14] = values[Matrix4.M32];
+        copy[15] = values[Matrix4.M33];
+        return copy;
+    }
+
+
+    public Matrix4 poseToTransformation(Pose pose) {
+        return Matrix4.createRotationMatrix(pose.getOrientation()).translate(pose.getPosition());
     }
 
     @Override

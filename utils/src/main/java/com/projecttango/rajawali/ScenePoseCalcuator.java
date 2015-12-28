@@ -37,22 +37,22 @@ public class ScenePoseCalcuator {
     // NOTE: Rajawali uses column-major for matrices.
     public static final Matrix4 OPENGL_T_TANGO_WORLD = new Matrix4(new double[]{
             1, 0, 0, 0,
-            0, 0,-1, 0,
+            0, 0, -1, 0,
             0, 1, 0, 0,
             0, 0, 0, 1
     });
     // Transformation from the Tango RGB camera coordinate frame to the OpenGL camera frame.
-    public static final Matrix4 COLOR_CAMERA_T_OPENGL_CAMERA = new Matrix4(new double[] {
+    public static final Matrix4 COLOR_CAMERA_T_OPENGL_CAMERA = new Matrix4(new double[]{
             1, 0, 0, 0,
-            0,-1, 0, 0,
-            0, 0,-1, 0,
+            0, -1, 0, 0,
+            0, 0, -1, 0,
             0, 0, 0, 1
     });
 
     public static final Matrix4 DEPTH_CAMERA_T_OPENGL_CAMERA = new Matrix4(new double[]{
             1, 0, 0, 0,
-            0,-1, 0, 0,
-            0, 0,-1, 0,
+            0, -1, 0, 0,
+            0, 0, -1, 0,
             0, 0, 0, 1
     });
 
@@ -63,7 +63,7 @@ public class ScenePoseCalcuator {
     private Matrix4 mDeviceTDepthCamera;
 
     // Transformation from the position of the color Camera to the device frame.
-    public Matrix4 mDeviceTColorCamera;
+    private Matrix4 mDeviceTColorCamera;
 
     /**
      * Converts from TangoPoseData to a Matrix4 for transformations.
@@ -157,7 +157,7 @@ public class ScenePoseCalcuator {
         Matrix4 invertYandZMatrix = new Matrix4(new double[]{1.0f, 0.0f, 0.0f, 0.0f,
                 0.0f, -1.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, -1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f });
+                0.0f, 0.0f, 0.0f, 1.0f});
 
         Matrix4 startServiceTdevice = tangoPoseToMatrix(tangoPose);
 
@@ -189,10 +189,10 @@ public class ScenePoseCalcuator {
      * frame at the time the point and normal were measured, calculate a TangoPoseData object in
      * Tango start of service frame.
      *
-     * @param point      Point in depth frame where the plane has been detected.
-     * @param normal     Normal of the detected plane.
-     * @param tangoPose  Device pose with respect to start of service at the time the plane was
-     *                   fitted.
+     * @param point     Point in depth frame where the plane has been detected.
+     * @param normal    Normal of the detected plane.
+     * @param tangoPose Device pose with respect to start of service at the time the plane was
+     *                  fitted.
      */
     public Pose planeFitToOpenGLPose(double[] point, double[] normal, TangoPoseData tangoPose) {
         if (mDeviceTDepthCamera == null) {
@@ -292,5 +292,23 @@ public class ScenePoseCalcuator {
         m.setTranslation(point[0], point[1], point[2]);
 
         return m;
+    }
+
+    public Pose toOpenChiselCameraPose(TangoPoseData tangoPose) {
+        // We can't do this calculation until extrinsics are set-up.
+        if (mDeviceTColorCamera == null) {
+            throw new RuntimeException("You must call setupExtrinsics first.");
+        }
+
+        Matrix4 startServiceTdevice = tangoPoseToMatrix(tangoPose);
+
+        // Get device pose in OpenGL world frame.
+        Matrix4 openglTDevice = OPENGL_T_TANGO_WORLD.clone().multiply(startServiceTdevice);
+
+        // Get OpenGL camera pose in OpenGL world frame.
+        Matrix4 openglWorldTOpenglCamera = openglTDevice.multiply(mDeviceTColorCamera).
+                multiply(COLOR_CAMERA_T_OPENGL_CAMERA);
+
+        return matrixToPose(openglWorldTOpenglCamera);
     }
 }

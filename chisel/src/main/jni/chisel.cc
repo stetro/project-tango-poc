@@ -29,15 +29,22 @@ namespace chisel {
         // move extrisics to a Eigen transformation
         jfloat *transformationData = env->GetFloatArrayElements(transformation, NULL);
         Transform extrinsic = Transform();
-        for (int j = 0; j < 16; ++j) {
-            extrinsic(j / 4, j % 4) = transformationData[j];
+        for (int j = 0; j < 4; ++j) {
+            for (int k = 0; k < 4; ++k) {
+                extrinsic(j, k) = transformationData[j * 4 + k];
+            }
         }
 
         double truncation = 0.5;
         double maxDist = 2.0;
 
-        chiselMap->IntegratePointCloud(projectionIntegrator, *lastPointCloud, extrinsic, truncation,
-                                       maxDist);
+        chiselMap->IntegratePointCloud(
+                projectionIntegrator,
+                *lastPointCloud,
+                extrinsic,
+                truncation,
+                maxDist
+        );
 
     }
 
@@ -70,21 +77,21 @@ namespace chisel {
     }
 
     void ChiselApplication::clear(JNIEnv * env) {
-        chiselMap.reset(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.03, false));
+        chiselMap.reset(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.08, false));
     }
 
     ChiselApplication::ChiselApplication() {
-        chiselMap = chisel::ChiselPtr(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.03, false));
+        chiselMap = chisel::ChiselPtr(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.08, false));
 
         float quadratic = 0.0019;
         float linear = 0.00152;
         float constant = 0.001504;
         float scale = 10.0;
-        QuadraticTruncatorPtr truncator(new QuadraticTruncator(quadratic, linear, constant, scale));
+        ConstantTruncatorPtr truncator(new ConstantTruncator(0.25));
 
         ConstantWeighterPtr weighter(new ConstantWeighter(1));
-        float carvingDist = 0.05;
-        bool enableCarving = false;
+        float carvingDist = 0.5;
+        bool enableCarving = true;
         Vec3List centroids;
 
         projectionIntegrator = ProjectionIntegrator(truncator, weighter, carvingDist, enableCarving,

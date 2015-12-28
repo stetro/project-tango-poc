@@ -14,4 +14,5 @@ public class JNIInterface {
     public static native void clear();
 
     public static native void update();
+
 }

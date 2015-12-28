@@ -1,11 +1,16 @@
 package de.stetro.master.chisel.util;
 
 
+import android.util.Log;
+
 import com.google.atap.tangoservice.TangoCameraIntrinsics;
 import com.google.atap.tangoservice.TangoPoseData;
 import com.google.atap.tangoservice.TangoXyzIjData;
 import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.renderables.primitives.Points;
+
+import org.rajawali3d.math.Matrix4;
+import org.rajawali3d.math.vector.Vector3;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -66,11 +71,13 @@ public class PointCloudManager {
         return newCloudTime != lastCloudTime;
     }
 
-    public synchronized float[] getPoints(Pose pose) {
+    public synchronized float[] getPoints() {
         float[] floats = new float[xyzIjData.xyzCount * 3];
         xyzIjData.xyz.position(0);
-        for (int i = 0; i < xyzIjData.xyzCount * 3; i++) {
-            floats[i] = xyzIjData.xyz.get();
+        for (int i = 0; i < xyzIjData.xyzCount; i++) {
+            floats[i * 3] = xyzIjData.xyz.get();
+            floats[i * 3 + 1] = xyzIjData.xyz.get();
+            floats[i * 3 + 2] = xyzIjData.xyz.get();
         }
         return floats;
     }
@@ -88,5 +95,6 @@ public class PointCloudManager {
             floats[i * 3 + 2] = (float) vector3.z;
         }
         return floats;
-     */
+    }
+    */
 }
