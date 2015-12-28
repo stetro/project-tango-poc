@@ -274,4 +274,5 @@ public abstract class TangoRajawaliRenderer extends RajawaliRenderer {
         return mLastRGBFrameTimestamp;
     }
 
+
 }

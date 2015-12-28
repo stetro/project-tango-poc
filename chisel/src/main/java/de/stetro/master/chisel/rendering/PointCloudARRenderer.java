@@ -16,9 +16,12 @@ import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.primitives.Cube;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import de.stetro.master.chisel.JNIInterface;
+import de.stetro.master.chisel.util.PLYExporter;
 import de.stetro.master.chisel.util.PointCloudManager;
 
 
@@ -159,5 +162,16 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
     public void toggleAction() {
         isRunning = !isRunning;
         Log.d(tag, "Toggled Reconstruction to " + isRunning);
+    }
+
+    public void exportMesh() {
+        if (mesh.length > 0) {
+            List<Vector3> vertices = new ArrayList<>();
+            for (int i = 0; i < mesh.length / 3; i++) {
+                vertices.add(new Vector3(mesh[i * 3], mesh[i * 3 + 1], mesh[i * 3 + 2]));
+            }
+            PLYExporter plyExporter = new PLYExporter(getContext(), vertices);
+            plyExporter.export();
+        }
     }
 }

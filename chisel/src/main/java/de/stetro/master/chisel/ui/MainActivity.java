@@ -165,6 +165,9 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
             case R.id.activity_main_menu_delete:
                 renderer.clearPoints();
                 return true;
+            case R.id.activity_main_menu_archive:
+                renderer.exportMesh();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

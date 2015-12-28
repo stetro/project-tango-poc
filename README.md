@@ -56,6 +56,13 @@
 
 ![Unity Screenshot 1](img/native.png)
 
+## CHISEL `open_chisel` implementation (chisel/)
+
+* online reconstruction using `open_chisel` library
+* transformation and interfaces to native environment
+* PLY exporter
+* ![Chisel Screenshot](img/chisel.png)
+
 ## Unity Implementierung (unity/)
 * Kombination der Experimental Beispiel aus Meshing und AR
 * Implementierung von Clipping Depth Shader
