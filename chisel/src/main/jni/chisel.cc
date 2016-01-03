@@ -6,6 +6,7 @@
 #include <open_chisel/geometry/Geometry.h>
 #include <open_chisel/truncation/QuadraticTruncator.h>
 #include <open_chisel/truncation/ConstantTruncator.h>
+#include <open_chisel/truncation/QuadraticTruncator.h>
 #include <open_chisel/weighting/ConstantWeighter.h>
 #include <open_chisel/mesh/Mesh.h>
 
@@ -35,15 +36,12 @@ namespace chisel {
             }
         }
 
-        double truncation = 0.5;
-        double maxDist = 2.0;
-
         chiselMap->IntegratePointCloud(
                 projectionIntegrator,
                 *lastPointCloud,
                 extrinsic,
-                truncation,
-                maxDist
+                rayTruncation,
+                farClipping
         );
 
     }
@@ -77,25 +75,38 @@ namespace chisel {
     }
 
     void ChiselApplication::clear(JNIEnv * env) {
-        chiselMap.reset(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.08, false));
+        chiselMap.reset(new chisel::Chisel(Eigen::Vector3i(chunkSize, chunkSize, chunkSize),
+                                           chunkResolution, false));
     }
 
     ChiselApplication::ChiselApplication() {
-        chiselMap = chisel::ChiselPtr(new chisel::Chisel(Eigen::Vector3i(16, 16, 16), 0.08, false));
+        chunkSize = 16;
 
-        float quadratic = 0.0019;
-        float linear = 0.00152;
-        float constant = 0.001504;
-        float scale = 10.0;
-        ConstantTruncatorPtr truncator(new ConstantTruncator(0.25));
+        truncationDistConst = 0.001504;
+        truncationDistLinear = 0.00152;
+        truncationDistQuad = 0.0019;
+        truncationDistScale = 8.0;
 
-        ConstantWeighterPtr weighter(new ConstantWeighter(1));
-        float carvingDist = 0.5;
-        bool enableCarving = true;
+        weighting = 1.0;
+        enableCarving = true;
+        carvingDistance = 0.5;
+        chunkResolution = 0.08;
+
+        farClipping = 2.0;
+        rayTruncation = 0.5;
+
+        chiselMap = chisel::ChiselPtr(
+                new chisel::Chisel(Eigen::Vector3i(chunkSize, chunkSize, chunkSize),
+                                   chunkResolution, false));
+
+        TruncatorPtr truncator(new ConstantTruncator(truncationDistScale));
+
+        ConstantWeighterPtr weighter(new ConstantWeighter(weighting));
+
         Vec3List centroids;
 
-        projectionIntegrator = ProjectionIntegrator(truncator, weighter, carvingDist, enableCarving,
-                                                    centroids);
+        projectionIntegrator = ProjectionIntegrator(truncator, weighter, carvingDistance,
+                                                    enableCarving, centroids);
         projectionIntegrator.SetCentroids(chiselMap->GetChunkManager().GetCentroids());
         LOGI("ChiselApplication was created in native environment");
     }

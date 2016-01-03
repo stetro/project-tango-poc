@@ -31,13 +31,28 @@ namespace chisel {
 
         // JNI Interface
         void addPoints(JNIEnv *env, jfloatArray vertices, jfloatArray transformation);
+
         jfloatArray getMesh(JNIEnv *env);
+
         void clear(JNIEnv *env);
+
         void update(JNIEnv *env);
 
         chisel::ChiselPtr chiselMap;
         chisel::PointCloudPtr lastPointCloud = chisel::PointCloudPtr(new PointCloud());
         chisel::ProjectionIntegrator projectionIntegrator;
+    protected:
+        double truncationDistConst;
+        double truncationDistLinear;
+        double truncationDistQuad;
+        double truncationDistScale;
+        double chunkSize;
+        double chunkResolution;
+        double weighting;
+        double carvingDistance;
+        bool enableCarving;
+        double farClipping;
+        double rayTruncation;
 
     };
 
