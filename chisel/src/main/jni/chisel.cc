@@ -90,7 +90,7 @@ namespace chisel {
         weighting = 1.0;
         enableCarving = true;
         carvingDistance = 0.5;
-        chunkResolution = 0.08;
+        chunkResolution = 0.06;
 
         farClipping = 2.0;
         rayTruncation = 0.5;

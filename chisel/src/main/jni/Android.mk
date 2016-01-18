@@ -3,9 +3,9 @@ LOCAL_PATH := $(call my-dir)
 PROJECT_ROOT_FROM_JNI := ../../../../..
 PROJECT_ROOT := $(LOCAL_PATH)/$(PROJECT_ROOT_FROM_JNI)
 
-EIGEN_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/Eigen
+EIGEN_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/eigen
 CHISEL := $(LOCAL_PATH)/../../../../native-libraries/open_chisel
-BOOST:= /Users/stetro/Source/Boost-for-Android-Prebuilt/boost_1_53_0
+BOOST:= $(LOCAL_PATH)/../../../../native-libraries/boost
 
 
 # Building Boost
