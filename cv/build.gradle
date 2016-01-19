@@ -1,0 +1,73 @@
+apply plugin: 'android-sdk-manager'
+apply plugin: 'com.android.application'
+apply plugin: 'com.tmiyamon.mdicons'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        applicationId "de.stetro.master.cv"
+        minSdkVersion 19
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    sourceSets.main {
+        jniLibs.srcDir 'src/main/libs'
+        jni.srcDirs = [];
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn ndkBuild
+}
+
+task ndkBuild(type: Exec) {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def ndkbuild = properties.getProperty('ndk.dir', null) + "/ndk-build"
+    commandLine ndkbuild, '-C', file('src/main/jni').absolutePath
+}
+
+dependencies {
+    compile project(':utils')
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'gov.nist.math:jama:1.0.2'
+    compile 'org.apache.commons:commons-math3:3.0'
+    compile 'de.greenrobot:eventbus:2.4.0'
+    compile 'com.github.erz05:JoyStick:fcd19c2704'
+    compile('com.afollestad.material-dialogs:core:0.8.5.2@aar') {
+        transitive = true
+    }
+    compile 'com.github.quickhull3d:quickhull3d:1.0.0'
+}
+
+preBuild.dependsOn installAssets
+
+mdicons {
+    defcolor 'black', '#000000'
+    defcolor 'white', '#FFFFFF'
+    defcolor 'gray', '#CCCCCC'
+    defcolor 'red', '#FF0000'
+
+    assets {
+        appIcon {
+            densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'
+            colors 'red'
+            sizes '48dp'
+            names 'donut_large'
+        }
+        toolbarIcons {
+            densities 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'
+            colors 'white'
+            sizes '24dp'
+            names 'archive', 'blur_linear', 'visibility', 'visibility_off', 'delete'
+        }
+    }
+}
