@@ -50,22 +50,23 @@ namespace {
         float cx = static_cast<float>(ccIntrinsics.cx);
         float cy = static_cast<float>(ccIntrinsics.cy);
 
-        float k1 = ccIntrinsics.distortion[0];
-        float k2 = ccIntrinsics.distortion[1];
-        float k3 = ccIntrinsics.distortion[2];
+        int width = static_cast<int>(ccIntrinsics.width);
+        int height = static_cast<int>(ccIntrinsics.height);
 
         for (int k = 0; k < xyz_ij->xyz_count; ++k) {
 
             float X = xyz_ij->xyz[k * 3][0];
             float Y = xyz_ij->xyz[k * 3][1];
-            float Z = -1 * xyz_ij->xyz[k * 3][2];
-            float ru = sqrt((pow(X, 2) + pow(Y, 2)) / (pow(Z, 2)));
-            float rd = ru + k1 * pow(ru, 3) + k2 * pow(ru, 5) + k3 * pow(ru, 7);
+            float Z = xyz_ij->xyz[k * 3][2];
 
-            int x = floor(abs(X / Z * fx * rd / ru + cx - 2));
-            int y = floor(abs(X / Z * fy * rd / ru + cy - 2));
+            int x = static_cast<int>(fx * (X / Z) + cx);
+            int y = static_cast<int>(fy * (Y / Z) + cy);
 
-//            depth.at<cv::Vec3b>(x, y)[0] = 240;
+            uint8_t depth_value = UCHAR_MAX - ((Z * 1000) * UCHAR_MAX / 4500);
+
+            cv::Point point(y % height, x % width);
+            line(depth, point, point, cv::Scalar(depth_value, depth_value, depth_value), 5.0);
+
         }
 
 
@@ -312,6 +313,17 @@ namespace tango_video_overlay {
             }
         }
 
+
+        cv::Mat edges(yuv_width_, yuv_height_, IPL_DEPTH_8U, 1);
+        cvtColor(rgb, edges, CV_RGB2GRAY);
+        blur(edges, edges, cv::Size(5, 5));
+        Canny(edges, edges, 60, 60 * 3, 5);
+        cv::Mat result(yuv_width_, yuv_height_, CV_8UC3);
+        cvtColor(edges, result, CV_GRAY2RGB);
+
+
+        subtract(rgb, result, rgb);
+
         if (!depth.empty()) {
             int space = 20;
             int x2 = yuv_height_ - space;
@@ -320,17 +332,6 @@ namespace tango_video_overlay {
             int y1 = yuv_width_ - (depth.rows + space);
             depth.copyTo(rgb.rowRange(y1, y2).colRange(x1, x2));
         }
-
-
-        cv::Mat edges(yuv_width_, yuv_height_, IPL_DEPTH_8U, 1);
-        cvtColor(rgb, edges, CV_RGB2GRAY);
-        blur(edges, edges, cv::Size(5, 5));
-        Canny(edges, edges, 60, 60 * 3,5);
-        cv::Mat result(yuv_width_, yuv_height_,CV_8UC3 );
-        cvtColor(edges, result, CV_GRAY2RGB);
-
-
-        subtract(rgb,  result, rgb);
 
         for (size_t i = 0; i < yuv_height_; ++i) {
             for (size_t j = 0; j < yuv_width_; ++j) {
