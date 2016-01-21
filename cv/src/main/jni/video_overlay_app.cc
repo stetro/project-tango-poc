@@ -32,6 +32,11 @@ const float kArCameraFarClippingPlane = 100.0f;
 std::vector <float> vertices_;
 int vertices_count_;
 
+enum Filter {
+    SMALL = 0, BIG = 1, EDGE = 2, INFILL = 3, COMBINED = 4
+};
+
+Filter filter = SMALL;
 
 // from android samples
 /* return current time in milliseconds */
@@ -41,6 +46,7 @@ static double now_ms(void) {
     return 1000.0 * res.tv_sec + (double) res.tv_nsec / 1e6;
 }
 
+double elapsedTime = now_ms();
 
 namespace {
     void OnFrameAvailableRouter(void *context, TangoCameraId, const TangoImageBuffer *buffer) {
@@ -88,7 +94,11 @@ namespace {
             uint8_t depth_value = UCHAR_MAX - ((Z * 1000) * UCHAR_MAX / 4500);
 
             cv::Point point(y, x);
-            line(depth, point, point, cv::Scalar(depth_value), 5.0);
+            if (filter == SMALL) {
+                line(depth, point, point, cv::Scalar(depth_value), 1.0);
+            } else {
+                line(depth, point, point, cv::Scalar(depth_value), 5.0);
+            }
 
         }
 
@@ -339,18 +349,29 @@ namespace tango_video_overlay {
         if (!depth.empty()) {
             cv::Mat tmp_depth(depth);
 
-            int space = 20;
-            int x2 = yuv_height_ - space;
-            int x1 = yuv_height_ - (tmp_depth.cols + space);
-            int y2 = yuv_width_ - space;
-            int y1 = yuv_width_ - (tmp_depth.rows + space);
+
+
+            filter = (Filter) (((int) ((now_ms() - elapsedTime) / 5000)) % 5);
 
             cv::Mat scaled_rgb(320, 180, CV_8UC3);
-            inpaint(tmp_depth, (tmp_depth == 0), tmp_depth, 5.0, 1);
+            if (filter == INFILL || filter == COMBINED) {
+                inpaint(tmp_depth, (tmp_depth == 0), tmp_depth, 3.0, 1);
+            }
             resize(rgb, scaled_rgb, scaled_rgb.size());
-            cv::ximgproc::guidedFilter(scaled_rgb, tmp_depth, tmp_depth, 3, 3.0);
+            if (filter == EDGE || filter == COMBINED) {
+                cv::ximgproc::guidedFilter(scaled_rgb, tmp_depth, tmp_depth, 5, 2.0);
+            }
             cv::cvtColor(tmp_depth, tmp_depth, CV_GRAY2RGB);
             addWeighted(scaled_rgb, 0.0, tmp_depth, 1.0, 0.0, scaled_rgb);
+
+            resize(scaled_rgb, scaled_rgb,cv::Size(360,640));
+
+            int space = 20;
+            int x2 = yuv_height_ - space;
+            int x1 = yuv_height_ - (scaled_rgb.cols + space);
+            int y2 = yuv_width_ - space;
+            int y1 = yuv_width_ - (scaled_rgb.rows + space);
+
             scaled_rgb.copyTo(rgb.rowRange(y1, y2).colRange(x1, x2));
 
             double currentTime = now_ms();
