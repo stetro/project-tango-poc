@@ -17,7 +17,7 @@ LOCAL_PATH := $(call my-dir)
 PROJECT_ROOT_FROM_JNI:= ../../../../..
 PROJECT_ROOT:= $(call my-dir)/../../../../..
 C_EXAMPLES:=/home/stetro/Source/tango-examples-c
-OPENCV:=/home/stetro/Library/OpenCV-android-sdk/sdk/native/
+OPENCV:=/home/stetro/Source/opencv/platforms/build_android_arm/
 
 
 
@@ -25,13 +25,13 @@ include $(CLEAR_VARS)
 
 OPENCV_CAMERA_MODULES:=on
 OPENCV_INSTALL_MODULES:=on
-include $(OPENCV)/jni/OpenCV.mk
+include $(OPENCV)/OpenCV.mk
 
 LOCAL_MODULE    := libvideo_overlay_jni_example
-LOCAL_SHARED_LIBRARIES := tango_client_api
-LOCAL_CFLAGS    := -std=c++11
+LOCAL_SHARED_LIBRARIES += tango_client_api
+LOCAL_CFLAGS    += -std=c++11
 
-LOCAL_SRC_FILES := jni_interface.cc \
+LOCAL_SRC_FILES += jni_interface.cc \
                    yuv_drawable.cc \
                    video_overlay_app.cc \
                    $(C_EXAMPLES)/tango-gl/axis.cpp \
@@ -51,11 +51,10 @@ LOCAL_SRC_FILES := jni_interface.cc \
                    $(C_EXAMPLES)/tango-gl/util.cpp \
                    $(C_EXAMPLES)/tango-gl/video_overlay.cpp
 
-LOCAL_C_INCLUDES := $(OPENCV)/jni/include \
-                    $(C_EXAMPLES)/tango-gl/include \
+LOCAL_C_INCLUDES += $(C_EXAMPLES)/tango-gl/include \
                     $(C_EXAMPLES)/third-party/glm
 
-LOCAL_LDLIBS    := -llog -lm -lGLESv2 -L$(SYSROOT)/usr/lib  -lopencv_java3 -L$(OPENCV)/libs/armeabi-v7a
+LOCAL_LDLIBS    += -llog -lm -lGLESv2 -L$(SYSROOT)/usr/lib
 
 
 

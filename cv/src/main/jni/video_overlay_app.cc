@@ -18,13 +18,29 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-
+#include <opencv2/ximgproc.hpp>
+#include <opencv2/videostab.hpp>
+#include <opencv2/photo.hpp>
+#include <time.h>
 
 cv::Mat depth;
 TangoCameraIntrinsics ccIntrinsics;
+double lastTime;
 // Far clipping plane of the AR camera.
 const float kArCameraNearClippingPlane = 0.1f;
 const float kArCameraFarClippingPlane = 100.0f;
+std::vector <float> vertices_;
+int vertices_count_;
+
+
+// from android samples
+/* return current time in milliseconds */
+static double now_ms(void) {
+    struct timespec res;
+    clock_gettime(CLOCK_REALTIME, &res);
+    return 1000.0 * res.tv_sec + (double) res.tv_nsec / 1e6;
+}
+
 
 namespace {
     void OnFrameAvailableRouter(void *context, TangoCameraId, const TangoImageBuffer *buffer) {
@@ -34,17 +50,19 @@ namespace {
     }
 
     void OnPointCloudAvailableRouter(void *context, const TangoXYZij *xyz_ij) {
+
+        // copy points to avoid concurrency
+        size_t point_cloud_size = xyz_ij->xyz_count * 3;
+        vertices_.resize(point_cloud_size);
+        std::copy(xyz_ij->xyz[0], xyz_ij->xyz[0] + point_cloud_size, vertices_.begin());
+        vertices_count_ = xyz_ij->xyz_count;
+
+
         //320×180 depth window
-        depth = cv::Mat(320, 180, CV_8UC3);
-        for (int i = 0; i < 320; ++i) {
-            for (int j = 0; j < 180; ++j) {
-                depth.at<cv::Vec3b>(i, j)[0] = 0;
-                depth.at<cv::Vec3b>(i, j)[1] = 0;
-                depth.at<cv::Vec3b>(i, j)[2] = 0;
-            }
-        }
+        depth = cv::Mat(320, 180, CV_8UC1);
+        depth.setTo(cv::Scalar(0, 0, 0));
 
-
+        // load camera intrinsics
         float fx = static_cast<float>(ccIntrinsics.fx);
         float fy = static_cast<float>(ccIntrinsics.fy);
         float cx = static_cast<float>(ccIntrinsics.cx);
@@ -53,19 +71,24 @@ namespace {
         int width = static_cast<int>(ccIntrinsics.width);
         int height = static_cast<int>(ccIntrinsics.height);
 
-        for (int k = 0; k < xyz_ij->xyz_count; ++k) {
+        for (int k = 0; k < vertices_count_; ++k) {
 
-            float X = xyz_ij->xyz[k * 3][0];
-            float Y = xyz_ij->xyz[k * 3][1];
-            float Z = xyz_ij->xyz[k * 3][2];
+            float X = vertices_[k * 3];
+            float Y = vertices_[k * 3 + 1];
+            float Z = vertices_[k * 3 + 2];
 
+            // project points with intrinsics
             int x = static_cast<int>(fx * (X / Z) + cx);
             int y = static_cast<int>(fy * (Y / Z) + cy);
 
+            if (x < 0 || x > width || y < 0 || y > height) {
+                continue;
+            }
+
             uint8_t depth_value = UCHAR_MAX - ((Z * 1000) * UCHAR_MAX / 4500);
 
-            cv::Point point(y % height, x % width);
-            line(depth, point, point, cv::Scalar(depth_value, depth_value, depth_value), 5.0);
+            cv::Point point(y, x);
+            line(depth, point, point, cv::Scalar(depth_value), 5.0);
 
         }
 
@@ -313,24 +336,27 @@ namespace tango_video_overlay {
             }
         }
 
-
-        cv::Mat edges(yuv_width_, yuv_height_, IPL_DEPTH_8U, 1);
-        cvtColor(rgb, edges, CV_RGB2GRAY);
-        blur(edges, edges, cv::Size(5, 5));
-        Canny(edges, edges, 60, 60 * 3, 5);
-        cv::Mat result(yuv_width_, yuv_height_, CV_8UC3);
-        cvtColor(edges, result, CV_GRAY2RGB);
-
-
-        subtract(rgb, result, rgb);
-
         if (!depth.empty()) {
+            cv::Mat tmp_depth(depth);
+
             int space = 20;
             int x2 = yuv_height_ - space;
-            int x1 = yuv_height_ - (depth.cols + space);
+            int x1 = yuv_height_ - (tmp_depth.cols + space);
             int y2 = yuv_width_ - space;
-            int y1 = yuv_width_ - (depth.rows + space);
-            depth.copyTo(rgb.rowRange(y1, y2).colRange(x1, x2));
+            int y1 = yuv_width_ - (tmp_depth.rows + space);
+
+            cv::Mat scaled_rgb(320, 180, CV_8UC3);
+            inpaint(tmp_depth, (tmp_depth == 0), tmp_depth, 5.0, 1);
+            resize(rgb, scaled_rgb, scaled_rgb.size());
+            cv::ximgproc::guidedFilter(scaled_rgb, tmp_depth, tmp_depth, 3, 3.0);
+            cv::cvtColor(tmp_depth, tmp_depth, CV_GRAY2RGB);
+            addWeighted(scaled_rgb, 0.0, tmp_depth, 1.0, 0.0, scaled_rgb);
+            scaled_rgb.copyTo(rgb.rowRange(y1, y2).colRange(x1, x2));
+
+            double currentTime = now_ms();
+            LOGE("%lf Hz", 1000 / (currentTime - lastTime));
+            lastTime = currentTime;
+
         }
 
         for (size_t i = 0; i < yuv_height_; ++i) {
