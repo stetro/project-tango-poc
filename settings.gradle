@@ -8,4 +8,7 @@ if (!System.getenv("CI")) {
     if(System.getenv("PCL")){
     	include ':construct-native'
     }
+
+    include ':openCVLibrary310'
+    include ':cv'
 }
