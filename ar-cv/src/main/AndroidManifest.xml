@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="de.stetro.master.arcv" xmlns:tools="http://schemas.android.com/tools"
+          xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-sdk/>
+
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false"/>
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true"/>
+
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_3d_rotation_red_48dp"
+        android:label="@string/sys_name"
+        tools:replace="android:label"
+        android:theme="@style/AppTheme">
+        <uses-library
+            android:name="com.projecttango.libtango_device"
+            android:required="true"/>
+        <activity
+            android:name=".AugmentedRealityActivity"
+            android:label="@string/menu_name"
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
