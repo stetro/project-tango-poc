@@ -36,6 +36,7 @@ LOCAL_SRC_FILES += augmented_reality_app.cc \
                    scene.cc \
                    tango_event_data.cc \
                    point_cloud_renderer.cc \
+                   point_cloud_drawable.cc \
                    $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/bounding_box.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/camera.cpp \

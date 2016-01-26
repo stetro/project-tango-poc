@@ -34,7 +34,7 @@
 #include <tango-gl/video_overlay.h>
 
 #include <tango-augmented-reality/pose_data.h>
-#include <tango-augmented-reality/point_cloud_renderer.h>
+#include <tango-augmented-reality/point_cloud_drawable.h>
 
 namespace tango_augmented_reality {
 
@@ -106,7 +106,13 @@ namespace tango_augmented_reality {
         // @param: scale, frustum's scale.
         void SetFrustumScale(const glm::vec3 &scale) { frustum_->SetScale(scale); }
 
-        void SetCloud(TangoXYZij points){cloud = points;}
+        void SetCloud(std::vector <float> _point_cloud_vertices) {
+            point_cloud_vertices = _point_cloud_vertices;
+        }
+
+        void SetPointCloudCameraTransformation(glm::mat4 _point_cloud_camera_transformation) {
+            point_cloud_camera_transformation = _point_cloud_camera_transformation;
+        }
 
         // Clear the Motion Tracking trajactory.
         void ResetTrajectory() { trace_->ClearVertexArray(); }
@@ -133,7 +139,7 @@ namespace tango_augmented_reality {
         // Device axis (in device frame of reference).
         tango_gl::Axis *axis_;
 
-        TangoXYZij cloud;
+        std::vector <float> point_cloud_vertices;
 
         // Device frustum.
         tango_gl::Frustum *frustum_;
@@ -144,7 +150,7 @@ namespace tango_augmented_reality {
         // A marker placed at (0.0f, 0.0f, -3.0f) location.
         tango_gl::GoalMarker *marker_;
 
-        PointCloudRenderer *pointcloud_;
+        PointCloudDrawable *point_cloud_;
 
         // We use both camera_image_plane_ratio_ and image_plane_distance_ to compute
         // the first person AR camera's frustum, these value is derived from actual
@@ -157,6 +163,8 @@ namespace tango_augmented_reality {
 
         // The projection matrix for the first person AR camera.
         glm::mat4 ar_camera_projection_matrix_;
+
+        glm::mat4 point_cloud_camera_transformation;
     };
 }  // namespace tango_augmented_reality
 

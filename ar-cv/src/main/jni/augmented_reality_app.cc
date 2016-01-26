@@ -24,11 +24,17 @@ bool catch_image = false;
 bool new_points = false;
 
 TangoCameraIntrinsics depth_camera_intrinsics_;
-
+tango_augmented_reality::PoseData pose_data_;
 cv::Mat depth;
 
 std::vector <float> vertices;
+glm::mat4 point_cloud_transformation;
 
+// The defined max distance for a depth value.
+static const int kMaxDepthDistance = 4000;
+
+// The meter to millimeter conversion.
+static const int kMeterToMillimeter = 1000;
 
 namespace {
 
@@ -37,6 +43,25 @@ namespace {
         *r = yValue + (1.370705 * (vValue - 128));
         *g = yValue - (0.698001 * (vValue - 128)) - (0.337633 * (uValue - 128));
         *b = yValue + (1.732446 * (uValue - 128));
+    }
+
+    glm::mat4 GetPoseMatrixAtTimestamp(double timstamp) {
+        TangoPoseData pose_start_service_T_device;
+        TangoCoordinateFramePair frame_pair;
+        frame_pair.base = TANGO_COORDINATE_FRAME_START_OF_SERVICE;
+        frame_pair.target = TANGO_COORDINATE_FRAME_DEVICE;
+        TangoErrorType status = TangoService_getPoseAtTime(
+                timstamp, frame_pair, &pose_start_service_T_device);
+        if (status != TANGO_SUCCESS) {
+            LOGE(
+                    "PoseData: Failed to get transform between the Start of service and "
+                            "device frames at timstamp %lf",
+                    timstamp);
+        }
+        if (pose_start_service_T_device.status_code != TANGO_POSE_VALID) {
+            return glm::mat4(1.0f);
+        }
+        return pose_data_.GetMatrixFromPose(pose_start_service_T_device);
     }
 
     const int kVersionStringLength = 128;
@@ -71,16 +96,21 @@ namespace {
 
 
     void OnPointCloudAvailableRouter(void *context, const TangoXYZij *xyz_ij) {
-
         if (is_calculating) {
             LOGD("skip depth frame");
             return;
         }
+        LOGD("get Tango Transformation at timestamp");
+        double timestamp = xyz_ij->timestamp;
+        point_cloud_transformation = GetPoseMatrixAtTimestamp(timestamp);
+        point_cloud_transformation = pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(
+                point_cloud_transformation);
+
         LOGD("transform pointcloud to depthmap");
         is_calculating = true;
 
         //320×180 depth window
-        depth = cv::Mat(180, 320, CV_8UC1);
+        depth = cv::Mat(320, 180, CV_8UC1);
         depth.setTo(cv::Scalar(0));
 
         // load camera intrinsics
@@ -106,8 +136,9 @@ namespace {
                 continue;
             }
 
-            uint8_t depth_value = 255 - ((Z * 1000) * 255 / 4500);
-            cv::Point point(x, y);
+            uint8_t depth_value = (Z * kMeterToMillimeter) * UCHAR_MAX / kMaxDepthDistance;
+
+            cv::Point point(y, x);
             line(depth, point, point, cv::Scalar(depth_value), 5.0);
         }
         catch_image = true;
@@ -130,7 +161,8 @@ namespace {
 
 
         cv::Mat rgb = cv::Mat(yuv_width_, yuv_height_, CV_8UC3);
-        cv::Mat rgb = cv::Mat(320, 180, CV_8UC3);
+        cv::Mat scaled_rgb = cv::Mat(320, 180, CV_8UC3);
+        cv::Mat scaled_gray = cv::Mat(320, 180, CV_8UC1);
         for (size_t i = 0; i < yuv_height_; ++i) {
             for (size_t j = 0; j < yuv_width_; ++j) {
                 size_t x_index = j;
@@ -153,12 +185,13 @@ namespace {
             }
         }
         resize(rgb, scaled_rgb, scaled_rgb.size());
-
+        cv::cvtColor(scaled_rgb, scaled_gray, CV_BGR2GRAY);
         LOGD("converted YUV to RGB frame");
 
         // filtering ...
         LOGD("filtering ...");
         inpaint(depth, (depth == 0), depth, 3.0, 1);
+        cv::ximgproc::guidedFilter(scaled_gray, depth, depth, 5, 2.0);
 
         // 320x180 pixel array with depth coordinates
         LOGD("create pointcloud ...");
@@ -175,13 +208,15 @@ namespace {
 
         for (int x = 0; x < 320; ++x) {
             for (int y = 0; y < 180; ++y) {
-                int depth_value = depth.at<uint8_t>(y, x);
+                int depth_value = depth.at<uint8_t>(x, y);
 
-                float Z = ((255 - depth_value) * 4500) / (255 * 1000);
+
+                float Z = ((float)depth_value * (float)kMaxDepthDistance) / ((float)UCHAR_MAX * (float)kMeterToMillimeter);
                 float Y = (y - cy) / fy * Z;
                 float X = (x - cx) / fx * Z;
 
-                glm::vec3 vector(X * 1.62, Y * 2.5, Z*0.6);
+
+                glm::vec3 vector(X, Y, Z);
 
                 vertices.push_back(vector.x);
                 vertices.push_back(vector.y);
@@ -212,9 +247,8 @@ namespace tango_augmented_reality {
 
     AugmentedRealityApp::AugmentedRealityApp()
             : calling_activity_obj_(nullptr), on_demand_render_(nullptr) {
-        TangoXYZij points;
-        points.xyz_count = 0;
-        main_scene_.SetCloud(points);
+        main_scene_.SetCloud(vertices);
+        main_scene_.SetPointCloudCameraTransformation(point_cloud_transformation);
     }
 
     AugmentedRealityApp::~AugmentedRealityApp() {
@@ -488,16 +522,10 @@ namespace tango_augmented_reality {
         }
         if (new_points) {
             new_points = false;
-            TangoXYZij points;
-            points.xyz_count = vertices.size() / 3;
-            float xyz[vertices.size() / 3][3];
-            for (int i = 0; i < vertices.size() / 3; ++i) {
-                xyz[i][0] = vertices.at(i * 3);
-                xyz[i][1] = vertices.at(i * 3 + 1);
-                xyz[i][2] = vertices.at(i * 3 + 2);
-            }
-            points.xyz = xyz;
-            main_scene_.SetCloud(points);
+            main_scene_.SetPointCloudCameraTransformation(point_cloud_transformation);
+            std::vector <float> point_cloud_vertices = vertices;
+            main_scene_.SetCloud(point_cloud_vertices);
+
             LOGD("added new pointscloud into scene");
 
         }

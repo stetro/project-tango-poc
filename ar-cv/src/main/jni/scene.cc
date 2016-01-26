@@ -39,8 +39,8 @@ namespace {
     const glm::quat kMarkerRotation = glm::quat(0.0f, 0.0f, 1.0f, 0.0f);
 // The reason we put mark at 0.85f at Y is because the center of the marker
 // object is not at the tip of the mark.
-    const glm::vec3 kMarkerPosition = glm::vec3(0.0f, 0.85f, -3.0f);
-    const glm::vec3 kMarkerScale = glm::vec3(0.05f, 0.05f, 0.05f);
+    const glm::vec3 kMarkerPosition = glm::vec3(0.0f, 0.2f, -1.0f);
+    const glm::vec3 kMarkerScale = glm::vec3(0.01f, 0.01f, 0.01f);
     const tango_gl::Color kMarkerColor(1.0f, 0.f, 0.f);
 }  // namespace
 
@@ -60,7 +60,7 @@ namespace tango_augmented_reality {
         trace_ = new tango_gl::Trace();
 
         marker_ = new tango_gl::GoalMarker();
-        pointcloud_ = new PointCloudRenderer();
+        point_cloud_ = new PointCloudDrawable();
 
         trace_->SetColor(kTraceColor);
 
@@ -114,8 +114,7 @@ namespace tango_augmented_reality {
             video_overlay_->Render(glm::mat4(1.0f), glm::mat4(1.0f));
 
             glm::mat4 projection(1.0f);
-            projection[1][1] = -1;
-            pointcloud_->Render(projection, glm::mat4(1.0f), &cloud);
+
         } else {
             // In third person or top down more, we follow the camera movement.
             gesture_camera_->SetAnchorPosition(position);
@@ -137,7 +136,14 @@ namespace tango_augmented_reality {
             video_overlay_->Render(ar_camera_projection_matrix_,
                                    gesture_camera_->GetViewMatrix());
         }
+
         glEnable(GL_DEPTH_TEST);
+
+        point_cloud_->Render(gesture_camera_->GetProjectionMatrix(),
+                             gesture_camera_->GetViewMatrix(),
+                             point_cloud_camera_transformation, point_cloud_vertices);
+
+
 
         marker_->Render(ar_camera_projection_matrix_,
                         gesture_camera_->GetViewMatrix());

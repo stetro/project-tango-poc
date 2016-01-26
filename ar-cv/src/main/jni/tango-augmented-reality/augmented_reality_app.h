@@ -161,7 +161,7 @@ class AugmentedRealityApp {
 
   // pose_data_ handles all pose onPoseAvailable callbacks, onPoseAvailable()
   // in this object will be routed to pose_data_ to handle.
-  PoseData pose_data_;
+
 
   // Mutex for protecting the pose data. The pose data is shared between render
   // thread and TangoService callback thread.
