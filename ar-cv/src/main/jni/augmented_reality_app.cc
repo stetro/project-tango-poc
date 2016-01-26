@@ -22,6 +22,7 @@
 bool is_calculating = false;
 bool catch_image = false;
 bool new_points = false;
+bool pause = false;
 
 TangoCameraIntrinsics depth_camera_intrinsics_;
 tango_augmented_reality::PoseData pose_data_;
@@ -110,8 +111,8 @@ namespace {
         is_calculating = true;
 
         //320×180 depth window
-        depth = cv::Mat(320, 180, CV_8UC1);
-        depth.setTo(cv::Scalar(0));
+        depth = cv::Mat(640, 360, CV_8UC1);
+        depth.setTo(cv::Scalar(255));
 
         // load camera intrinsics
         float fx = static_cast<float>(depth_camera_intrinsics_.fx);
@@ -139,14 +140,14 @@ namespace {
             uint8_t depth_value = (Z * kMeterToMillimeter) * UCHAR_MAX / kMaxDepthDistance;
 
             cv::Point point(y, x);
-            line(depth, point, point, cv::Scalar(depth_value), 5.0);
+            line(depth, point, point, cv::Scalar(depth_value), 7.0);
         }
         catch_image = true;
     }
 
 
     void OnFrameAvailableRouter(void *context, TangoCameraId id, const TangoImageBuffer *buffer) {
-        if (buffer->format != TANGO_HAL_PIXEL_FORMAT_YCrCb_420_SP || !catch_image) {
+        if (buffer->format != TANGO_HAL_PIXEL_FORMAT_YCrCb_420_SP || !catch_image || pause) {
             return;
         }
         catch_image = false;
@@ -161,8 +162,8 @@ namespace {
 
 
         cv::Mat rgb = cv::Mat(yuv_width_, yuv_height_, CV_8UC3);
-        cv::Mat scaled_rgb = cv::Mat(320, 180, CV_8UC3);
-        cv::Mat scaled_gray = cv::Mat(320, 180, CV_8UC1);
+        cv::Mat scaled_rgb = cv::Mat(640, 360, CV_8UC3);
+        cv::Mat scaled_gray = cv::Mat(640, 360, CV_8UC1);
         for (size_t i = 0; i < yuv_height_; ++i) {
             for (size_t j = 0; j < yuv_width_; ++j) {
                 size_t x_index = j;
@@ -190,8 +191,10 @@ namespace {
 
         // filtering ...
         LOGD("filtering ...");
-        inpaint(depth, (depth == 0), depth, 3.0, 1);
-        cv::ximgproc::guidedFilter(scaled_gray, depth, depth, 5, 2.0);
+//        inpaint(depth, (depth == 0), depth, 3.0, 1);
+        cv::ximgproc::guidedFilter(scaled_gray, depth, depth, 3, 1.0);
+//        cv::Mat depth_copy(320, 180, CV_8UC1);
+//        bilateralFilter(depth, depth_copy, 4, 50, 50);
 
         // 320x180 pixel array with depth coordinates
         LOGD("create pointcloud ...");
@@ -206,17 +209,18 @@ namespace {
 
         vertices.clear();
 
-        for (int x = 0; x < 320; ++x) {
-            for (int y = 0; y < 180; ++y) {
+        for (int x = 0; x < 640; ++x) {
+            for (int y = 0; y < 360; ++y) {
                 int depth_value = depth.at<uint8_t>(x, y);
 
 
-                float Z = ((float)depth_value * (float)kMaxDepthDistance) / ((float)UCHAR_MAX * (float)kMeterToMillimeter);
+                float Z = ((float) depth_value * (float) kMaxDepthDistance) /
+                          ((float) UCHAR_MAX * (float) kMeterToMillimeter);
                 float Y = (y - cy) / fy * Z;
                 float X = (x - cx) / fx * Z;
 
 
-                glm::vec3 vector(X, Y, Z);
+                glm::vec3 vector(X * 0.9, Y * 1.2, Z);
 
                 vertices.push_back(vector.x);
                 vertices.push_back(vector.y);
@@ -413,6 +417,11 @@ namespace tango_augmented_reality {
     void AugmentedRealityApp::TangoResetMotionTracking() {
         main_scene_.ResetTrajectory();
         TangoService_resetMotionTracking();
+    }
+
+    void AugmentedRealityApp::TangoPauseMotionTracking() {
+        LOGI("Pressed Pause!");
+        pause = !pause;
     }
 
     void AugmentedRealityApp::InitializeGLContent() {

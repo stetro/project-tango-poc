@@ -75,6 +75,12 @@ Java_de_stetro_master_arcv_TangoJNINative_resetMotionTracking(
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_arcv_TangoJNINative_pauseMotionTracking(
+    JNIEnv*, jobject) {
+  app.TangoPauseMotionTracking();
+}
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_arcv_TangoJNINative_initGlContent(
     JNIEnv*, jobject) {
   app.InitializeGLContent();

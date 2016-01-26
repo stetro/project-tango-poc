@@ -85,6 +85,8 @@ class AugmentedRealityApp {
   // Note that this will cause motion tracking to re-initialize.
   void TangoResetMotionTracking();
 
+  void TangoPauseMotionTracking();
+
   // Tango service event callback function for pose data. Called when new events
   // are available from the Tango Service.
   //

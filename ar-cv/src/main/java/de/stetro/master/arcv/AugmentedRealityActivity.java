@@ -130,6 +130,7 @@ public class AugmentedRealityActivity extends Activity implements
     findViewById(R.id.first_person_button).setOnClickListener(this);
     findViewById(R.id.third_person_button).setOnClickListener(this);
     findViewById(R.id.top_down_button).setOnClickListener(this);
+    findViewById(R.id.pausemotion).setOnClickListener(this);
 
     // Button to reset motion tracking
     mMotionReset = (Button) findViewById(R.id.resetmotion);
@@ -229,6 +230,9 @@ public class AugmentedRealityActivity extends Activity implements
         break;
       case R.id.resetmotion:
         TangoJNINative.resetMotionTracking();
+        break;
+      case R.id.pausemotion:
+        TangoJNINative.pauseMotionTracking();
         break;
       default:
         Log.w(TAG, "Unknown button click");

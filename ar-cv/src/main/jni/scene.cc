@@ -136,7 +136,8 @@ namespace tango_augmented_reality {
             video_overlay_->Render(ar_camera_projection_matrix_,
                                    gesture_camera_->GetViewMatrix());
         }
-
+        glEnable (GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
 
         point_cloud_->Render(gesture_camera_->GetProjectionMatrix(),
