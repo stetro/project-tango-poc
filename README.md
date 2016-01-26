@@ -113,4 +113,5 @@
 * [Poly2Tri](http://code.google.com/p/poly2tri/)
 * [PCL](http://pointclouds.org/)
 * [Unity Engine](https://unity3d.com/)
+* [OpenCV](http://opencv.org/)
 * [tango-examples-unity](https://github.com/googlesamples/tango-examples-unity)
