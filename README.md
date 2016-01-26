@@ -2,7 +2,7 @@
 
 > Optimierung von Augmented Reality Anwendungen durch die Berücksichtigung von Tiefeninformationen mit Googles Project Tango
 
-> Optimization of AR applications with considering the depth information with Googles project tango
+> Optimization of AR applications considering the depth information with Googles project tango
 
 ## Table of Content
 * [Augmented Reality Demo](https://github.com/stetro/project-tango-poc#augmented-reality-ar)
