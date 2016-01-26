@@ -11,7 +11,8 @@
 * [PCL based native Reconstruction (Greedy Projection Triangulation)](https://github.com/stetro/project-tango-poc#native-implementierung-construct-native)
 * [CHISEL based native reconstruction](https://github.com/stetro/project-tango-poc#chisel-open_chisel-implementation-chisel)
 * [Unity Marching Cubes AR Demo](https://github.com/stetro/project-tango-poc#unity-implementierung-unity)
-
+* [OpenCV Depthmap Generation and Filtering](https://github.com/stetro/project-tango-poc#opencv-depthmap-generation-and-filtering)
+* [OpenCV Depthmap Filtering for AR](https://github.com/stetro/project-tango-poc#opencv-depthmap-filtering-for-ar)
 
 ## Augmented Reality (ar/)
 * AR Camera matching intrinsics
