@@ -2,29 +2,32 @@
 
 > Optimierung von Augmented Reality Anwendungen durch die Berücksichtigung von Tiefeninformationen mit Googles Project Tango
 
+> Optimization of AR applications with considering the depth information with Googles project tango
+
 ## Table of Content
 * [Augmented Reality Demo](https://github.com/stetro/project-tango-poc#augmented-reality-ar)
 * [Pointcloud Extraction](https://github.com/stetro/project-tango-poc#pointcloud-app-pc)
 * [Plane based Reconstruction](https://github.com/stetro/project-tango-poc#plane-based-reconstruction-construct)
 * [PCL based native Reconstruction (Greedy Projection Triangulation)](https://github.com/stetro/project-tango-poc#native-implementierung-construct-native)
+* [CHISEL based native reconstruction](https://github.com/stetro/project-tango-poc#chisel-open_chisel-implementation-chisel)
 * [Unity Marching Cubes AR Demo](https://github.com/stetro/project-tango-poc#unity-implementierung-unity)
 
 
 ## Augmented Reality (ar/)
-* Augmented Reality Kamera mit passenden Intrinsics
-* Motion Tracking mit korrekter GL Positionierung
-* Darstellung der aktuellen PointCloud Scene
-* Ray Intersection für eine PointCloud Interaktion
-* Simples Tower-Defense Spiel mit Ray Intersection (siehe Screenshot)
-* Einfache Pointcloud Occlusion
+* AR Camera matching intrinsics
+* motion tracking with correct gl positioning
+* visualization of the current pointcloud
+* ray-intersection for pointcloud interaction
+* simple tower defense game with ray intersection
+* simple direct pointcloud z-buffer occlusion
 
 ![AR Screenshot](img/ar.png)
 
 ## Pointcloud App (pc/)
-* Exporter der aufgenommenen PointCloud
-* Sammeln von PointCloud ausschnitten in einem OctTree
-* Reconstruction der OctTree Points mit der Methode aus 'construct'
-* Reconstruction der OctTree Points durch Marching Cubes
+* collects points into a large pointcloud using an octree
+* exports to pts file
+* plane based reconstruction applicable
+* marching cube reconstruction applicable (usualy to slow here!)
 
 ![PointCloud Screenshot](img/pc.png)
 ![PointCloud Screenshot 2](img/pc2.png)
@@ -49,10 +52,10 @@
 ![AR Screenshot](img/construct.png)
 ![AR Screenshot](img/marchingcube.png)
 
-## Native Implementierung (construct-native/)
-* Crosscompiling von [PCL](http://pointclouds.org/) 
-* Voxel Grid downsampling
-* Greedy Triangulation mit PCL
+## Native PCL based Reconstruction (construct-native/)
+* VoxelGrid downsampling
+* Greedy Triangulation with PCL
+* __Build PCL Library not included__!
 
 ![Unity Screenshot 1](img/native.png)
 
@@ -61,12 +64,34 @@
 * online reconstruction using `open_chisel` library
 * transformation and interfaces to native environment
 * PLY exporter
-* ![Chisel Screenshot](img/chisel.png)
+* __Build open_chisel Library not included__!
+
+![Chisel Screenshot](img/chisel.png)
+
+## OpenCV Depthmap Generation and Filtering
+
+* generate depthmap using [this](http://stackoverflow.com/questions/34901155/project-tango-depthmap-transformation-from-xyzij-data/34905235#34905235) approach
+* applying inpaint and guided filtering for depthmap improvements
+* __Build opencv+contrib Library not included__!
+
+![Chisel Screenshot](img/opencv.png)
+
+**Video Demonstration**
+
+[![OpenCV Demonstration](http://img.youtube.com/vi/D6FcBPK7sYc/0.jpg)](https://www.youtube.com/watch?v=D6FcBPK7sYc)
+
+## OpenCV Depthmap Filtering for AR
+
+* using the previous approach for a pointcloud reprojection
+
+![Chisel Screenshot](img/opencv-ar.png)
+
 
 ## Unity Implementierung (unity/)
-* Kombination der Experimental Beispiel aus Meshing und AR
-* Implementierung von Clipping Depth Shader
-* Einfaches Interaktives Beispiel zum Steuern eines Balls
+* Reconstruction using the MeshBuilder with an simple TSDF by Google
+* Implementation of a Clipping Depth Shader
+* simple ball moving interaction
+* extension of shader for shadowing effects
 
 **Video Demonstration**
 
@@ -88,5 +113,3 @@
 * [PCL](http://pointclouds.org/)
 * [Unity Engine](https://unity3d.com/)
 * [tango-examples-unity](https://github.com/googlesamples/tango-examples-unity)
-
-
