@@ -101,6 +101,13 @@
             android:paddingLeft="20dp"
             android:text="@string/status"/>
 
+        <TextView
+            android:id="@+id/depth_data_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="20dp"
+            android:text="@string/status"/>
+
     </LinearLayout>
 
     <Button

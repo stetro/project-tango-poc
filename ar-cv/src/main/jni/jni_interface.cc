@@ -111,6 +111,12 @@ Java_de_stetro_master_arcv_TangoJNINative_getPoseString(
 }
 
 JNIEXPORT jstring JNICALL
+Java_de_stetro_master_arcv_TangoJNINative_getDepthString(
+        JNIEnv* env, jobject) {
+    return (env)->NewStringUTF(app.GetDepthString().c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_de_stetro_master_arcv_TangoJNINative_getEventString(
     JNIEnv* env, jobject) {
   return (env)->NewStringUTF(app.GetEventString().c_str());

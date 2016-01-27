@@ -20,7 +20,10 @@
 #include <jni.h>
 #include <memory>
 #include <cstdlib>
+#include <string>
+#include <sstream>
 #include <android/log.h>
+#include <unistd.h>
 
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Native",__VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG  , "Native",__VA_ARGS__)
@@ -114,6 +117,9 @@ class AugmentedRealityApp {
 
   // Retrun pose debug string.
   std::string GetPoseString();
+
+  // Retrun pose debug string.
+  std::string GetDepthString();
 
   // Retrun Tango event debug string.
   std::string GetEventString();

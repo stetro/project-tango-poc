@@ -63,6 +63,7 @@ public class AugmentedRealityActivity extends Activity implements
     // Debug information text.
     // Current frame's pose information.
     private TextView mPoseData;
+    private TextView mDepthData;
     // Tango Core version.
     private TextView mVersion;
     // Application version.
@@ -100,6 +101,7 @@ public class AugmentedRealityActivity extends Activity implements
     };
     private GestureDetector detector;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,6 +120,7 @@ public class AugmentedRealityActivity extends Activity implements
 
         // Text views for displaying translation and rotation data
         mPoseData = (TextView) findViewById(R.id.pose_data_textview);
+        mDepthData = (TextView) findViewById(R.id.depth_data_textview);
 
         // Text views for displaying most recent Tango Event
         mEvent = (TextView) findViewById(R.id.tango_event_textview);
@@ -296,6 +299,7 @@ public class AugmentedRealityActivity extends Activity implements
         try {
             mEvent.setText(TangoJNINative.getEventString());
             mPoseData.setText(TangoJNINative.getPoseString());
+            mDepthData.setText(TangoJNINative.getDepthString());
         } catch (Exception e) {
             e.printStackTrace();
         }

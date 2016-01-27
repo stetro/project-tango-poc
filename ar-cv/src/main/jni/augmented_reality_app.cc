@@ -21,8 +21,14 @@
 
 bool is_calculating = false;
 bool catch_image = false;
+bool do_pause = false;
+bool is_rendered = true;
 bool new_points = false;
-bool pause = false;
+
+int point_count = 0;
+
+double timestamp;
+
 
 TangoCameraIntrinsics depth_camera_intrinsics_;
 tango_augmented_reality::PoseData pose_data_;
@@ -36,6 +42,13 @@ static const int kMaxDepthDistance = 4000;
 
 // The meter to millimeter conversion.
 static const int kMeterToMillimeter = 1000;
+
+template<typename T>
+std::string to_string(T value) {
+    std::ostringstream os;
+    os << value;
+    return os.str();
+}
 
 namespace {
 
@@ -97,10 +110,13 @@ namespace {
 
 
     void OnPointCloudAvailableRouter(void *context, const TangoXYZij *xyz_ij) {
-        if (is_calculating) {
+        if (is_calculating || !is_rendered) {
             LOGD("skip depth frame");
             return;
         }
+        is_rendered = false;
+        point_count = xyz_ij->xyz_count;
+        timestamp = xyz_ij->timestamp;
 
         LOGD("transform pointcloud to depthmap");
         is_calculating = true;
@@ -143,7 +159,7 @@ namespace {
 
     void OnFrameAvailableRouter(void *context, TangoCameraId id, const TangoImageBuffer *buffer) {
 
-        if (buffer->format != TANGO_HAL_PIXEL_FORMAT_YCrCb_420_SP || !catch_image || pause) {
+        if (buffer->format != TANGO_HAL_PIXEL_FORMAT_YCrCb_420_SP || !catch_image || do_pause) {
             return;
         }
         catch_image = false;
@@ -227,8 +243,8 @@ namespace {
         }
 
         LOGD("DONE");
-        new_points = true;
         is_calculating = false;
+        new_points = true;
 
     }
 
@@ -419,7 +435,7 @@ namespace tango_augmented_reality {
 
     void AugmentedRealityApp::TangoPauseMotionTracking() {
         LOGI("Pressed Pause!");
-        pause = !pause;
+        do_pause = !do_pause;
     }
 
     void AugmentedRealityApp::InitializeGLContent() {
@@ -513,19 +529,26 @@ namespace tango_augmented_reality {
     }
 
     void AugmentedRealityApp::Render() {
-        double video_overlay_timestamp;
-        TangoErrorType status = TangoService_updateTexture(TANGO_CAMERA_COLOR,
-                                                           &video_overlay_timestamp);
 
-        if (!pause) {
-            double timestamp = video_overlay_timestamp;
+        while (true) {
+            if (new_points) {
+                new_points = false;
+                break;
+            }
+            usleep(2000);
+        }
+
+        TangoErrorType status = TangoService_updateTexture(TANGO_CAMERA_COLOR,
+                                                           &timestamp);
+
+        if (!do_pause) {
             point_cloud_transformation = GetPoseMatrixAtTimestamp(timestamp);
             point_cloud_transformation = pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(
                     point_cloud_transformation);
         }
 
-        glm::mat4 color_camera_pose = GetPoseMatrixAtTimestamp(video_overlay_timestamp);
-
+        glm::mat4 color_camera_pose = GetPoseMatrixAtTimestamp(timestamp);
+        is_rendered = true;
         color_camera_pose =
                 pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(color_camera_pose);
         if (status != TANGO_SUCCESS) {
@@ -533,12 +556,9 @@ namespace tango_augmented_reality {
                  status);
         }
 
-        if (new_points) {
-            new_points = false;
-            std::vector <float> point_cloud_vertices = vertices;
-            main_scene_.SetCloud(point_cloud_vertices);
-            LOGD("added new pointscloud into scene");
-        }
+        std::vector <float> point_cloud_vertices = vertices;
+        main_scene_.SetCloud(point_cloud_vertices);
+        LOGD("added new pointscloud into scene");
         main_scene_.SetPointCloudCameraTransformation(point_cloud_transformation);
         main_scene_.Render(color_camera_pose);
     }
@@ -585,7 +605,7 @@ namespace tango_augmented_reality {
         float Y = (y - cy) / fy * Z;
         float X = (x - cx) / fx * Z;
 
-        glm::vec3 vector = glm::vec3(X,Y,Z);
+        glm::vec3 vector = glm::vec3(X, Y, Z);
         main_scene_.SetMarkerPosition(vector);
 
     }
@@ -660,6 +680,32 @@ namespace tango_augmented_reality {
         JNIEnv *env;
         java_vm_->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
         env->CallVoidMethod(calling_activity_obj_, on_demand_render_);
+    }
+
+
+    std::string string_format(const std::string fmt_str, ...) {
+        int final_n, n = ((int) fmt_str.size()) *
+                         2; /* Reserve two times as much as the length of the fmt_str */
+        std::string str;
+        std::unique_ptr <char[]> formatted;
+        va_list ap;
+        while (1) {
+            formatted.reset(new char[n]); /* Wrap the plain char array into the unique_ptr */
+            strcpy(&formatted[0], fmt_str.c_str());
+            va_start(ap, fmt_str);
+            final_n = vsnprintf(&formatted[0], n, fmt_str.c_str(), ap);
+            va_end(ap);
+            if (final_n < 0 || final_n >= n)
+                n += abs(final_n - n + 1);
+            else
+                break;
+        }
+        return std::string(formatted.get());
+    }
+
+
+    std::string AugmentedRealityApp::GetDepthString() {
+        return string_format("%d", point_count);
     }
 
 }  // namespace tango_augmented_reality
