@@ -55,6 +55,8 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
         cube = new Cube(0.1f);
         cube.setMaterial(Materials.getGreenMaterial());
         getCurrentScene().addChild(cube);
+
+        getCurrentCamera().setFarPlane(0.4);
     }
 
     public void capturePoints() {
@@ -133,7 +135,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
                     }
                     polygon = new Polygon(faces);
                     polygon.setTransparent(true);
-                    polygon.setMaterial(Materials.getTransparentRed());
+                    polygon.setMaterial(Materials.getDepthMaterial());
                     polygon.setDoubleSided(true);
                     getCurrentScene().addChild(polygon);
                 }

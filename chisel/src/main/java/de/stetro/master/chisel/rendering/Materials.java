@@ -14,6 +14,7 @@ public class Materials {
     private static Material bluePointCloud;
     private static Material transparentClippingMaterial;
     private static Material redTransparentMaterial;
+    private static Material depthMaterial;
 
     private static Material createLambertMaterial(float[] color) {
         Material material = new Material();
@@ -99,5 +100,14 @@ public class Materials {
             redTransparentMaterial = createMaterial(color);
         }
         return redTransparentMaterial;
+    }
+
+    public static Material getDepthMaterial() {
+        if(depthMaterial == null){
+//            float[] color = {0.0f, 0.0f, 0.0f, 1.0f};
+            depthMaterial= new Material();
+            depthMaterial.addPlugin(new CustomDepthMaterialPlugin());
+        }
+        return depthMaterial;
     }
 }

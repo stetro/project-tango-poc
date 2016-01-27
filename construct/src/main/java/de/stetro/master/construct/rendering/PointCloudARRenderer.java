@@ -93,7 +93,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
                 pointCollection.getMeshTree().fillPolygons(faces);
                 polygon = new Polygon(faces);
                 polygon.setTransparent(true);
-                polygon.setMaterial(Materials.getTransparentRed());
+                polygon.setMaterial(Materials.getDepthMaterial());
                 polygon.setDoubleSided(true);
                 getCurrentScene().addChild(polygon);
             }
