@@ -101,17 +101,12 @@ namespace {
             LOGD("skip depth frame");
             return;
         }
-        LOGD("get Tango Transformation at timestamp");
-        double timestamp = xyz_ij->timestamp;
-        point_cloud_transformation = GetPoseMatrixAtTimestamp(timestamp);
-        point_cloud_transformation = pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(
-                point_cloud_transformation);
 
         LOGD("transform pointcloud to depthmap");
         is_calculating = true;
 
         //320×180 depth window
-        depth = cv::Mat(640, 360, CV_8UC1);
+        depth = cv::Mat(320, 180, CV_8UC1);
         depth.setTo(cv::Scalar(255));
 
         // load camera intrinsics
@@ -147,10 +142,12 @@ namespace {
 
 
     void OnFrameAvailableRouter(void *context, TangoCameraId id, const TangoImageBuffer *buffer) {
+
         if (buffer->format != TANGO_HAL_PIXEL_FORMAT_YCrCb_420_SP || !catch_image || pause) {
             return;
         }
         catch_image = false;
+
         LOGD("getting color grame");
         int yuv_width_ = buffer->width;
         int yuv_height_ = buffer->height;
@@ -163,7 +160,7 @@ namespace {
 
         cv::Mat rgb = cv::Mat(yuv_width_, yuv_height_, CV_8UC3);
         cv::Mat scaled_rgb = cv::Mat(640, 360, CV_8UC3);
-        cv::Mat scaled_gray = cv::Mat(640, 360, CV_8UC1);
+        cv::Mat scaled_rgb_grayscale = cv::Mat(640, 360, CV_8UC1);
         for (size_t i = 0; i < yuv_height_; ++i) {
             for (size_t j = 0; j < yuv_width_; ++j) {
                 size_t x_index = j;
@@ -186,32 +183,33 @@ namespace {
             }
         }
         resize(rgb, scaled_rgb, scaled_rgb.size());
-        cv::cvtColor(scaled_rgb, scaled_gray, CV_BGR2GRAY);
+        cv::cvtColor(scaled_rgb, scaled_rgb_grayscale, CV_BGR2GRAY);
+
+        cv::Mat scaled_gray = cv::Mat(640, 360, CV_8UC1);
+        resize(depth, scaled_gray, scaled_gray.size());
         LOGD("converted YUV to RGB frame");
 
         // filtering ...
         LOGD("filtering ...");
 //        inpaint(depth, (depth == 0), depth, 3.0, 1);
-        cv::ximgproc::guidedFilter(scaled_gray, depth, depth, 3, 1.0);
+        cv::ximgproc::guidedFilter(scaled_rgb_grayscale, scaled_gray, scaled_gray, 4, 0.5);
 //        cv::Mat depth_copy(320, 180, CV_8UC1);
 //        bilateralFilter(depth, depth_copy, 4, 50, 50);
 
         // 320x180 pixel array with depth coordinates
         LOGD("create pointcloud ...");
 
-        float fx = static_cast<float>(depth_camera_intrinsics_.fx);
-        float fy = static_cast<float>(depth_camera_intrinsics_.fy);
-        float cx = static_cast<float>(depth_camera_intrinsics_.cx);
-        float cy = static_cast<float>(depth_camera_intrinsics_.cy);
+        float fx = static_cast<float>(depth_camera_intrinsics_.fx) * 2;
+        float fy = static_cast<float>(depth_camera_intrinsics_.fy) * 2;
+        float cx = static_cast<float>(depth_camera_intrinsics_.cx) * 2;
+        float cy = static_cast<float>(depth_camera_intrinsics_.cy) * 2;
 
-        int width = static_cast<int>(depth_camera_intrinsics_.width);
-        int height = static_cast<int>(depth_camera_intrinsics_.height);
 
         vertices.clear();
 
         for (int x = 0; x < 640; ++x) {
             for (int y = 0; y < 360; ++y) {
-                int depth_value = depth.at<uint8_t>(x, y);
+                int depth_value = scaled_gray.at<uint8_t>(x, y);
 
 
                 float Z = ((float) depth_value * (float) kMaxDepthDistance) /
@@ -516,28 +514,32 @@ namespace tango_augmented_reality {
 
     void AugmentedRealityApp::Render() {
         double video_overlay_timestamp;
-        TangoErrorType status =
-                TangoService_updateTexture(TANGO_CAMERA_COLOR, &video_overlay_timestamp);
+        TangoErrorType status = TangoService_updateTexture(TANGO_CAMERA_COLOR,
+                                                           &video_overlay_timestamp);
 
-        glm::mat4 color_camera_pose =
-                GetPoseMatrixAtTimestamp(video_overlay_timestamp);
+        if (!pause) {
+            double timestamp = video_overlay_timestamp;
+            point_cloud_transformation = GetPoseMatrixAtTimestamp(timestamp);
+            point_cloud_transformation = pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(
+                    point_cloud_transformation);
+        }
+
+        glm::mat4 color_camera_pose = GetPoseMatrixAtTimestamp(video_overlay_timestamp);
+
         color_camera_pose =
                 pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(color_camera_pose);
         if (status != TANGO_SUCCESS) {
-            LOGE(
-                    "AugmentedRealityApp: Failed to update video overlay texture with "
-                            "error code: %d",
-                    status);
+            LOGE("AugmentedRealityApp: Failed to update video overlay texture with error code: %d",
+                 status);
         }
+
         if (new_points) {
             new_points = false;
-            main_scene_.SetPointCloudCameraTransformation(point_cloud_transformation);
             std::vector <float> point_cloud_vertices = vertices;
             main_scene_.SetCloud(point_cloud_vertices);
-
             LOGD("added new pointscloud into scene");
-
         }
+        main_scene_.SetPointCloudCameraTransformation(point_cloud_transformation);
         main_scene_.Render(color_camera_pose);
     }
 
@@ -566,6 +568,26 @@ namespace tango_augmented_reality {
                                            tango_gl::GestureCamera::TouchEvent event,
                                            float x0, float y0, float x1, float y1) {
         main_scene_.OnTouchEvent(touch_count, event, x0, y0, x1, y1);
+    }
+
+    void AugmentedRealityApp::OnDepthTouchEvent(int x, int y) {
+        LOGI("Touch Event at %d x %d", x, y);
+        x = x / 6;
+        y = y / 6;
+        uint8_t depth_value = depth.at<uint8_t>(x, y);
+        float fx = static_cast<float>(depth_camera_intrinsics_.fx);
+        float fy = static_cast<float>(depth_camera_intrinsics_.fy);
+        float cx = static_cast<float>(depth_camera_intrinsics_.cx);
+        float cy = static_cast<float>(depth_camera_intrinsics_.cy);
+
+        float Z = ((float) depth_value * (float) kMaxDepthDistance) /
+                  ((float) UCHAR_MAX * (float) kMeterToMillimeter);
+        float Y = (y - cy) / fy * Z;
+        float X = (x - cx) / fx * Z;
+
+        glm::vec3 vector = glm::vec3(X,Y,Z);
+        main_scene_.SetMarkerPosition(vector);
+
     }
 
     glm::mat4 AugmentedRealityApp::GetPoseMatrixAtTimestamp(double timstamp) {

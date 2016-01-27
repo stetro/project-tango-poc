@@ -132,6 +132,14 @@ Java_de_stetro_master_arcv_TangoJNINative_setCamera(
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_arcv_TangoJNINative_onDepthTouchEvent(
+        JNIEnv*, jobject, int x, int y) {
+    app.OnDepthTouchEvent(x,y);
+}
+
+
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_arcv_TangoJNINative_onTouchEvent(
     JNIEnv*, jobject, int touch_count, int event, float x0, float y0, float x1,
     float y1) {

@@ -129,6 +129,8 @@ namespace tango_augmented_reality {
         void OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event,
                           float x0, float y0, float x1, float y1);
 
+        void SetMarkerPosition(glm::vec3 vector);
+
     private:
         // Video overlay drawable object to display the camera image.
         tango_gl::VideoOverlay *video_overlay_;

@@ -139,6 +139,9 @@ class AugmentedRealityApp {
   void OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event,
                     float x0, float y0, float x1, float y1);
 
+
+ void OnDepthTouchEvent(int x, int y);
+
   // Cache the Java VM
   //
   // @JavaVM java_vm: the Java VM is using from the Java layer.

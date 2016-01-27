@@ -28,8 +28,9 @@ namespace {
                     "void main() {\n"
                     "  gl_Position = mvp*vertex;\n"
                     "  v_color = vec4(0.0,0.0,0.0,0.0);\n"
-//                    "  v_color = vertex;\n"
-                    "gl_PointSize = 6.3;\n"
+//                    "  v_color = vec4(vertex.z / 4.5,vertex.z / 4.5,vertex.z / 4.5,1.0);\n" // grayscale
+//                    "  v_color = vertex;\n"  // colored
+                    "  gl_PointSize = 3.3;\n"
                     "}\n";
     const std::string kPointCloudFragmentShader =
             "precision mediump float;\n"

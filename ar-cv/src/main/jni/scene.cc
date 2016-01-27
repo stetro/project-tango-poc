@@ -42,6 +42,10 @@ namespace {
     const glm::vec3 kMarkerPosition = glm::vec3(0.0f, 0.2f, -1.0f);
     const glm::vec3 kMarkerScale = glm::vec3(0.01f, 0.01f, 0.01f);
     const tango_gl::Color kMarkerColor(1.0f, 0.f, 0.f);
+
+    const glm::mat4 kOpengGL_T_Depth =
+            glm::mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                      -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 }  // namespace
 
 namespace tango_augmented_reality {
@@ -136,14 +140,13 @@ namespace tango_augmented_reality {
             video_overlay_->Render(ar_camera_projection_matrix_,
                                    gesture_camera_->GetViewMatrix());
         }
-        glEnable (GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
 
         point_cloud_->Render(gesture_camera_->GetProjectionMatrix(),
                              gesture_camera_->GetViewMatrix(),
                              point_cloud_camera_transformation, point_cloud_vertices);
-
 
 
         marker_->Render(ar_camera_projection_matrix_,
@@ -170,6 +173,15 @@ namespace tango_augmented_reality {
                              tango_gl::GestureCamera::TouchEvent event, float x0,
                              float y0, float x1, float y1) {
         gesture_camera_->OnTouchEvent(touch_count, event, x0, y0, x1, y1);
+    }
+
+    void Scene::SetMarkerPosition(glm::vec3 vector) {
+        glm::mat4 mvp = gesture_camera_->GetProjectionMatrix() *
+                        gesture_camera_->GetViewMatrix() *
+                        point_cloud_camera_transformation *
+                glm::inverse(kOpengGL_T_Depth);
+        glm::vec4 point = mvp * glm::vec4(vector, 1);
+        marker_->SetPosition(glm::vec3(point));
     }
 
 }  // namespace tango_augmented_reality

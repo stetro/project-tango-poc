@@ -11,4 +11,5 @@ if (!System.getenv("CI")) {
 
     include ':openCVLibrary310'
     include ':cv'
+    include ':ar-cv'
 }
