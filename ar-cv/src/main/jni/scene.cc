@@ -184,4 +184,8 @@ namespace tango_augmented_reality {
         marker_->SetPosition(glm::vec3(point));
     }
 
+    void Scene::SetVisibility(bool visible) {
+        point_cloud_->SetVisibility(visible);
+    }
+
 }  // namespace tango_augmented_reality

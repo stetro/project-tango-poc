@@ -85,4 +85,6 @@ public class TangoJNINative {
     public static native void pauseMotionTracking();
 
     public static native String getDepthString();
+
+    public static native void toggleVisible();
 }

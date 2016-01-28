@@ -55,6 +55,9 @@ namespace tango_augmented_reality {
         // Release non-OpenGL resources.
         void DeleteResources();
 
+
+        void SetVisibility(bool visible);
+
         // Setup GL view port.
         // @param: x, left of the screen.
         // @param: y, bottom of the screen.

@@ -40,6 +40,8 @@ class PointCloudDrawable {
   void Render(glm::mat4 projection_mat, glm::mat4 view_mat, glm::mat4 model_mat,
               const std::vector<float>& vertices);
 
+ void SetVisibility(bool visible);
+
  private:
   // Vertex buffer of the point cloud geometry.
   GLuint vertex_buffers_;
@@ -49,6 +51,10 @@ class PointCloudDrawable {
 
   // Handle to vertex attribute value in the shader.
   GLuint vertices_handle_;
+
+  GLboolean vertices_visible_handle_;
+
+ bool visible;
 
   // Handle to the model view projection matrix uniform in the shader.
   GLuint mvp_handle_;

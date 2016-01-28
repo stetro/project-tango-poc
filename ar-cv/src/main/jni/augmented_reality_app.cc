@@ -24,6 +24,7 @@ bool catch_image = false;
 bool do_pause = false;
 bool is_rendered = true;
 bool new_points = false;
+bool is_visible = false;
 
 int point_count = 0;
 
@@ -148,10 +149,11 @@ namespace {
                 continue;
             }
 
-            uint8_t depth_value = (Z * kMeterToMillimeter) * UCHAR_MAX / kMaxDepthDistance;
-
-            cv::Point point(y, x);
-            line(depth, point, point, cv::Scalar(depth_value), 7.0);
+            int depth_value = (Z * kMeterToMillimeter) * UCHAR_MAX / kMaxDepthDistance;
+            if(depth_value <= 255){
+                cv::Point point(y, x);
+                line(depth, point, point, cv::Scalar(depth_value), 7.0);
+            }
         }
         catch_image = true;
     }
@@ -530,7 +532,7 @@ namespace tango_augmented_reality {
 
     void AugmentedRealityApp::Render() {
 
-        while (true) {
+        while (!do_pause) {
             if (new_points) {
                 new_points = false;
                 break;
@@ -701,6 +703,13 @@ namespace tango_augmented_reality {
                 break;
         }
         return std::string(formatted.get());
+    }
+
+    void AugmentedRealityApp::toggleVisible() {
+        LOGI("toggle visibility");
+
+        is_visible = !is_visible;
+        main_scene_.SetVisibility(is_visible);
     }
 
 

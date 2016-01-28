@@ -143,6 +143,12 @@ Java_de_stetro_master_arcv_TangoJNINative_onDepthTouchEvent(
     app.OnDepthTouchEvent(x,y);
 }
 
+JNIEXPORT void JNICALL
+Java_de_stetro_master_arcv_TangoJNINative_toggleVisible(
+        JNIEnv*, jobject) {
+    app.toggleVisible();
+}
+
 
 
 JNIEXPORT void JNICALL

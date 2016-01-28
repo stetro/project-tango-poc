@@ -23,14 +23,15 @@ namespace {
             "precision mediump float;\n"
                     "precision mediump int;\n"
                     "attribute vec4 vertex;\n"
+                    "uniform bool visible;\n"
                     "uniform mat4 mvp;\n"
                     "varying vec4 v_color;\n"
                     "void main() {\n"
                     "  gl_Position = mvp*vertex;\n"
                     "  v_color = vec4(0.0,0.0,0.0,0.0);\n"
-//                    "  v_color = vec4(vertex.z / 4.5,vertex.z / 4.5,vertex.z / 4.5,1.0);\n" // grayscale
+                    "if(visible){ v_color = vec4(vertex.z / 4.5,vertex.z / 4.5,vertex.z / 4.5,1.0);}\n" // grayscale
 //                    "  v_color = vertex;\n"  // colored
-                    "  gl_PointSize = 3.3;\n"
+                    " gl_PointSize = 3.3;\n"
                     "}\n";
     const std::string kPointCloudFragmentShader =
             "precision mediump float;\n"
@@ -52,6 +53,8 @@ namespace tango_augmented_reality {
                 kPointCloudVertexShader.c_str(), kPointCloudFragmentShader.c_str());
 
         mvp_handle_ = glGetUniformLocation(shader_program_, "mvp");
+        vertices_visible_handle_ = glGetUniformLocation(shader_program_, "visible");
+
         vertices_handle_ = glGetAttribLocation(shader_program_, "vertex");
         glGenBuffers(1, &vertex_buffers_);
     }
@@ -69,8 +72,14 @@ namespace tango_augmented_reality {
                                     glm::mat4 model_mat,
                                     const std::vector <float> &vertices) {
         glUseProgram(shader_program_);
-        mvp_handle_ = glGetUniformLocation(shader_program_, "mvp");
+        vertices_visible_handle_ = glGetUniformLocation(shader_program_, "visible");
+        if (visible) {
+            glUniform1i(vertices_visible_handle_, GL_TRUE);
+        } else {
+            glUniform1i(vertices_visible_handle_, GL_FALSE);
+        }
 
+        mvp_handle_ = glGetUniformLocation(shader_program_, "mvp");
         // Calculate model view projection matrix.
         glm::mat4 mvp_mat = projection_mat * view_mat * model_mat * kOpengGL_T_Depth;
         glUniformMatrix4fv(mvp_handle_, 1, GL_FALSE, glm::value_ptr(mvp_mat));
@@ -86,6 +95,10 @@ namespace tango_augmented_reality {
 
         glUseProgram(0);
         tango_gl::util::CheckGlError("Pointcloud::Render()");
+    }
+
+    void PointCloudDrawable::SetVisibility(bool _visible) {
+        visible = _visible;
     }
 
 }  // namespace tango_point_cloud

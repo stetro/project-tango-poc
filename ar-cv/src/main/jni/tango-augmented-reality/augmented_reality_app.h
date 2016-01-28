@@ -84,6 +84,8 @@ class AugmentedRealityApp {
   // holding from Tango Service.
   void TangoDisconnect();
 
+  void toggleVisible();
+
   // Explicitly reset motion tracking and restart the pipeline.
   // Note that this will cause motion tracking to re-initialize.
   void TangoResetMotionTracking();
