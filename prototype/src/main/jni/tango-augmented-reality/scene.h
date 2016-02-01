@@ -195,6 +195,8 @@ namespace tango_augmented_reality {
         cv::Mat rgb_frame;
         cv::Mat depth_frame;
         std::vector <float> vertices;
+
+        std::mutex depth_mutex_;
     };
 }  // namespace tango_augmented_reality
 

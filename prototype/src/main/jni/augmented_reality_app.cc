@@ -69,6 +69,7 @@ namespace tango_augmented_reality {
     void AugmentedRealityApp::onFrameAvailable(const TangoImageBuffer *buffer) {
         skip_value++;
         if (skip_value % SKIP_INTERVAL == 0) {
+            skip_value = 0;
             main_scene_.OnFrameAvailable(buffer);
             RequestRender();
         }
@@ -283,16 +284,8 @@ namespace tango_augmented_reality {
 
     void AugmentedRealityApp::Render() {
         double video_overlay_timestamp;
-        TangoErrorType status =
-                TangoService_updateTexture(TANGO_CAMERA_COLOR, &video_overlay_timestamp);
-
-        glm::mat4 color_camera_pose =
-                GetPoseMatrixAtTimestamp(video_overlay_timestamp);
-        color_camera_pose =
-                pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(color_camera_pose);
-        if (status != TANGO_SUCCESS) {
-            LOGE("Failed to update video overlay texture with error code: %d", status);
-        }
+        glm::mat4 color_camera_pose = GetPoseMatrixAtTimestamp(video_overlay_timestamp);
+        color_camera_pose = pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(color_camera_pose);
         main_scene_.Render(color_camera_pose);
     }
 

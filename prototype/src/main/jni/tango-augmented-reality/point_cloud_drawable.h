@@ -54,7 +54,7 @@ namespace tango_augmented_reality {
 
         GLboolean vertices_visible_handle_;
 
-        bool visible;
+        bool visible = true;
 
         // Handle to the model view projection matrix uniform in the shader.
         GLuint mvp_handle_;

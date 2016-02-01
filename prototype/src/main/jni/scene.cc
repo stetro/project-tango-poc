@@ -146,9 +146,11 @@ namespace tango_augmented_reality {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
+        depth_mutex_.lock();
         point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(),
                                       gesture_camera_->GetViewMatrix(), point_cloud_transformation,
                                       vertices);
+        depth_mutex_.unlock();
         grid_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
         cube_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
     }
@@ -196,7 +198,7 @@ namespace tango_augmented_reality {
             yuv_buffer_.resize(yuv_size_);
             yuv_temp_buffer_.resize(yuv_size_);
             rgb_buffer_.resize(yuv_width_ * yuv_height_ * 3);
-
+            rgb_frame = cv::Mat(yuv_height_, yuv_width_, CV_8UC3);
 
             AllocateTexture(yuv_drawable_->GetTextureId(), yuv_width_, yuv_height_);
             is_yuv_texture_available_ = true;
@@ -214,15 +216,17 @@ namespace tango_augmented_reality {
             points.push_back(XYZ_ij->xyz[i][1] * 1.2);
             points.push_back(XYZ_ij->xyz[i][2]);
         }
+        depth_mutex_.lock();
         vertices = points;
+        depth_mutex_.unlock();
     }
 
     void Scene::AllocateTexture(GLuint texture_id, int width, int height) {
         glBindTexture(GL_TEXTURE_2D, texture_id);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,
-                     rgb_buffer_.data());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, rgb_frame.ptr());
     }
 
     void Scene::FillRGBTexture() {
@@ -233,9 +237,6 @@ namespace tango_augmented_reality {
                 swap_buffer_signal_ = false;
             }
         }
-
-        cv::Mat rgb_frame(yuv_width_, yuv_height_, CV_8UC3);
-
         for (size_t i = 0; i < yuv_height_; ++i) {
             for (size_t j = 0; j < yuv_width_; ++j) {
                 size_t x_index = j;
@@ -243,23 +244,20 @@ namespace tango_augmented_reality {
                     x_index = j - 1;
                 }
                 size_t rgb_index = (i * yuv_width_ + j) * 3;
-                // The YUV texture format is NV21,
-                // yuv_buffer_ buffer layout:
-                //   [y0, y1, y2, ..., yn, v0, u0, v1, u1, ..., v(n/4), u(n/4)]
+                cv::Vec3b rgb_dot;
                 Yuv2Rgb(yuv_buffer_[i * yuv_width_ + j],
                         yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
                         yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
-                        &rgb_buffer_[rgb_index], &rgb_buffer_[rgb_index + 1],
-                        &rgb_buffer_[rgb_index + 2]);
-                rgb_frame.at<cv::Vec3b>(j, i) = cv::Vec3b(rgb_buffer_[rgb_index],
-                                                          rgb_buffer_[rgb_index + 1],
-                                                          rgb_buffer_[rgb_index + 2]);
+                        &rgb_dot[0], &rgb_dot[1], &rgb_dot[2]);
+                rgb_frame.at<cv::Vec3b>(i, j) = rgb_dot;
             }
         }
 
+
+
         glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, yuv_width_, yuv_height_, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, rgb_buffer_.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, rgb_frame.ptr());
     }
 
 }  // namespace tango_augmented_reality
