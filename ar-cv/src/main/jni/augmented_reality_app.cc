@@ -44,13 +44,6 @@ static const int kMaxDepthDistance = 4000;
 // The meter to millimeter conversion.
 static const int kMeterToMillimeter = 1000;
 
-template<typename T>
-std::string to_string(T value) {
-    std::ostringstream os;
-    os << value;
-    return os.str();
-}
-
 namespace {
 
     void Yuv2Rgb(uint8_t yValue, uint8_t uValue, uint8_t vValue, uint8_t *r, uint8_t *g,
@@ -210,7 +203,7 @@ namespace {
         // filtering ...
         LOGD("filtering ...");
 //        inpaint(depth, (depth == 0), depth, 3.0, 1);
-        cv::ximgproc::guidedFilter(scaled_rgb_grayscale, scaled_gray, scaled_gray, 4, 0.5);
+//        cv::ximgproc::guidedFilter(scaled_rgb_grayscale, scaled_gray, scaled_gray, 13, 0.05);
 //        cv::Mat depth_copy(320, 180, CV_8UC1);
 //        bilateralFilter(depth, depth_copy, 4, 50, 50);
 

@@ -17,35 +17,25 @@
 #include <tango-gl/conversions.h>
 
 #include "tango-augmented-reality/scene.h"
-#include <tango-augmented-reality/point_cloud_renderer.h>
 
 namespace {
-// We want to represent the device properly with respect to the ground so we'll
-// add an offset in z to our origin. We'll set this offset to 1.3 meters based
-// on the average height of a human standing with a Tango device. This allows us
-// to place a grid roughly on the ground for most users.
+    // We want to represent the device properly with respect to the ground so we'll
+    // add an offset in z to our origin. We'll set this offset to 1.3 meters based
+    // on the average height of a human standing with a Tango device. This allows us
+    // to place a grid roughly on the ground for most users.
     const glm::vec3 kHeightOffset = glm::vec3(0.0f, 0.0f, 0.0f);
 
-// Color of the motion tracking trajectory.
+    // Color of the motion tracking trajectory.
     const tango_gl::Color kTraceColor(0.22f, 0.28f, 0.67f);
 
-// Color of the ground grid.
+    // Color of the ground grid.
     const tango_gl::Color kGridColor(0.85f, 0.85f, 0.85f);
 
-// Frustum scale.
-    const glm::vec3 kFrustumScale = glm::vec3(0.4f, 0.3f, 0.5f);
-
-// Some property for the AR marker.
-    const glm::quat kMarkerRotation = glm::quat(0.0f, 0.0f, 1.0f, 0.0f);
-// The reason we put mark at 0.85f at Y is because the center of the marker
-// object is not at the tip of the mark.
-    const glm::vec3 kMarkerPosition = glm::vec3(0.0f, 0.2f, -1.0f);
-    const glm::vec3 kMarkerScale = glm::vec3(0.01f, 0.01f, 0.01f);
-    const tango_gl::Color kMarkerColor(1.0f, 0.f, 0.f);
-
-    const glm::mat4 kOpengGL_T_Depth =
-            glm::mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-                      -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    // Some property for the AR cube.
+    const glm::quat kCubeRotation = glm::quat(0.0f, 0.0f, 1.0f, 0.0f);
+    const glm::vec3 kCubePosition = glm::vec3(0.0f, 0.0f, -1.0f);
+    const glm::vec3 kCubeScale = glm::vec3(0.05f, 0.05f, 0.05f);
+    const tango_gl::Color kCubeColor(1.0f, 0.f, 0.f);
 }  // namespace
 
 namespace tango_augmented_reality {
@@ -62,19 +52,19 @@ namespace tango_augmented_reality {
         axis_ = new tango_gl::Axis();
         frustum_ = new tango_gl::Frustum();
         trace_ = new tango_gl::Trace();
-
-        marker_ = new tango_gl::GoalMarker();
-        point_cloud_ = new PointCloudDrawable();
+        grid_ = new tango_gl::Grid();
+        cube_ = new tango_gl::Cube();
 
         trace_->SetColor(kTraceColor);
+        grid_->SetColor(kGridColor);
+        grid_->SetPosition(-kHeightOffset);
 
-        marker_->SetPosition(kCubePosition);
-        marker_->SetScale(kcubeScale);
-        marker_->SetRotation(kCubeRotation);
-        marker_->SetColor(kCubeColor);
+        cube_->SetPosition(kCubePosition);
+        cube_->SetScale(kCubeScale);
+        cube_->SetRotation(kCubeRotation);
+        cube_->SetColor(kCubeColor);
 
-        gesture_camera_->SetCameraType(
-                tango_gl::GestureCamera::CameraType::kThirdPerson);
+        gesture_camera_->SetCameraType(tango_gl::GestureCamera::CameraType::kThirdPerson);
     }
 
     void Scene::DeleteResources() {
@@ -83,7 +73,8 @@ namespace tango_augmented_reality {
         delete axis_;
         delete frustum_;
         delete trace_;
-        delete marker_;
+        delete grid_;
+        delete cube_;
     }
 
     void Scene::SetupViewPort(int x, int y, int w, int h) {
@@ -116,9 +107,6 @@ namespace tango_augmented_reality {
             // screen, so we passed identity matrix as view and projection matrix.
             glDisable(GL_DEPTH_TEST);
             video_overlay_->Render(glm::mat4(1.0f), glm::mat4(1.0f));
-
-            glm::mat4 projection(1.0f);
-
         } else {
             // In third person or top down more, we follow the camera movement.
             gesture_camera_->SetAnchorPosition(position);
@@ -140,19 +128,11 @@ namespace tango_augmented_reality {
             video_overlay_->Render(ar_camera_projection_matrix_,
                                    gesture_camera_->GetViewMatrix());
         }
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
-
-        point_cloud_->Render(gesture_camera_->GetProjectionMatrix(),
-                             gesture_camera_->GetViewMatrix(),
-                             point_cloud_camera_transformation, point_cloud_vertices);
-
-
-        marker_->Render(ar_camera_projection_matrix_,
-                        gesture_camera_->GetViewMatrix());
+        grid_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
+        cube_->Render(ar_camera_projection_matrix_,
+                      gesture_camera_->GetViewMatrix());
     }
-
 
     void Scene::SetCameraType(tango_gl::GestureCamera::CameraType camera_type) {
         gesture_camera_->SetCameraType(camera_type);
@@ -169,23 +149,9 @@ namespace tango_augmented_reality {
         }
     }
 
-    void Scene::OnTouchEvent(int touch_count,
-                             tango_gl::GestureCamera::TouchEvent event, float x0,
+    void Scene::OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event, float x0,
                              float y0, float x1, float y1) {
         gesture_camera_->OnTouchEvent(touch_count, event, x0, y0, x1, y1);
-    }
-
-    void Scene::SetMarkerPosition(glm::vec3 vector) {
-        glm::mat4 mvp = gesture_camera_->GetProjectionMatrix() *
-                        gesture_camera_->GetViewMatrix() *
-                        point_cloud_camera_transformation *
-                glm::inverse(kOpengGL_T_Depth);
-        glm::vec4 point = mvp * glm::vec4(vector, 1);
-        marker_->SetPosition(glm::vec3(point));
-    }
-
-    void Scene::SetVisibility(bool visible) {
-        point_cloud_->SetVisibility(visible);
     }
 
 }  // namespace tango_augmented_reality

@@ -32,104 +32,74 @@ jint JNI_OnLoad(JavaVM* vm, void*) {
 }
 
 JNIEXPORT jint JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_initialize(
+Java_de_stetro_master_prototype_TangoJNINative_initialize(
     JNIEnv* env, jobject, jobject activity) {
   return app.TangoInitialize(env, activity);
 }
 
 JNIEXPORT jint JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_setupConfig(
+Java_de_stetro_master_prototype_TangoJNINative_setupConfig(
     JNIEnv*, jobject) {
   return app.TangoSetupConfig();
 }
 
 JNIEXPORT jint JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_connect(
+Java_de_stetro_master_prototype_TangoJNINative_connect(
     JNIEnv*, jobject) {
   return app.TangoConnect();
 }
 
 JNIEXPORT jint JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_connectCallbacks(
+Java_de_stetro_master_prototype_TangoJNINative_connectCallbacks(
     JNIEnv*, jobject) {
   int ret = app.TangoConnectCallbacks();
   return ret;
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_disconnect(
+Java_de_stetro_master_prototype_TangoJNINative_disconnect(
     JNIEnv*, jobject) {
   app.TangoDisconnect();
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_destroyActivity(
+Java_de_stetro_master_prototype_TangoJNINative_destroyActivity(
     JNIEnv*, jobject) {
   app.ActivityDestroyed();
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_resetMotionTracking(
+Java_de_stetro_master_prototype_TangoJNINative_resetMotionTracking(
     JNIEnv*, jobject) {
   app.TangoResetMotionTracking();
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_pauseMotionTracking(
-    JNIEnv*, jobject) {
-  app.TangoPauseMotionTracking();
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_initGlContent(
+Java_de_stetro_master_prototype_TangoJNINative_initGlContent(
     JNIEnv*, jobject) {
   app.InitializeGLContent();
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_setupGraphic(
+Java_de_stetro_master_prototype_TangoJNINative_setupGraphic(
     JNIEnv*, jobject, jint width, jint height) {
   app.SetViewPort(width, height);
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_render(
+Java_de_stetro_master_prototype_TangoJNINative_render(
     JNIEnv*, jobject) {
   app.Render();
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_deleteResources(
+Java_de_stetro_master_prototype_TangoJNINative_deleteResources(
     JNIEnv*, jobject) {
   app.DeleteResources();
 }
 
-JNIEXPORT jstring JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_getPoseString(
-    JNIEnv* env, jobject) {
-  return (env)->NewStringUTF(app.GetPoseString().c_str());
-}
-
-JNIEXPORT jstring JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_getDepthString(
-        JNIEnv* env, jobject) {
-    return (env)->NewStringUTF(app.GetDepthString().c_str());
-}
-
-JNIEXPORT jstring JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_getEventString(
-    JNIEnv* env, jobject) {
-  return (env)->NewStringUTF(app.GetEventString().c_str());
-}
-
-JNIEXPORT jstring JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_getVersionNumber(
-    JNIEnv* env, jobject) {
-  return (env)->NewStringUTF(app.GetVersionString().c_str());
-}
-
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_setCamera(
+Java_de_stetro_master_prototype_TangoJNINative_setCamera(
     JNIEnv*, jobject, int camera_index) {
   using namespace tango_gl;
   GestureCamera::CameraType cam_type =
@@ -138,19 +108,7 @@ Java_de_stetro_master_arcv_TangoJNINative_setCamera(
 }
 
 JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_onDepthTouchEvent(
-        JNIEnv*, jobject, int x, int y) {
-    app.OnDepthTouchEvent(x,y);
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_toggleVisible(
-        JNIEnv*, jobject) {
-    app.toggleVisible();
-}
-
-JNIEXPORT void JNICALL
-Java_de_stetro_master_arcv_TangoJNINative_onTouchEvent(
+Java_de_stetro_master_prototype_TangoJNINative_onTouchEvent(
     JNIEnv*, jobject, int touch_count, int event, float x0, float y0, float x1,
     float y1) {
   using namespace tango_gl;
