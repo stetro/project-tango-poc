@@ -156,6 +156,13 @@ namespace tango_augmented_reality {
             return ret;
         }
 
+        // Enable depth camera from config.
+        ret = TangoConfig_setBool(tango_config_, "config_enable_depth", true);
+        if (ret != TANGO_SUCCESS) {
+            LOGE("config_enable_depth() failed with error code: %d", ret);
+            return ret;
+        }
+
         // Low latency IMU integration enables aggressive integration of the latest
         // inertial measurements to provide lower latency pose estimates. This will
         // improve the AR experience.
@@ -184,6 +191,21 @@ namespace tango_augmented_reality {
         int ret = TangoService_connectOnTangoEvent(onTangoEventAvailableRouter);
         if (ret != TANGO_SUCCESS) {
             LOGE("Failed to connect to event callback with error code: %d", ret);
+            return ret;
+        }
+
+        // Attach onFrameAvailable callback.
+        ret = TangoService_connectOnFrameAvailable(TANGO_CAMERA_COLOR, this,
+                                                   onFrameAvailableRouter);
+        if (ret != TANGO_SUCCESS) {
+            LOGE("Failed to connect to frame callback with error code: %d", ret);
+            return ret;
+        }
+
+        // Attach onXYZijAvailable callback.
+        ret = TangoService_connectOnXYZijAvailable(onXYZijAvailableRouter);
+        if (ret != TANGO_SUCCESS) {
+            LOGE("Failed to connect to depth callback with error code: %d", ret);
             return ret;
         }
 

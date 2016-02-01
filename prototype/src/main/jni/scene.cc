@@ -54,6 +54,7 @@ namespace tango_augmented_reality {
         trace_ = new tango_gl::Trace();
         grid_ = new tango_gl::Grid();
         cube_ = new tango_gl::Cube();
+        point_cloud_drawable_ = new PointCloudDrawable();
 
         trace_->SetColor(kTraceColor);
         grid_->SetColor(kGridColor);
@@ -75,6 +76,7 @@ namespace tango_augmented_reality {
         delete trace_;
         delete grid_;
         delete cube_;
+        delete point_cloud_drawable_;
     }
 
     void Scene::SetupViewPort(int x, int y, int w, int h) {

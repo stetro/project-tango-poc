@@ -34,6 +34,7 @@
 #include <tango-gl/video_overlay.h>
 
 #include <tango-augmented-reality/pose_data.h>
+#include <tango-augmented-reality/point_cloud_drawable.h>
 
 namespace tango_augmented_reality {
 
@@ -141,6 +142,8 @@ namespace tango_augmented_reality {
 
         // A cub placed at (0.0f, 0.0f, -1.0f) location.
         tango_gl::Cube *cube_;
+
+        PointCloudDrawable *point_cloud_drawable_;
 
         // We use both camera_image_plane_ratio_ and image_plane_distance_ to compute
         // the first person AR camera's frustum, these value is derived from actual
