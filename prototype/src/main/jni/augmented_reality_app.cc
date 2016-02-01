@@ -62,23 +62,16 @@ namespace {
         app->onTangoEventAvailable(event);
     }
 
-    // This function routes texture callbacks to the application object for
-    // handling.
-    //
-    // @param context, context will be a pointer to a AugmentedRealityApp
-    //        instance on which to call callbacks.
-    // @param id, id of the updated camera..
-    void onTextureAvailableRouter(void *context, TangoCameraId id) {
-        using namespace tango_augmented_reality;
-        AugmentedRealityApp *app = static_cast<AugmentedRealityApp *>(context);
-        app->onTextureAvailable(id);
-    }
 }  // namespace
 
 namespace tango_augmented_reality {
 
     void AugmentedRealityApp::onFrameAvailable(const TangoImageBuffer *buffer) {
-        LOGD("got image data ...");
+        skip_value++;
+        if (skip_value % SKIP_INTERVAL == 0) {
+            main_scene_.OnFrameAvailable(buffer);
+            RequestRender();
+        }
     }
 
     void AugmentedRealityApp::onXYZijAvailable(const TangoXYZij *XYZ_ij) {
@@ -88,12 +81,6 @@ namespace tango_augmented_reality {
     void AugmentedRealityApp::onTangoEventAvailable(const TangoEvent *event) {
         std::lock_guard <std::mutex> lock(tango_event_mutex_);
         tango_event_data_.UpdateTangoEvent(event);
-    }
-
-    void AugmentedRealityApp::onTextureAvailable(TangoCameraId id) {
-        if (id == TANGO_CAMERA_COLOR) {
-            RequestRender();
-        }
     }
 
     AugmentedRealityApp::AugmentedRealityApp() : calling_activity_obj_(nullptr),
@@ -247,16 +234,6 @@ namespace tango_augmented_reality {
 
     void AugmentedRealityApp::InitializeGLContent() {
         main_scene_.InitGLContent();
-
-        // Connect color camera texture. TangoService_connectTextureId expects a valid
-        // texture id from the caller, so we will need to wait until the GL content is
-        // properly allocated.
-        TangoErrorType ret = TangoService_connectTextureId(
-                TANGO_CAMERA_COLOR, main_scene_.GetVideoOverlayTextureId(), this,
-                onTextureAvailableRouter);
-        if (ret != TANGO_SUCCESS) {
-            LOGE(" Failed to connect the texture id with error code: %d", ret);
-        }
     }
 
     void AugmentedRealityApp::SetViewPort(int width, int height) {

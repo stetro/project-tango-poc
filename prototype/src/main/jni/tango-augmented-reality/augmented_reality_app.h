@@ -37,6 +37,7 @@
 #include <tango-augmented-reality/scene.h>
 #include <tango-augmented-reality/tango_event_data.h>
 
+#define SKIP_INTERVAL 5
 
 namespace tango_augmented_reality {
 
@@ -165,6 +166,14 @@ namespace tango_augmented_reality {
         // thread and TangoService callback thread.
         std::mutex pose_mutex_;
 
+        // Mutex for protecting the frame data. The frame data is shared between render
+        // thread and TangoService callback thread.
+        std::mutex frame_mutex_;
+
+        // Mutex for protecting the depth data. The depth data is shared between render
+        // thread and TangoService callback thread.
+        std::mutex depth_mutex_;
+
         // tango_event_data_ handles all Tango event callbacks,
         // onTangoEventAvailable() in this object will be routed to tango_event_data_
         // to handle.
@@ -202,6 +211,10 @@ namespace tango_augmented_reality {
         jmethodID on_demand_render_;
 
         ARMode mode;
+
+        cv::Mat rgb;
+
+        int skip_value;
     };
 }  // namespace tango_augmented_reality
 

@@ -17,8 +17,10 @@
 #ifndef TANGO_AUGMENTED_REALITY_SCENE_H_
 #define TANGO_AUGMENTED_REALITY_SCENE_H_
 
+#include <atomic>
 #include <jni.h>
 #include <memory>
+#include <mutex>
 
 #include <tango_client_api.h>  // NOLINT
 #include <tango-gl/axis.h>
@@ -35,6 +37,14 @@
 
 #include <tango-augmented-reality/pose_data.h>
 #include <tango-augmented-reality/point_cloud_drawable.h>
+#include <tango-augmented-reality/yuv_drawable.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/ximgproc.hpp>
+#include <opencv2/videostab.hpp>
+#include <opencv2/photo.hpp>
 
 namespace tango_augmented_reality {
 
@@ -70,10 +80,6 @@ namespace tango_augmented_reality {
         // @param: camera_type, camera type includes first person, third person and
         //         top down
         void SetCameraType(tango_gl::GestureCamera::CameraType camera_type);
-
-        // Get video overlay texture id.
-        // @return: texture id of video overlay's texture.
-        GLuint GetVideoOverlayTextureId() { return video_overlay_->GetTextureId(); }
 
         // @return: AR render camera's image plane ratio.
         float GetCameraImagePlaneRatio() { return camera_image_plane_ratio_; }
@@ -121,9 +127,16 @@ namespace tango_augmented_reality {
         void OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event,
                           float x0, float y0, float x1, float y1);
 
+        // Updates the yuv_drawable
+        void OnFrameAvailable(const TangoImageBuffer * buffer);
+
+        void AllocateTexture(GLuint texture_id, int width, int height);
+
+        void FillRGBTexture();
+
     private:
         // Video overlay drawable object to display the camera image.
-        tango_gl::VideoOverlay *video_overlay_;
+        YUVDrawable *yuv_drawable_;
 
         // Camera object that allows user to use touch input to interact with.
         tango_gl::GestureCamera *gesture_camera_;
@@ -156,6 +169,23 @@ namespace tango_augmented_reality {
 
         // The projection matrix for the first person AR camera.
         glm::mat4 ar_camera_projection_matrix_;
+
+        size_t yuv_width_;
+        size_t yuv_height_;
+        size_t yuv_size_;
+        size_t uv_buffer_offset_;
+
+        std::vector <uint8_t> yuv_buffer_;
+        std::vector <uint8_t> yuv_temp_buffer_;
+        std::vector <GLubyte> rgb_buffer_;
+
+        std::atomic<bool> is_yuv_texture_available_;
+        std::atomic<bool> swap_buffer_signal_;
+        std::mutex yuv_buffer_mutex_;
+
+        cv::Mat rgb_frame;
+        cv::Mat depth_frame;
+
     };
 }  // namespace tango_augmented_reality
 

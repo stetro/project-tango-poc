@@ -52,6 +52,7 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    pose_data.cc \
                    scene.cc \
                    point_cloud_drawable.cc \
+                   yuv_drawable.cc \
                    tango_event_data.cc
 
 LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango-gl/include \

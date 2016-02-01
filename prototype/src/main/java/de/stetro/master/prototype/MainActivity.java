@@ -56,7 +56,7 @@ public class MainActivity extends Activity implements
     // The interval at which we'll update our UI debug text in milliseconds.
     // This is the rate at which we query our native wrapper around the tango
     // service for pose and event information.
-    private static final int UPDATE_UI_INTERVAL_MS = 100;
+    private static final int UPDATE_UI_INTERVAL_MS = 1000;
 
     private GLSurfaceView mGLView;
 
