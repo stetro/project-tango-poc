@@ -106,6 +106,10 @@ namespace tango_augmented_reality {
             ar_camera_projection_matrix_ = projection_matrix;
         }
 
+        void SetPointCloudTransformation(glm::mat4 _point_cloud_transformation) {
+            point_cloud_transformation = _point_cloud_transformation;
+        }
+
         // Set the frustum render drawable object's scale. For the best visialization
         // result, we set the camera frustum object's scale to the physical camera's
         // aspect ratio.
@@ -129,6 +133,9 @@ namespace tango_augmented_reality {
 
         // Updates the yuv_drawable
         void OnFrameAvailable(const TangoImageBuffer * buffer);
+
+        // Updates the depth information
+        void OnXYZijAvailable(const TangoXYZij *XYZ_ij);
 
         void AllocateTexture(GLuint texture_id, int width, int height);
 
@@ -170,6 +177,8 @@ namespace tango_augmented_reality {
         // The projection matrix for the first person AR camera.
         glm::mat4 ar_camera_projection_matrix_;
 
+        glm::mat4 point_cloud_transformation;
+
         size_t yuv_width_;
         size_t yuv_height_;
         size_t yuv_size_;
@@ -185,7 +194,7 @@ namespace tango_augmented_reality {
 
         cv::Mat rgb_frame;
         cv::Mat depth_frame;
-
+        std::vector <float> vertices;
     };
 }  // namespace tango_augmented_reality
 

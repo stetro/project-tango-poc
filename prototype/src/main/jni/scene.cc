@@ -99,7 +99,9 @@ namespace tango_augmented_reality {
         if (!is_yuv_texture_available_) {
             return;
         }
+
         FillRGBTexture();
+
         glEnable(GL_DEPTH_TEST);
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -140,10 +142,15 @@ namespace tango_augmented_reality {
             yuv_drawable_->Render(ar_camera_projection_matrix_,
                                   gesture_camera_->GetViewMatrix());
         }
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
+        point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(),
+                                      gesture_camera_->GetViewMatrix(), point_cloud_transformation,
+                                      vertices);
         grid_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
-        cube_->Render(ar_camera_projection_matrix_,
-                      gesture_camera_->GetViewMatrix());
+        cube_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
     }
 
     void Scene::SetCameraType(tango_gl::GestureCamera::CameraType camera_type) {
@@ -200,6 +207,16 @@ namespace tango_augmented_reality {
         swap_buffer_signal_ = true;
     }
 
+    void Scene::OnXYZijAvailable(const TangoXYZij *XYZ_ij) {
+        std::vector <float> points;
+        for (int i = 0; i < XYZ_ij->xyz_count; ++i) {
+            points.push_back(XYZ_ij->xyz[i][0] * .9);
+            points.push_back(XYZ_ij->xyz[i][1] * 1.2);
+            points.push_back(XYZ_ij->xyz[i][2]);
+        }
+        vertices = points;
+    }
+
     void Scene::AllocateTexture(GLuint texture_id, int width, int height) {
         glBindTexture(GL_TEXTURE_2D, texture_id);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -235,8 +252,8 @@ namespace tango_augmented_reality {
                         &rgb_buffer_[rgb_index], &rgb_buffer_[rgb_index + 1],
                         &rgb_buffer_[rgb_index + 2]);
                 rgb_frame.at<cv::Vec3b>(j, i) = cv::Vec3b(rgb_buffer_[rgb_index],
-                                                        rgb_buffer_[rgb_index + 1],
-                                                        rgb_buffer_[rgb_index + 2]);
+                                                          rgb_buffer_[rgb_index + 1],
+                                                          rgb_buffer_[rgb_index + 2]);
             }
         }
 

@@ -31,7 +31,7 @@ namespace {
                     "  v_color = vec4(0.0,0.0,0.0,0.0);\n"
                     "if(visible){ v_color = vec4(vertex.z / 4.5,vertex.z / 4.5,vertex.z / 4.5,1.0);}\n" // grayscale
 //                    "  v_color = vertex;\n"  // colored
-                    " gl_PointSize = 3.3;\n"
+                    " gl_PointSize = 10.0;\n"
                     "}\n";
     const std::string kPointCloudFragmentShader =
             "precision mediump float;\n"

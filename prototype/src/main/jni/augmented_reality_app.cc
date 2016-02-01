@@ -75,7 +75,10 @@ namespace tango_augmented_reality {
     }
 
     void AugmentedRealityApp::onXYZijAvailable(const TangoXYZij *XYZ_ij) {
-        LOGD("got depth data...");
+        main_scene_.OnXYZijAvailable(XYZ_ij);
+        glm::mat4 transformation = GetPoseMatrixAtTimestamp(XYZ_ij->timestamp);
+        transformation = pose_data_.GetExtrinsicsAppliedOpenGLWorldFrame(transformation);
+        main_scene_.SetPointCloudTransformation(transformation);
     }
 
     void AugmentedRealityApp::onTangoEventAvailable(const TangoEvent *event) {
