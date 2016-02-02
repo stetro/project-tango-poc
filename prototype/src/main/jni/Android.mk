@@ -53,12 +53,13 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    scene.cc \
                    point_cloud_drawable.cc \
                    yuv_drawable.cc \
+                   depth_drawable.cc \
                    tango_event_data.cc
 
 LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango-gl/include \
                     $(TANGO_C_EXAMPLES)/third-party/glm/
 
-LOCAL_LDLIBS    += -llog -lGLESv2 -L$(SYSROOT)/usr/lib
+LOCAL_LDLIBS    += -llog -lGLESv3 -L$(SYSROOT)/usr/lib
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-add-path, $(TANGO_C_EXAMPLES))

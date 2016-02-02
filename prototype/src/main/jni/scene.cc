@@ -52,6 +52,31 @@ namespace tango_augmented_reality {
     Scene::~Scene() { }
 
     void Scene::InitGLContent() {
+
+        // create drawable with rgb texture
+        depth_frame = cv::Mat(1280, 720, CV_8UC3);
+        depth_drawable_ = new DepthDrawable();
+        glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_frame.rows, depth_frame.cols, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+//        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.rows, depth_frame.cols, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+        // create depth buffer for frame buffer
+        glGenRenderbuffers(1, &depth_frame_depth_buffer_);
+        glBindRenderbuffer(GL_RENDERBUFFER, depth_frame_depth_buffer_);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 720);
+
+        // create frame buffer with color texture and depth
+        glGenFramebuffers(1, &depth_frame_buffer_);
+        glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_frame_depth_buffer_);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, depth_drawable_->GetTextureId(), 0);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+        // check for errors of framebuffer
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            LOGE("ERROR %d in fb %d ", depth_frame_buffer_);
+        }
+
         // Allocating render camera and drawable object.
         // All of these objects are for visualization purposes.
         yuv_drawable_ = new YUVDrawable();
@@ -78,6 +103,7 @@ namespace tango_augmented_reality {
     void Scene::DeleteResources() {
         delete gesture_camera_;
         delete yuv_drawable_;
+        delete depth_drawable_;
         delete axis_;
         delete frustum_;
         delete trace_;
@@ -90,8 +116,7 @@ namespace tango_augmented_reality {
         if (h == 0) {
             LOGE("Setup graphic height not valid");
         }
-        gesture_camera_->SetAspectRatio(static_cast<float>(w) /
-                                        static_cast<float>(h));
+        gesture_camera_->SetAspectRatio(static_cast<float>(w) / static_cast<float>(h));
         glViewport(x, y, w, h);
     }
 
@@ -100,23 +125,20 @@ namespace tango_augmented_reality {
             return;
         }
 
-        FillRGBTexture();
+        ConvertYuvToRGBMat();
+        BindRGBMatAsTexture();
 
         glEnable(GL_DEPTH_TEST);
-
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        glm::vec3 position = glm::vec3(cur_pose_transformation[3][0], cur_pose_transformation[3][1],
-                                       cur_pose_transformation[3][2]);
+        glm::vec3 position = glm::vec3(cur_pose_transformation[3][0], cur_pose_transformation[3][1], cur_pose_transformation[3][2]);
 
         trace_->UpdateVertexArray(position);
 
-        if (gesture_camera_->GetCameraType() ==
-            tango_gl::GestureCamera::CameraType::kFirstPerson) {
+        if (gesture_camera_->GetCameraType() == tango_gl::GestureCamera::CameraType::kFirstPerson) {
             // In first person mode, we directly control camera's motion.
             gesture_camera_->SetTransformationMatrix(cur_pose_transformation);
-
             // If it's first person view, we will render the video overlay in full
             // screen, so we passed identity matrix as view and projection matrix.
             glDisable(GL_DEPTH_TEST);
@@ -124,39 +146,45 @@ namespace tango_augmented_reality {
         } else {
             // In third person or top down more, we follow the camera movement.
             gesture_camera_->SetAnchorPosition(position);
-
             frustum_->SetTransformationMatrix(cur_pose_transformation);
             // Set the frustum scale to 4:3, this doesn't necessarily match the physical
             // camera's aspect ratio, this is just for visualization purposes.
-            frustum_->SetScale(
-                    glm::vec3(1.0f, camera_image_plane_ratio_, image_plane_distance_));
-            frustum_->Render(ar_camera_projection_matrix_,
-                             gesture_camera_->GetViewMatrix());
-
+            frustum_->SetScale(glm::vec3(1.0f, camera_image_plane_ratio_, image_plane_distance_));
+            frustum_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
             axis_->SetTransformationMatrix(cur_pose_transformation);
-            axis_->Render(ar_camera_projection_matrix_,
-                          gesture_camera_->GetViewMatrix());
-
-            trace_->Render(ar_camera_projection_matrix_,
-                           gesture_camera_->GetViewMatrix());
-            yuv_drawable_->Render(ar_camera_projection_matrix_,
-                                  gesture_camera_->GetViewMatrix());
+            axis_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
+            trace_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
+            yuv_drawable_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
         }
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
+
+        // draw depth to framebuffer object
+        glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
+        glClearColor(1.0, 1.0, 1.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         depth_mutex_.lock();
-        point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(),
-                                      gesture_camera_->GetViewMatrix(), point_cloud_transformation,
-                                      vertices);
+        point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
         depth_mutex_.unlock();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // render rest of drawables
+        depth_drawable_->Render(glm::mat4(1.0f), glm::mat4(1.0f));
         grid_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
         cube_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
+
     }
 
     void Scene::SetCameraType(tango_gl::GestureCamera::CameraType camera_type) {
         gesture_camera_->SetCameraType(camera_type);
+
+        depth_drawable_->SetParent(nullptr);
+//        depth_drawable_->SetScale(glm::vec3(1.f, 1.f, 1.f));
+//        depth_drawable_->SetPosition(glm::vec3(+0.f, -0., 0.0f));
+        depth_drawable_->SetScale(glm::vec3(0.3f, 0.3f, 0.3f));
+        depth_drawable_->SetPosition(glm::vec3(+0.6f, -0.6f, 0.0f));
+        depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+
         if (camera_type == tango_gl::GestureCamera::CameraType::kFirstPerson) {
             yuv_drawable_->SetParent(nullptr);
             yuv_drawable_->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
@@ -170,8 +198,7 @@ namespace tango_augmented_reality {
         }
     }
 
-    void Scene::OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event, float x0,
-                             float y0, float x1, float y1) {
+    void Scene::OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event, float x0, float y0, float x1, float y1) {
         gesture_camera_->OnTouchEvent(touch_count, event, x0, y0, x1, y1);
     }
 
@@ -191,6 +218,7 @@ namespace tango_augmented_reality {
         if (!is_yuv_texture_available_) {
             yuv_width_ = buffer->width;
             yuv_height_ = buffer->height;
+            LOGE("%d %d", yuv_width_, yuv_height_);
             uv_buffer_offset_ = yuv_width_ * yuv_height_;
             yuv_size_ = yuv_width_ * yuv_height_ + yuv_width_ * yuv_height_ / 2;
 
@@ -200,7 +228,9 @@ namespace tango_augmented_reality {
             rgb_buffer_.resize(yuv_width_ * yuv_height_ * 3);
             rgb_frame = cv::Mat(yuv_height_, yuv_width_, CV_8UC3);
 
-            AllocateTexture(yuv_drawable_->GetTextureId(), yuv_width_, yuv_height_);
+            glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_frame.ptr());
+
             is_yuv_texture_available_ = true;
         }
 
@@ -221,15 +251,7 @@ namespace tango_augmented_reality {
         depth_mutex_.unlock();
     }
 
-    void Scene::AllocateTexture(GLuint texture_id, int width, int height) {
-        glBindTexture(GL_TEXTURE_2D, texture_id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, rgb_frame.ptr());
-    }
-
-    void Scene::FillRGBTexture() {
+    void Scene::ConvertYuvToRGBMat() {
         {
             std::lock_guard <std::mutex> lock(yuv_buffer_mutex_);
             if (swap_buffer_signal_) {
@@ -253,11 +275,11 @@ namespace tango_augmented_reality {
             }
         }
 
+    }
 
-
+    void Scene::BindRGBMatAsTexture() {
         glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, rgb_frame.ptr());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_frame.ptr());
     }
 
 }  // namespace tango_augmented_reality
