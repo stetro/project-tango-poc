@@ -46,7 +46,6 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/trace.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/transform.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/util.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/video_overlay.cpp \
                    augmented_reality_app.cc \
                    jni_interface.cc \
                    pose_data.cc \

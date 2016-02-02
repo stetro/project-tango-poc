@@ -1,4 +1,5 @@
 //include ':ar'
+include ':utils'
 //include ':pc'
 //include ':construct'
 if (!System.getenv("CI")) {
@@ -14,4 +15,4 @@ if (!System.getenv("CI")) {
     include ':prototype'
 }
 
-include ':utils'
+

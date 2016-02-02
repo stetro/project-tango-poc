@@ -18,6 +18,7 @@
 
 #include "tango-augmented-reality/scene.h"
 
+
 namespace {
     // We want to represent the device properly with respect to the ground so we'll
     // add an offset in z to our origin. We'll set this offset to 1.3 meters based
@@ -58,18 +59,17 @@ namespace tango_augmented_reality {
         depth_drawable_ = new DepthDrawable();
         glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_frame.rows, depth_frame.cols, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-//        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.rows, depth_frame.cols, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
-        // create depth buffer for frame buffer
-        glGenRenderbuffers(1, &depth_frame_depth_buffer_);
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_frame_depth_buffer_);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 720);
+        // create depth texture
+        glGenTextures(1, &depth_frame_buffer_depth_texture_);
+        glBindTexture(GL_TEXTURE_2D, depth_frame_buffer_depth_texture_);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.rows, depth_frame.cols, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 
         // create frame buffer with color texture and depth
         glGenFramebuffers(1, &depth_frame_buffer_);
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_frame_depth_buffer_);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, depth_drawable_->GetTextureId(), 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_frame_buffer_depth_texture_, 0);
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
         // check for errors of framebuffer
@@ -157,15 +157,23 @@ namespace tango_augmented_reality {
             yuv_drawable_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
         }
 
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_DEPTH_TEST);
 
         // draw depth to framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
         glClearColor(1.0, 1.0, 1.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         depth_mutex_.lock();
         point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
         depth_mutex_.unlock();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // copy depth to main framebuffer
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, depth_frame_buffer_);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, 1280, 720, 0, 0, 1280, 720, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // render rest of drawables

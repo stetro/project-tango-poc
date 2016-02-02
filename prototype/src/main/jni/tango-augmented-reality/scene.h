@@ -210,7 +210,7 @@ namespace tango_augmented_reality {
         std::mutex depth_mutex_;
 
         GLuint depth_frame_buffer_;
-        GLuint depth_frame_depth_buffer_;
+        GLuint depth_frame_buffer_depth_texture_;
     };
 }  // namespace tango_augmented_reality
 
