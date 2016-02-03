@@ -47,6 +47,7 @@
 #include <tango-augmented-reality/point_cloud_drawable.h>
 #include <tango-augmented-reality/yuv_drawable.h>
 #include <tango-augmented-reality/depth_drawable.h>
+#include <tango-augmented-reality/chisel_mesh.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -183,6 +184,8 @@ namespace tango_augmented_reality {
 
         // A cub placed at (0.0f, 0.0f, -1.0f) location.
         tango_gl::Cube *cube_;
+
+        ChiselMesh *chisel_mesh_;
 
         PointCloudDrawable *point_cloud_drawable_;
 

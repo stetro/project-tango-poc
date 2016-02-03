@@ -24,6 +24,8 @@ BOOST_ANDROID_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/boost
 FLANN_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/flann
 EIGEN_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/eigen
 
+CHISEL := $(LOCAL_PATH)/../../../../native-libraries/open_chisel
+
 
 # PCL libraries
 
@@ -75,7 +77,7 @@ include $(OPENCV)/OpenCV.mk
 
 LOCAL_MODULE    := libaugmented_reality_jni_example
 LOCAL_SHARED_LIBRARIES += tango_client_api
-LOCAL_CFLAGS    += -std=c++11 -mfloat-abi=softfp -mfpu=neon -march=armv7 -mthumb -O3
+
 
 LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/bounding_box.cpp \
@@ -93,6 +95,22 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/trace.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/transform.cpp \
                    $(TANGO_C_EXAMPLES)/tango-gl/util.cpp \
+                   $(CHISEL)/src/Chunk.cpp \
+                   $(CHISEL)/src/ChunkManager.cpp \
+                   $(CHISEL)/src/DistVoxel.cpp \
+                   $(CHISEL)/src/ColorVoxel.cpp \
+                   $(CHISEL)/src/geometry/AABB.cpp \
+                   $(CHISEL)/src/geometry/Plane.cpp \
+                   $(CHISEL)/src/geometry/Frustum.cpp \
+                   $(CHISEL)/src/camera/Intrinsics.cpp \
+                   $(CHISEL)/src/camera/PinholeCamera.cpp \
+                   $(CHISEL)/src/pointcloud/PointCloud.cpp \
+                   $(CHISEL)/src/ProjectionIntegrator.cpp \
+                   $(CHISEL)/src/Chisel.cpp \
+                   $(CHISEL)/src/mesh/Mesh.cpp \
+                   $(CHISEL)/src/marching_cubes/MarchingCubes.cpp \
+                   $(CHISEL)/src/io/PLY.cpp \
+                   $(CHISEL)/src/geometry/Raycast.cpp \
                    augmented_reality_app.cc \
                    jni_interface.cc \
                    pose_data.cc \
@@ -108,7 +126,8 @@ LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango-gl/include \
                     $(PCL_INCLUDE)/include/pcl-1.6 \
                     $(BOOST_ANDROID_INCLUDE)/include \
                     $(EIGEN_INCLUDE) \
-                    $(FLANN_INCLUDE)/include
+                    $(FLANN_INCLUDE)/include \
+                    $(CHISEL)/include
 
 LOCAL_LDFLAGS += -L$(PCL_INCLUDE)/lib  \
                  -L$(BOOST_ANDROID_INCLUDE)/lib \
@@ -123,7 +142,9 @@ LOCAL_SHARED_LIBRARIES   += boost_date_time boost_iostreams boost_regex boost_sy
 
 LOCAL_SHARED_LIBRARIES   += flann flann_cpp
 
-LOCAL_LDLIBS    +=  -llog -lGLESv3 -L$(SYSROOT)/usr/lib \
+LOCAL_CFLAGS    += -std=c++11 -mfloat-abi=softfp -mfpu=neon -march=armv7 -mthumb -O3
+
+LOCAL_LDLIBS    +=  -lc -lm -llog -landroid -ldl -llog -lGLESv3 -L$(SYSROOT)/usr/lib \
                     -lpcl_common -lpcl_geometry -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_sample_consensus \
     				-lpcl_surface -lpcl_features -lpcl_filters -lpcl_keypoints -lpcl_tracking -lpcl_ml \
     				-lpcl_registration -lpcl_segmentation \

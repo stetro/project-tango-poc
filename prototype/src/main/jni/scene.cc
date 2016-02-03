@@ -56,9 +56,8 @@ namespace tango_augmented_reality {
 
         depth_width_ = 1280;
         depth_height_ = 720;
-
-        gl_depth_format_ = GL_UNSIGNED_SHORT;
-        cv_depth_format_ = CV_16UC1;
+        gl_depth_format_ = GL_UNSIGNED_SHORT;       // 16 Bit
+        cv_depth_format_ = CV_16UC1;                // 16 Bit
 
         // temporary depth_frame cv buffer
         depth_frame = cv::Mat(depth_height_, depth_width_, cv_depth_format_);
@@ -169,10 +168,17 @@ namespace tango_augmented_reality {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
 
+        if (mode == TSDF) {
+            std::lock_guard <std::mutex> lock(depth_mutex_);
+            chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+        }
+
         // draw depth to framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
         glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // render reconstructions or pointcloud, depending on mode
         switch (mode) {
             case POINTCLOUD: {
                 std::lock_guard <std::mutex> lock(depth_mutex_);
@@ -180,7 +186,6 @@ namespace tango_augmented_reality {
             }
                 break;
             case TSDF:
-
                 break;
             case PLANE:
 
@@ -201,7 +206,6 @@ namespace tango_augmented_reality {
             // apply opencv filters
             cv::Mat temp_frame(depth_frame.size(), CV_8UC1);
             depth_frame.convertTo(temp_frame, CV_8U, 0.00390625);
-//            line(depth_frame, cv::Point(20, 20), cv::Point(150, 150), cv::Scalar(0.0), 5);
             cv::ximgproc::guidedFilter(rgb_frame, temp_frame, temp_frame, 13, 0.05);
             temp_frame.convertTo(depth_frame, CV_16UC1, 255);
 
@@ -228,8 +232,6 @@ namespace tango_augmented_reality {
         gesture_camera_->SetCameraType(camera_type);
 
         depth_drawable_->SetParent(nullptr);
-//        depth_drawable_->SetScale(glm::vec3(1.f, 1.f, 1.f));
-//        depth_drawable_->SetPosition(glm::vec3(+0.f, -0., 0.0f));
         depth_drawable_->SetScale(glm::vec3(0.3f, 0.3f, 0.3f));
         depth_drawable_->SetPosition(glm::vec3(+0.6f, -0.6f, 0.0f));
         depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
@@ -339,11 +341,19 @@ namespace tango_augmented_reality {
     void Scene::Tap() {
         if (mode == TSDF) {
             LOGD("Collect Points for Chisel");
+            {
+                std::lock_guard <std::mutex> lock(depth_mutex_);
+                chisel_mesh_->addPoints(vertices, point_cloud_transformation);
+                chisel_mesh_->updateVertices();
+            }
         }
     }
 
     void Scene::SetMode(int id) {
         mode = (ARMode) id;
+        if (mode == TSDF) {
+            chisel_mesh_ = new ChiselMesh();
+        }
     }
 
 }  // namespace tango_augmented_reality

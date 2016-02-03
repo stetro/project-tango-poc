@@ -21,6 +21,19 @@
 #include <tango-gl/drawable_object.h>
 #include <tango-gl/segment.h>
 
+#include <Eigen/Core>
+
+#include <open_chisel/Chisel.h>
+#include <open_chisel/pointcloud/PointCloud.h>
+#include <open_chisel/ProjectionIntegrator.h>
+#include <open_chisel/geometry/Geometry.h>
+#include <open_chisel/truncation/Truncator.h>
+#include <open_chisel/truncation/QuadraticTruncator.h>
+#include <open_chisel/truncation/ConstantTruncator.h>
+#include <open_chisel/truncation/QuadraticTruncator.h>
+#include <open_chisel/weighting/ConstantWeighter.h>
+#include <open_chisel/mesh/Mesh.h>
+
 namespace tango_augmented_reality {
     class ChiselMesh : public tango_gl::DrawableObject {
     public:
@@ -40,6 +53,10 @@ namespace tango_augmented_reality {
 
         bool IsIntersecting(const tango_gl::Segment &segment);
 
+        void addPoints(std::vector<float> vertices, glm::mat4 transformation);
+
+        void updateVertices();
+
     protected:
         tango_gl::BoundingBox *bounding_box_;
 
@@ -52,6 +69,19 @@ namespace tango_augmented_reality {
         GLuint uniform_mv_mat_;
 
         GLuint uniform_light_vec_;
+
+        double truncationDistScale;
+        double chunkSize;
+        double chunkResolution;
+        double weighting;
+        double carvingDistance;
+        bool enableCarving;
+        double farClipping;
+        double rayTruncation;
+
+        chisel::ChiselPtr chiselMap;
+        chisel::PointCloudPtr lastPointCloud = chisel::PointCloudPtr(new chisel::PointCloud());
+        chisel::ProjectionIntegrator projectionIntegrator;
     };
 }  // namespace tango_augmented_reality
 #endif  // TANGO_AUGMENTED_REALITY_MESH_H_
