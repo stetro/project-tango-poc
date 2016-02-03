@@ -368,7 +368,15 @@ namespace tango_augmented_reality {
     }
 
     void AugmentedRealityApp::ToggleFilter() {
-    main_scene_.ToggleFilter();
+        main_scene_.ToggleFilter();
+    }
+
+    void AugmentedRealityApp::tap() {
+        main_scene_.Tap();
+    }
+
+    void AugmentedRealityApp::setMode(int id) {
+        main_scene_.SetMode(id);
     }
 
 }  // namespace tango_augmented_reality

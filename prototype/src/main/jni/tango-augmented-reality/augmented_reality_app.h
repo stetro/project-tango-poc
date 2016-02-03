@@ -70,6 +70,9 @@ namespace tango_augmented_reality {
         // Connect the onPoseAvailable callback.
         int TangoConnectCallbacks();
 
+        // On Tap Event
+        void tap();
+
         // Connect to Tango Service.
         // This function will start the Tango Service pipeline, in this case, it will
         // start Motion Tracking.
@@ -85,6 +88,9 @@ namespace tango_augmented_reality {
 
         // toggles the ability to apply the guided filtering
         void ToggleFilter();
+
+        // setting the reconstruction mode
+        void setMode(int id);
 
         // Tango service event callback function for pose data. Called when new events
         // are available from the Tango Service.

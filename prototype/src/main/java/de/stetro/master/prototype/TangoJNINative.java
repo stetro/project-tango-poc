@@ -71,4 +71,9 @@ public class TangoJNINative {
     public static native void onTouchEvent(int touchCount, int event0, float x0, float y0, float x1, float y1);
 
     public static native void toggleFilter();
+
+    public static native void tap();
+
+    public static native void setMode(int mode);
+
 }

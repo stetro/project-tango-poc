@@ -57,6 +57,10 @@
 
 namespace tango_augmented_reality {
 
+    enum ARMode {
+        POINTCLOUD = 0, TSDF = 1, PLANE = 2
+    };
+
 // Scene provides OpenGL drawable objects and renders them for visualization.
     class Scene {
     public:
@@ -152,6 +156,10 @@ namespace tango_augmented_reality {
 
         void ToggleFilter();
 
+        void Tap();
+
+        void SetMode(int id);
+
     private:
         // Video overlay drawable object to display the camera image.
         YUVDrawable *yuv_drawable_;
@@ -222,6 +230,7 @@ namespace tango_augmented_reality {
         GLuint depth_frame_buffer_depth_texture_;
 
         bool do_filtering = false;
+        ARMode mode = POINTCLOUD;
     };
 }  // namespace tango_augmented_reality
 

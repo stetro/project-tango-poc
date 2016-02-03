@@ -25,5 +25,9 @@
     <string name="near">Near</string>
     <string name="far">Far</string>
     <string name="filter">Filter (%1$s)</string>
+    <string name="pointclouds">Pointcloud Projection</string>
+    <string name="tsdf">TSDF Reconstruciton</string>
+    <string name="plane">PlaneReconstruciton</string>
+
 </resources>
 

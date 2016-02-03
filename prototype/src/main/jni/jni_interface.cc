@@ -81,6 +81,18 @@ Java_de_stetro_master_prototype_TangoJNINative_toggleFilter(
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_tap(
+    JNIEnv*, jobject) {
+  app.tap();
+}
+
+JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_setMode(
+    JNIEnv*, jobject, jint id) {
+  app.setMode(id);
+}
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_prototype_TangoJNINative_initGlContent(
     JNIEnv*, jobject) {
   app.InitializeGLContent();

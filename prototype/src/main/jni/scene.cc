@@ -173,9 +173,20 @@ namespace tango_augmented_reality {
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
         glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        depth_mutex_.lock();
-        point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
-        depth_mutex_.unlock();
+        switch (mode) {
+            case POINTCLOUD: {
+                std::lock_guard <std::mutex> lock(depth_mutex_);
+                point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
+            }
+                break;
+            case TSDF:
+
+                break;
+            case PLANE:
+
+                break;
+        }
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // render colored depth
@@ -284,9 +295,10 @@ namespace tango_augmented_reality {
             points.push_back(XYZ_ij->xyz[i][1] * 1.2);
             points.push_back(XYZ_ij->xyz[i][2]);
         }
-        depth_mutex_.lock();
-        vertices = points;
-        depth_mutex_.unlock();
+        {
+            std::lock_guard <std::mutex> lock(depth_mutex_);
+            vertices = points;
+        }
     }
 
     void Scene::ConvertYuvToRGBMat() {
@@ -322,6 +334,16 @@ namespace tango_augmented_reality {
 
     void Scene::ToggleFilter() {
         do_filtering = !do_filtering;
+    }
+
+    void Scene::Tap() {
+        if (mode == TSDF) {
+            LOGD("Collect Points for Chisel");
+        }
+    }
+
+    void Scene::SetMode(int id) {
+        mode = (ARMode) id;
     }
 
 }  // namespace tango_augmented_reality

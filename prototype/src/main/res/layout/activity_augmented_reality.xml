@@ -15,8 +15,8 @@
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="wrap_content"
-                android:background="@android:color/background_dark"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:background="@android:color/background_dark">
 
     <android.opengl.GLSurfaceView
         android:id="@+id/gl_surface_view"
@@ -25,56 +25,98 @@
         android:layout_centerInParent="true"
         android:layout_gravity="top"/>
 
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@android:color/white"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/pointclouds"
+            style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:padding="10dp"
+            android:text="@string/pointclouds"/>
+
+        <RadioButton
+            android:id="@+id/tsdf"
+            style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:padding="10dp"
+            android:text="@string/tsdf"/>
+
+        <RadioButton
+            android:id="@+id/plane"
+            style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:padding="10dp"
+            android:text="@string/plane"/>
+    </RadioGroup>
+
     <Button
         android:id="@+id/first_person_button"
+        style="@style/Widget.AppCompat.Button"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_above="@+id/third_person_button"
         android:layout_alignLeft="@+id/third_person_button"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginBottom="5dp"
-        android:layout_marginRight="5dp"
-        android:paddingRight="5dp"
+        android:layout_marginEnd="5dp"
+        android:paddingEnd="5dp"
         android:text="@string/first_person"/>
 
     <Button
         android:id="@+id/top_down_button"
+        style="@style/Widget.AppCompat.Button"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="5dp"
-        android:paddingRight="5dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="5dp"
+        android:paddingEnd="5dp"
         android:text="@string/top_down"/>
 
     <Button
         android:id="@+id/third_person_button"
+        style="@style/Widget.AppCompat.Button"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_above="@+id/top_down_button"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginBottom="5dp"
-        android:layout_marginRight="5dp"
-        android:paddingRight="5dp"
+        android:layout_marginEnd="5dp"
+        android:paddingEnd="5dp"
         android:text="@string/third_person"/>
 
     <Button
         android:id="@+id/resetmotion"
+        style="@style/Widget.AppCompat.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="5dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="5dp"
         android:text="@string/reset"/>
 
     <Button
         android:id="@+id/toggle_filter"
+        style="@style/Widget.AppCompat.Button"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginStart="5dp"
         android:text="@string/filter"/>
 
 </RelativeLayout>

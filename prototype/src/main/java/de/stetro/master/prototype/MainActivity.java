@@ -27,10 +27,12 @@ import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,10 +45,7 @@ import java.io.InputStream;
 // glSurfaceView that renders graphic content.
 public class MainActivity extends Activity implements
         View.OnClickListener {
-    // The input argument is invalid.
-    private static final int TANGO_INVALID = -2;
-    // This error code denotes some sort of hard error occurred.
-    private static final int TANGO_ERROR = -1;
+
     // This code indicates success.
     private static final int TANGO_SUCCESS = 0;
 
@@ -80,6 +79,8 @@ public class MainActivity extends Activity implements
             mHandler.postDelayed(this, UPDATE_UI_INTERVAL_MS);
         }
     };
+    private ARMode mode = ARMode.POINTCLOUD;
+    private GestureDetector detector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +106,8 @@ public class MainActivity extends Activity implements
         findViewById(R.id.first_person_button).setOnClickListener(this);
         findViewById(R.id.third_person_button).setOnClickListener(this);
         findViewById(R.id.top_down_button).setOnClickListener(this);
+
+        ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
         Button button = (Button) findViewById(R.id.toggle_filter);
         button.setOnClickListener(this);
         changeFilterButtonLabel(button);
@@ -117,6 +120,8 @@ public class MainActivity extends Activity implements
 
         // Configure OpenGL renderer
         mGLView.setEGLContextClientVersion(2);
+
+        detector = new GestureDetector(this, new TapGestureDetector());
 
         // Set up button click listeners
         mMotionReset.setOnClickListener(this);
@@ -131,8 +136,7 @@ public class MainActivity extends Activity implements
 
         // Check if the Tango Core is out dated.
         if (!CheckTangoCoreVersion(MIN_TANGO_CORE_VERSION)) {
-            Toast.makeText(this, "Tango Core out dated, please update in Play Store",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Tango Core out dated, please update in Play Store", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -246,23 +250,21 @@ public class MainActivity extends Activity implements
         if (pointCount == 1) {
             float normalizedX = event.getX(0) / mScreenSize.x;
             float normalizedY = event.getY(0) / mScreenSize.y;
-            TangoJNINative.onTouchEvent(1,
-                    event.getActionMasked(), normalizedX, normalizedY, 0.0f, 0.0f);
+            TangoJNINative.onTouchEvent(1, event.getActionMasked(), normalizedX, normalizedY, 0.0f, 0.0f);
+            detector.onTouchEvent(event);
         }
         if (pointCount == 2) {
             if (event.getActionMasked() == MotionEvent.ACTION_POINTER_UP) {
                 int index = event.getActionIndex() == 0 ? 1 : 0;
                 float normalizedX = event.getX(index) / mScreenSize.x;
                 float normalizedY = event.getY(index) / mScreenSize.y;
-                TangoJNINative.onTouchEvent(1,
-                        MotionEvent.ACTION_DOWN, normalizedX, normalizedY, 0.0f, 0.0f);
+                TangoJNINative.onTouchEvent(1, MotionEvent.ACTION_DOWN, normalizedX, normalizedY, 0.0f, 0.0f);
             } else {
                 float normalizedX0 = event.getX(0) / mScreenSize.x;
                 float normalizedY0 = event.getY(0) / mScreenSize.y;
                 float normalizedX1 = event.getX(1) / mScreenSize.x;
                 float normalizedY1 = event.getY(1) / mScreenSize.y;
-                TangoJNINative.onTouchEvent(2, event.getActionMasked(),
-                        normalizedX0, normalizedY0, normalizedX1, normalizedY1);
+                TangoJNINative.onTouchEvent(2, event.getActionMasked(), normalizedX0, normalizedY0, normalizedX1, normalizedY1);
             }
         }
         return true;
@@ -279,12 +281,43 @@ public class MainActivity extends Activity implements
         int versionNumber = 0;
         String packageName = TANGO_PACKAGE_NAME;
         try {
-            PackageInfo pi = getApplicationContext().getPackageManager().getPackageInfo(packageName,
-                    PackageManager.GET_META_DATA);
+            PackageInfo pi = getApplicationContext().getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
             versionNumber = pi.versionCode;
         } catch (NameNotFoundException e) {
             e.printStackTrace();
         }
         return (minVersion <= versionNumber);
     }
+
+    public void onRadioButtonClicked(View view) {
+        // Check which radio button was clicked
+        switch (view.getId()) {
+            case R.id.pointclouds:
+                mode = ARMode.POINTCLOUD;
+                break;
+            case R.id.tsdf:
+                mode = ARMode.TSDF;
+                break;
+            case R.id.plane:
+                mode = ARMode.PLANE;
+                break;
+        }
+        Log.i(TAG, "onRadioButtonClicked: mode is now " + mode);
+        TangoJNINative.setMode(mode.id());
+    }
+
+    enum ARMode {
+        POINTCLOUD(0), TSDF(1), PLANE(2);
+
+        private final int id;
+
+        ARMode(int id) {
+            this.id = id;
+        }
+
+        int id() {
+            return id;
+        }
+    }
+
 }
