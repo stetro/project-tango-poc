@@ -23,6 +23,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
@@ -32,6 +33,11 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 // The main activity of the application which shows debug information and a
 // glSurfaceView that renders graphic content.
@@ -57,18 +63,15 @@ public class MainActivity extends Activity implements
     // This is the rate at which we query our native wrapper around the tango
     // service for pose and event information.
     private static final int UPDATE_UI_INTERVAL_MS = 1000;
-
+    boolean do_filtering = false;
     private GLSurfaceView mGLView;
-
     // A flag to check if the Tango Service is connected. This flag avoids the
     // program attempting to disconnect from the service while it is not
     // connected.This is especially important in the onPause() callback for the
     // activity class.
     private boolean mIsConnectedService = false;
-
     // Screen size for normalizing the touch input for orbiting the render camera.
     private Point mScreenSize = new Point();
-
     // Handles the debug text UI update loop.
     private Handler mHandler = new Handler();
     // Debug text UI update loop, updating at 10Hz.
@@ -81,6 +84,10 @@ public class MainActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        loadAssetLibrary("libflann.so.1.8");
+        loadAssetLibrary("libflann_cpp.so.1.8");
+
         setTitle(R.string.app_name);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -98,7 +105,9 @@ public class MainActivity extends Activity implements
         findViewById(R.id.first_person_button).setOnClickListener(this);
         findViewById(R.id.third_person_button).setOnClickListener(this);
         findViewById(R.id.top_down_button).setOnClickListener(this);
-        findViewById(R.id.toggle_filter).setOnClickListener(this);
+        Button button = (Button) findViewById(R.id.toggle_filter);
+        button.setOnClickListener(this);
+        changeFilterButtonLabel(button);
 
         // Button to reset motion tracking
         Button mMotionReset = (Button) findViewById(R.id.resetmotion);
@@ -132,6 +141,22 @@ public class MainActivity extends Activity implements
         // between the application and Tango Service.
         // The activity object is used for checking if the API version is outdated.
         TangoJNINative.initialize(this);
+    }
+
+    private void loadAssetLibrary(String libraryName) {
+        try {
+            InputStream in = getAssets().open(libraryName);
+            File file = new File(Environment.getExternalStorageDirectory(), libraryName);
+            FileOutputStream outputStream = new FileOutputStream(file);
+            int read = 0;
+            byte[] bytes = new byte[1024];
+            while ((read = in.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, read);
+            }
+            System.load(file.getPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -199,11 +224,17 @@ public class MainActivity extends Activity implements
                 TangoJNINative.resetMotionTracking();
                 break;
             case R.id.toggle_filter:
+                do_filtering = !do_filtering;
+                changeFilterButtonLabel((Button) v);
                 TangoJNINative.toggleFilter();
                 break;
             default:
                 Log.w(TAG, "Unknown button click");
         }
+    }
+
+    private void changeFilterButtonLabel(Button button) {
+        button.setText(String.format(getString(R.string.filter), (do_filtering) ? "ON" : "OFF"));
     }
 
     @Override

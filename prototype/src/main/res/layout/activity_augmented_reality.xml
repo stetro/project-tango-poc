@@ -15,6 +15,7 @@
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="wrap_content"
+                android:background="@android:color/background_dark"
                 android:layout_height="wrap_content">
 
     <android.opengl.GLSurfaceView
@@ -23,12 +24,6 @@
         android:layout_height="720px"
         android:layout_centerInParent="true"
         android:layout_gravity="top"/>
-
-    <TextView
-        android:id="@+id/info_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="top"/>
 
     <Button
         android:id="@+id/first_person_button"
@@ -74,7 +69,7 @@
 
     <Button
         android:id="@+id/toggle_filter"
-        android:layout_width="80dp"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"

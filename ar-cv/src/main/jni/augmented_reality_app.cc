@@ -203,7 +203,7 @@ namespace {
         // filtering ...
         LOGD("filtering ...");
 //        inpaint(depth, (depth == 0), depth, 3.0, 1);
-//        cv::ximgproc::guidedFilter(scaled_rgb_grayscale, scaled_gray, scaled_gray, 13, 0.05);
+        cv::ximgproc::guidedFilter(scaled_rgb_grayscale, scaled_gray, scaled_gray, 13, 0.05);
 //        cv::Mat depth_copy(320, 180, CV_8UC1);
 //        bilateralFilter(depth, depth_copy, 4, 50, 50);
 

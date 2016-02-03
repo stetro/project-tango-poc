@@ -41,9 +41,7 @@
 
 namespace tango_augmented_reality {
 
-    enum ARMode {
-        PC, PC_FILTERED, PLANE, PLANE_FILTERED, TSDF, TSDF_FILTERED
-    };
+
 
     // AugmentedRealityApp handles the application lifecycle and resources.
     class AugmentedRealityApp {
@@ -204,8 +202,6 @@ namespace tango_augmented_reality {
         JavaVM *java_vm_;
         jobject calling_activity_obj_;
         jmethodID on_demand_render_;
-
-        ARMode mode;
 
         cv::Mat rgb;
 

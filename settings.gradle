@@ -1,17 +1,16 @@
-//include ':ar'
+include ':ar'
 include ':utils'
-//include ':pc'
-//include ':construct'
+include ':pc'
+include ':construct'
 if (!System.getenv("CI")) {
 //    // Native Project
-//    include ':chisel'
+    include ':chisel'
 //    if(System.getenv("PCL")){
 //    	include ':construct-native'
 //    }
 //
-//    include ':openCVLibrary310'
-//    include ':cv'
-//    include ':ar-cv'
+    include ':cv'
+    include ':ar-cv'
     include ':prototype'
 }
 

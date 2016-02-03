@@ -18,15 +18,16 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
-        android:allowBackup="true"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_slow_motion_video_red_48dp"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:fullBackupContent="false"
         tools:replace="android:label">
+
         <uses-library
             android:name="com.projecttango.libtango_device"
             android:required="true"/>
+
         <activity
             android:name=".MainActivity"
             android:screenOrientation="landscape">
@@ -35,6 +36,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

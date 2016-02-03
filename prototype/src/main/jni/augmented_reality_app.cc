@@ -89,7 +89,6 @@ namespace tango_augmented_reality {
 
     AugmentedRealityApp::AugmentedRealityApp() : calling_activity_obj_(nullptr),
                                                  on_demand_render_(nullptr) {
-        mode = PC;
     }
 
     AugmentedRealityApp::~AugmentedRealityApp() {

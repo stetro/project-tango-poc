@@ -221,7 +221,7 @@ namespace tango_augmented_reality {
         GLuint depth_frame_buffer_;
         GLuint depth_frame_buffer_depth_texture_;
 
-        bool do_filtering = true;
+        bool do_filtering = false;
     };
 }  // namespace tango_augmented_reality
 

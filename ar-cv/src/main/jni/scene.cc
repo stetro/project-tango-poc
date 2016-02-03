@@ -68,13 +68,12 @@ namespace tango_augmented_reality {
 
         trace_->SetColor(kTraceColor);
 
-        marker_->SetPosition(kCubePosition);
-        marker_->SetScale(kcubeScale);
-        marker_->SetRotation(kCubeRotation);
-        marker_->SetColor(kCubeColor);
+        marker_->SetPosition(kMarkerPosition);
+        marker_->SetScale(kMarkerScale);
+        marker_->SetRotation(kMarkerRotation);
+        marker_->SetColor(kMarkerColor);
 
-        gesture_camera_->SetCameraType(
-                tango_gl::GestureCamera::CameraType::kThirdPerson);
+        gesture_camera_->SetCameraType(tango_gl::GestureCamera::CameraType::kThirdPerson);
     }
 
     void Scene::DeleteResources() {
