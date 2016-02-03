@@ -24,5 +24,6 @@
     <string name="down">Down</string>
     <string name="near">Near</string>
     <string name="far">Far</string>
+    <string name="filter">Filter</string>
 </resources>
 

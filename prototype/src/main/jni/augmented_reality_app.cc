@@ -23,7 +23,7 @@ namespace {
 
     // Far clipping plane of the AR camera.
     const float kArCameraNearClippingPlane = 0.1f;
-    const float kArCameraFarClippingPlane = 100.0f;
+    const float kArCameraFarClippingPlane = 10.0f;
 
 
     // This function routes onXYZijAvailable callbacks to the application object for
@@ -366,6 +366,10 @@ namespace tango_augmented_reality {
         JNIEnv *env;
         java_vm_->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
         env->CallVoidMethod(calling_activity_obj_, on_demand_render_);
+    }
+
+    void AugmentedRealityApp::ToggleFilter() {
+    main_scene_.ToggleFilter();
     }
 
 }  // namespace tango_augmented_reality

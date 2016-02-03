@@ -85,6 +85,9 @@ namespace tango_augmented_reality {
         // Note that this will cause motion tracking to re-initialize.
         void TangoResetMotionTracking();
 
+        // toggles the ability to apply the guided filtering
+        void ToggleFilter();
+
         // Tango service event callback function for pose data. Called when new events
         // are available from the Tango Service.
         //

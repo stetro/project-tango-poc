@@ -54,16 +54,24 @@ namespace tango_augmented_reality {
 
     void Scene::InitGLContent() {
 
+        depth_width_ = 1280;
+        depth_height_ = 720;
+
+        gl_depth_format_ = GL_UNSIGNED_SHORT;
+        cv_depth_format_ = CV_16UC1;
+
+        // temporary depth_frame cv buffer
+        depth_frame = cv::Mat(depth_height_, depth_width_, cv_depth_format_);
+
         // create drawable with rgb texture
-        depth_frame = cv::Mat(1280, 720, CV_8UC3);
         depth_drawable_ = new DepthDrawable();
         glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_frame.rows, depth_frame.cols, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_width_, depth_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
         // create depth texture
         glGenTextures(1, &depth_frame_buffer_depth_texture_);
         glBindTexture(GL_TEXTURE_2D, depth_frame_buffer_depth_texture_);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.rows, depth_frame.cols, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_width_, depth_height_, 0, GL_DEPTH_COMPONENT, gl_depth_format_, NULL);
 
         // create frame buffer with color texture and depth
         glGenFramebuffers(1, &depth_frame_buffer_);
@@ -170,6 +178,29 @@ namespace tango_augmented_reality {
         depth_mutex_.unlock();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        // render colored depth
+        depth_drawable_->Render(glm::mat4(1.0f), glm::mat4(1.0f));
+
+        if (do_filtering) {
+            // DEPTH FILTERING ...
+            // convert from depth component to mat
+            glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
+            glReadPixels(0, 0, depth_frame.cols, depth_frame.rows, GL_DEPTH_COMPONENT, gl_depth_format_, depth_frame.ptr());
+
+            // apply opencv filters
+            cv::Mat temp_frame(depth_frame.size(), CV_8UC1);
+            depth_frame.convertTo(temp_frame, CV_8U, 0.00390625);
+//            line(depth_frame, cv::Point(20, 20), cv::Point(150, 150), cv::Scalar(0.0), 5);
+            cv::ximgproc::guidedFilter(rgb_frame, temp_frame, temp_frame, 13, 0.05);
+            temp_frame.convertTo(depth_frame, CV_16UC1, 255);
+
+            // copy back to depth texture
+            glBindTexture(GL_TEXTURE_2D, depth_frame_buffer_depth_texture_);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.cols, depth_frame.rows, 0, GL_DEPTH_COMPONENT, gl_depth_format_, depth_frame.ptr());
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        }
+
         // copy depth to main framebuffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, depth_frame_buffer_);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -177,7 +208,6 @@ namespace tango_augmented_reality {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // render rest of drawables
-        depth_drawable_->Render(glm::mat4(1.0f), glm::mat4(1.0f));
         grid_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
         cube_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
 
@@ -288,6 +318,10 @@ namespace tango_augmented_reality {
     void Scene::BindRGBMatAsTexture() {
         glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_frame.ptr());
+    }
+
+    void Scene::ToggleFilter() {
+        do_filtering = !do_filtering;
     }
 
 }  // namespace tango_augmented_reality

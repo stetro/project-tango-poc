@@ -75,6 +75,12 @@ Java_de_stetro_master_prototype_TangoJNINative_resetMotionTracking(
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_toggleFilter(
+    JNIEnv*, jobject) {
+  app.ToggleFilter();
+}
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_prototype_TangoJNINative_initGlContent(
     JNIEnv*, jobject) {
   app.InitializeGLContent();

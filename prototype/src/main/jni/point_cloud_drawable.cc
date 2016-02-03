@@ -29,8 +29,8 @@ namespace {
                     "void main() {\n"
                     "  gl_Position = mvp*vertex;\n"
                     "  v_color = vec4(0.0,0.0,0.0,0.0);\n"
-                    "if(visible){ v_color = vec4(vertex.z / 4.5,vertex.z / 4.5,vertex.z / 4.5,1.0);}\n" // grayscale
-//                    "  v_color = vertex;\n"  // colored
+//                    "if(visible){ v_color = vec4(vertex.z / 4.5,vertex.z / 4.5,vertex.z / 4.5,1.0);}\n" // grayscale
+                    "if(visible){v_color = vertex;}\n" // colored
                     " gl_PointSize = 11.0;\n"
                     "}\n";
     const std::string kPointCloudFragmentShader =
@@ -101,4 +101,4 @@ namespace tango_augmented_reality {
         visible = _visible;
     }
 
-}  // namespace tango_point_cloud
+}  // namespace tango-augmented-reality

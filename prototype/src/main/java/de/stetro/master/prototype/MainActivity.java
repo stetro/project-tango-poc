@@ -98,6 +98,7 @@ public class MainActivity extends Activity implements
         findViewById(R.id.first_person_button).setOnClickListener(this);
         findViewById(R.id.third_person_button).setOnClickListener(this);
         findViewById(R.id.top_down_button).setOnClickListener(this);
+        findViewById(R.id.toggle_filter).setOnClickListener(this);
 
         // Button to reset motion tracking
         Button mMotionReset = (Button) findViewById(R.id.resetmotion);
@@ -196,6 +197,9 @@ public class MainActivity extends Activity implements
                 break;
             case R.id.resetmotion:
                 TangoJNINative.resetMotionTracking();
+                break;
+            case R.id.toggle_filter:
+                TangoJNINative.toggleFilter();
                 break;
             default:
                 Log.w(TAG, "Unknown button click");

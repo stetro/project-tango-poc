@@ -150,6 +150,8 @@ namespace tango_augmented_reality {
 
         void BindRGBMatAsTexture();
 
+        void ToggleFilter();
+
     private:
         // Video overlay drawable object to display the camera image.
         YUVDrawable *yuv_drawable_;
@@ -190,6 +192,13 @@ namespace tango_augmented_reality {
 
         glm::mat4 point_cloud_transformation;
 
+        size_t depth_width_;
+        size_t depth_height_;
+
+        GLenum gl_depth_format_;
+        int cv_depth_format_;
+
+
         size_t yuv_width_;
         size_t yuv_height_;
         size_t yuv_size_;
@@ -211,6 +220,8 @@ namespace tango_augmented_reality {
 
         GLuint depth_frame_buffer_;
         GLuint depth_frame_buffer_depth_texture_;
+
+        bool do_filtering = true;
     };
 }  // namespace tango_augmented_reality
 

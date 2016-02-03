@@ -20,8 +20,8 @@
     <android.opengl.GLSurfaceView
         android:id="@+id/gl_surface_view"
         android:layout_width="1280px"
-        android:layout_centerInParent="true"
         android:layout_height="720px"
+        android:layout_centerInParent="true"
         android:layout_gravity="top"/>
 
     <TextView
@@ -71,5 +71,15 @@
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="5dp"
         android:text="@string/reset"/>
+
+    <Button
+        android:id="@+id/toggle_filter"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:text="@string/filter"/>
 
 </RelativeLayout>
