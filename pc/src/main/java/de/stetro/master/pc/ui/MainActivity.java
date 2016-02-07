@@ -45,9 +45,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
         setContentView(R.layout.activity_main);
         RelativeLayout wrapper = (RelativeLayout) findViewById(R.id.wrapper_view);
         tango = new Tango(this);
-        startActivityForResult(
-                Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING),
-                Tango.TANGO_INTENT_ACTIVITYCODE);
+        startActivityForResult(Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_MOTION_TRACKING), Tango.TANGO_INTENT_ACTIVITYCODE);
         wrapper.addView(glView);
 
     }
@@ -141,8 +139,8 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
             case R.id.activity_main_menu_export_pointcloud:
                 renderer.exportPointCloud(this);
                 return true;
-            case R.id.activity_main_menu_reconstruction:
-                renderer.reconstruct(this);
+            case R.id.activity_main_menu_clear:
+                renderer.clearPointCloud();
                 return true;
             case R.id.activity_main_menu_toggle_pointcloud:
                 renderer.togglePointCloudVisibility();
