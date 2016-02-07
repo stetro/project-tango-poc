@@ -10,9 +10,9 @@
 
 
     <item
-        android:id="@+id/activity_main_menu_reconstruction"
-        android:icon="@mipmap/ic_blur_linear_white_24dp"
-        android:title="@string/reconstruct"
+        android:id="@+id/activity_main_menu_clear"
+        android:icon="@mipmap/ic_delete_white_24dp"
+        android:title="@string/export_pointcloud"
         app:showAsAction="ifRoom" />
 
     <item

@@ -3,6 +3,8 @@ package de.stetro.master.pc.util;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Environment;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 
@@ -23,6 +25,7 @@ public class PointCloudExporter {
     private final Context context;
     private final PointCollection pointCollection;
     private MaterialDialog dialog;
+    private String filePath;
 
     public PointCloudExporter(Context context, PointCollection pointCollection) {
         this.context = context;
@@ -50,8 +53,14 @@ public class PointCloudExporter {
             }
             PointCollection pointCollection = params[0];
             Format formatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.GERMAN);
-            final String fileName = "pointcloud-" + formatter.format(new Date()) + ".pts";
-            final File file = new File(context.getExternalFilesDir(null), fileName);
+
+            String fileName = "pointcloud-" + formatter.format(new Date()) + ".xyz";
+            File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/pointclouds");
+            if (!f.exists()) {
+                f.mkdirs();
+            }
+            final File file = new File(f, fileName);
+            filePath = file.getPath();
             try {
                 OutputStream os = new FileOutputStream(file);
                 int size = pointCollection.getCount();
@@ -84,6 +93,7 @@ public class PointCloudExporter {
         @Override
         protected void onPostExecute(Void aVoid) {
             dialog.dismiss();
+            Toast.makeText(context, String.format(context.getString(R.string.export_pointcloud_result), filePath), Toast.LENGTH_LONG).show();
         }
 
         @Override

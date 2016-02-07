@@ -15,23 +15,24 @@ import org.rajawali3d.math.vector.Vector3;
 import java.nio.FloatBuffer;
 
 public class PointCollection extends Object3D {
-    private final FloatBuffer buffer;
-    private int mMaxNumberofVertices;
+    private FloatBuffer buffer;
+    private int mMaxNumberOfVertices;
     private int count = 0;
 
     public PointCollection(int numberOfPoints) {
         super();
-        buffer = FloatBuffer.allocate(numberOfPoints * 3);
-        mMaxNumberofVertices = numberOfPoints;
-        init(true);
+        mMaxNumberOfVertices = numberOfPoints;
+        init();
         Material m = new Material();
         m.setColor(Color.GREEN);
         setMaterial(m);
     }
 
-    protected void init(boolean createVBOs) {
-        float[] vertices = new float[mMaxNumberofVertices * 3];
-        int[] indices = new int[mMaxNumberofVertices];
+    protected void init() {
+        count = 0;
+        buffer = FloatBuffer.allocate(mMaxNumberOfVertices * 3);
+        float[] vertices = new float[mMaxNumberOfVertices * 3];
+        int[] indices = new int[mMaxNumberOfVertices];
         for (int i = 0; i < indices.length; ++i) {
             indices[i] = i;
         }
@@ -44,7 +45,7 @@ public class PointCollection extends Object3D {
     }
 
     public void updatePoints(FloatBuffer pointCloudBuffer, int pointCount, Pose pose) {
-        if (count + pointCount < mMaxNumberofVertices) {
+        if (count + pointCount < mMaxNumberOfVertices) {
             pointCloudBuffer.position(0);
             FloatBuffer transformedPoints = FloatBuffer.allocate(pointCount * 3);
             for (int i = 0; i < pointCount; i++) {
@@ -82,5 +83,11 @@ public class PointCollection extends Object3D {
     public FloatBuffer getBuffer() {
         return buffer;
     }
+
+    public void clear() {
+        count = 0;
+        mGeometry.setNumIndices(0);
+    }
+
 }
 
