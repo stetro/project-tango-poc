@@ -4,7 +4,7 @@ apply plugin: 'com.tmiyamon.mdicons'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.1"
 
     defaultConfig {
         applicationId "de.stetro.master.pc"
