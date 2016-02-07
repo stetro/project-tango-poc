@@ -60,10 +60,19 @@ class PoseData {
   // @return: color camera frame with respect to IMU frame.
   glm::mat4 GetImuTColorCamera() { return imu_T_color_camera_; }
 
+  // @return: color camera frame with respect to IMU frame.
+  glm::mat4 GetImuTDepthCamera() { return imu_T_depth_camera_; }
+
   // Set color camera frame with respect to IMU frame matrix.
   // @param: imu_T_color_camera, imu_T_color_camera_ matrix.
   void SetImuTColorCamera(const glm::mat4& imu_T_color_camera) {
     imu_T_color_camera_ = imu_T_color_camera;
+  }
+
+  // Set depth camera frame with respect to IMU frame matrix.
+  // @param: imu_T_depth_camera, imu_T_depth_camera_ matrix.
+  void SetImuTDepthCamera(const glm::mat4& imu_T_depth_camera) {
+    imu_T_depth_camera_ = imu_T_depth_camera;
   }
 
   // Get pose transformation in OpenGL coordinate system. This function also
@@ -94,6 +103,9 @@ class PoseData {
 
   // Color camera frame with respect to IMU frame.
   glm::mat4 imu_T_color_camera_;
+
+  // Depth camera frame with respect to IMU frame.
+  glm::mat4 imu_T_depth_camera_;
 
   // Pose data of current frame.
   TangoPoseData cur_pose_;

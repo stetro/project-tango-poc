@@ -352,6 +352,17 @@ namespace tango_augmented_reality {
             return ret;
         }
         pose_data_.SetImuTColorCamera(pose_data_.GetMatrixFromPose(pose_data));
+
+        // Get depth camera with respect to imu transformation matrix.
+        frame_pair.base = TANGO_COORDINATE_FRAME_IMU;
+        frame_pair.target = TANGO_COORDINATE_FRAME_CAMERA_DEPTH;
+        ret = TangoService_getPoseAtTime(0.0, frame_pair, &pose_data);
+        if (ret != TANGO_SUCCESS) {
+            LOGE("Failed to get transform between the depth camera frame and device frames");
+            return ret;
+        }
+        pose_data_.SetImuTDepthCamera(pose_data_.GetMatrixFromPose(pose_data));
+
         return ret;
     }
 

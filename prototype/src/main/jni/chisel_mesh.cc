@@ -79,19 +79,15 @@ namespace tango_augmented_reality {
         LOGI("Map with %d items", meshMap.size());
 
         std::vector <GLfloat> mesh;
-        std::vector <GLushort> indices;
         for (const std::pair <chisel::ChunkID, chisel::MeshPtr> &meshes : meshMap) {
             for (size_t &index: meshes.second->indices) {
                 mesh.push_back(meshes.second->vertices[index](0));
                 mesh.push_back(meshes.second->vertices[index](1));
                 mesh.push_back(meshes.second->vertices[index](2));
-                indices.push_back(index*3);
-                indices.push_back(index*3+1);
-                indices.push_back(index*3+2);
             }
         }
         LOGI("Got %d polygons", mesh.size() / 3);
-        SetVertices(mesh, indices);
+        SetVertices(mesh);
     }
 
     ChiselMesh::ChiselMesh(GLenum render_mode) {
