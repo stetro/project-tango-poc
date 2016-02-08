@@ -28,6 +28,7 @@
     <string name="pointclouds">Pointcloud Projection</string>
     <string name="tsdf">TSDF Reconstruciton</string>
     <string name="plane">PlaneReconstruciton</string>
+    <string name="show_occlusion">Show Occlusion</string>
 
 </resources>
 

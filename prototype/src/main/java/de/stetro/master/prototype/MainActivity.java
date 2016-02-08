@@ -31,6 +31,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.Toast;
 
@@ -79,9 +80,6 @@ public class MainActivity extends Activity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        setTitle(R.string.app_name);
-
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -97,6 +95,7 @@ public class MainActivity extends Activity implements
         findViewById(R.id.first_person_button).setOnClickListener(this);
         findViewById(R.id.third_person_button).setOnClickListener(this);
         findViewById(R.id.top_down_button).setOnClickListener(this);
+        findViewById(R.id.show_occlusion).setOnClickListener(this);
 
         ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
         Button button = (Button) findViewById(R.id.toggle_filter);
@@ -122,7 +121,7 @@ public class MainActivity extends Activity implements
         // by the onTextureAvailable callback from the Tango Service in the native
         // code.
         Renderer mRenderer = new Renderer();
-        mGLView.getHolder().setFixedSize(1280, 720);
+        mGLView.getHolder().setFixedSize(1280/2, 720/2);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
@@ -208,6 +207,8 @@ public class MainActivity extends Activity implements
                 changeFilterButtonLabel((Button) v);
                 TangoJNINative.toggleFilter();
                 break;
+            case R.id.show_occlusion:
+                TangoJNINative.setShowOcclusion(((CheckBox)v).isChecked());
             default:
                 Log.w(TAG, "Unknown button click");
         }

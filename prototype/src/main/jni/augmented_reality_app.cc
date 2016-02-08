@@ -390,4 +390,8 @@ namespace tango_augmented_reality {
         main_scene_.SetMode(id);
     }
 
+    void AugmentedRealityApp::setShowOcclusion(bool show) {
+        main_scene_.SetShowOcclusion(show);
+    }
+
 }  // namespace tango_augmented_reality

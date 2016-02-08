@@ -60,8 +60,8 @@ namespace tango_augmented_reality {
 
     void Scene::InitGLContent() {
 
-        depth_width_ = 1280;
-        depth_height_ = 720;
+        depth_width_ = 1280/2;
+        depth_height_ = 720/2;
         gl_depth_format_ = GL_UNSIGNED_SHORT;       // 16 Bit
         cv_depth_format_ = CV_16UC1;                // 16 Bit
 
@@ -87,7 +87,7 @@ namespace tango_augmented_reality {
 
         // check for errors of framebuffer
         if (status != GL_FRAMEBUFFER_COMPLETE) {
-            LOGE("ERROR %d in fb %d ", depth_frame_buffer_);
+            LOGE("ERROR in fb %d ", depth_frame_buffer_);
         }
 
         // Allocating render camera and drawable object.
@@ -171,27 +171,28 @@ namespace tango_augmented_reality {
         }
 
 
-        // render reconstructions or pointcloud, depending on mode
-        switch (mode) {
-            case POINTCLOUD: {
-                std::lock_guard <std::mutex> lock(depth_mutex_);
-                point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
-            }
-                break;
-            case TSDF: {
-                std::lock_guard <std::mutex> lock(depth_mutex_);
-                chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
-            }
-                break;
-            case PLANE:
+        if(show_occlusion){
+            // render reconstructions or pointcloud, depending on mode
+            switch (mode) {
+                case POINTCLOUD: {
+                    std::lock_guard <std::mutex> lock(depth_mutex_);
+                    point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
+                }
+                    break;
+                case TSDF: {
+                    std::lock_guard <std::mutex> lock(depth_mutex_);
+                    chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+                }
+                    break;
+                case PLANE:
 
-                break;
+                    break;
+            }
         }
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
-
 
         // draw depth to framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
@@ -242,7 +243,7 @@ namespace tango_augmented_reality {
         // copy depth to main framebuffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, depth_frame_buffer_);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, 1280, 720, 0, 0, 1280, 720, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0, 0, depth_width_, depth_height_, 0, 0, depth_width_, depth_height_, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // render rest of drawables
@@ -299,7 +300,7 @@ namespace tango_augmented_reality {
             yuv_buffer_.resize(yuv_size_);
             yuv_temp_buffer_.resize(yuv_size_);
             rgb_buffer_.resize(yuv_width_ * yuv_height_ * 3);
-            rgb_frame = cv::Mat(yuv_height_, yuv_width_, CV_8UC3);
+            rgb_frame = cv::Mat(depth_height_, depth_width_, CV_8UC3);
 
             glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_frame.ptr());
@@ -333,6 +334,8 @@ namespace tango_augmented_reality {
                 swap_buffer_signal_ = false;
             }
         }
+        size_t x_factor = yuv_height_/depth_height_;
+        size_t y_factor = yuv_width_/depth_width_;
         for (size_t i = 0; i < yuv_height_; ++i) {
             for (size_t j = 0; j < yuv_width_; ++j) {
                 size_t x_index = j;
@@ -345,7 +348,7 @@ namespace tango_augmented_reality {
                         yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
                         yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
                         &rgb_dot[0], &rgb_dot[1], &rgb_dot[2]);
-                rgb_frame.at<cv::Vec3b>(i, j) = rgb_dot;
+                rgb_frame.at<cv::Vec3b>(i/ x_factor, j/ y_factor) = rgb_dot;
             }
         }
 
