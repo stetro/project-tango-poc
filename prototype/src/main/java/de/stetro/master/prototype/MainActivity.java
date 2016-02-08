@@ -23,7 +23,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
@@ -33,13 +32,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RadioButton;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 // The main activity of the application which shows debug information and a
 // glSurfaceView that renders graphic content.
@@ -86,8 +79,6 @@ public class MainActivity extends Activity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        loadAssetLibrary("libflann.so.1.8");
-        loadAssetLibrary("libflann_cpp.so.1.8");
 
         setTitle(R.string.app_name);
 
@@ -131,6 +122,7 @@ public class MainActivity extends Activity implements
         // by the onTextureAvailable callback from the Tango Service in the native
         // code.
         Renderer mRenderer = new Renderer();
+        mGLView.getHolder().setFixedSize(1280, 720);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
@@ -145,22 +137,6 @@ public class MainActivity extends Activity implements
         // between the application and Tango Service.
         // The activity object is used for checking if the API version is outdated.
         TangoJNINative.initialize(this);
-    }
-
-    private void loadAssetLibrary(String libraryName) {
-        try {
-            InputStream in = getAssets().open(libraryName);
-            File file = new File(Environment.getExternalStorageDirectory(), libraryName);
-            FileOutputStream outputStream = new FileOutputStream(file);
-            int read = 0;
-            byte[] bytes = new byte[1024];
-            while ((read = in.read(bytes)) != -1) {
-                outputStream.write(bytes, 0, read);
-            }
-            System.load(file.getPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

@@ -17,6 +17,7 @@
 package de.stetro.master.prototype;
 
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -24,6 +25,8 @@ import javax.microedition.khronos.opengles.GL10;
 // Renderer renders graphic content. This includes the ground grid,
 // camera frustum, camera axis, and trajectory based on the Tango device's pose.
 public class Renderer implements GLSurfaceView.Renderer {
+    private static final String TAG = "Renderer";
+
     // Render loop of the Gl context.
     public void onDrawFrame(GL10 gl) {
         TangoJNINative.render();
@@ -32,6 +35,7 @@ public class Renderer implements GLSurfaceView.Renderer {
     // Called when the surface size changes.
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         TangoJNINative.setupGraphic(width, height);
+        Log.i(TAG, "onSurfaceChanged: to " + width + " " + height);
     }
 
     // Called when the surface is created or recreated.

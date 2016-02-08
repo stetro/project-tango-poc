@@ -170,10 +170,28 @@ namespace tango_augmented_reality {
             yuv_drawable_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
         }
 
+
+        // render reconstructions or pointcloud, depending on mode
+        switch (mode) {
+            case POINTCLOUD: {
+                std::lock_guard <std::mutex> lock(depth_mutex_);
+                point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
+            }
+                break;
+            case TSDF: {
+                std::lock_guard <std::mutex> lock(depth_mutex_);
+                chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+            }
+                break;
+            case PLANE:
+
+                break;
+        }
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
-        
+
 
         // draw depth to framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
@@ -274,7 +292,6 @@ namespace tango_augmented_reality {
         if (!is_yuv_texture_available_) {
             yuv_width_ = buffer->width;
             yuv_height_ = buffer->height;
-            LOGE("%d %d", yuv_width_, yuv_height_);
             uv_buffer_offset_ = yuv_width_ * yuv_height_;
             yuv_size_ = yuv_width_ * yuv_height_ + yuv_width_ * yuv_height_ / 2;
 
