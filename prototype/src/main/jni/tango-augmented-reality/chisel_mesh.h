@@ -43,15 +43,7 @@ namespace tango_augmented_reality {
 
         void SetShader();
 
-        void SetShader(bool is_lighting_on);
-
-        void SetBoundingBox();
-
-        void SetLightDirection(const glm::vec3 &light_direction);
-
         void Render(const glm::mat4 &projection_mat, const glm::mat4 &view_mat) const;
-
-        bool IsIntersecting(const tango_gl::Segment &segment);
 
         void addPoints(std::vector<float> vertices, glm::mat4 transformation);
 
@@ -60,15 +52,7 @@ namespace tango_augmented_reality {
     protected:
         tango_gl::BoundingBox *bounding_box_;
 
-        bool is_lighting_on_;
-
-        bool is_bounding_box_on_;
-
-        glm::vec3 light_direction_;
-
         GLuint uniform_mv_mat_;
-
-        GLuint uniform_light_vec_;
 
         double truncationDistScale;
         double chunkSize;

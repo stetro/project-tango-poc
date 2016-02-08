@@ -87,6 +87,10 @@ class PoseData {
   // This funciton will transform the passed in matrix into opengl world frame.
   glm::mat4 GetExtrinsicsAppliedOpenGLWorldFrame(const glm::mat4& pose_matrix);
 
+  // Apply extrinsics and coordinate frame transformations to the matrix.
+  // This funciton will transform the passed in matrix into opengl world depth camera frame.
+  glm::mat4 GetExtrinsicsAppliedOpenGLWorldDepthCameraFrame(const glm::mat4& pose_matrix);
+
  private:
   // Convert TangoPoseStatusType to string.
   //

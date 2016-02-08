@@ -43,7 +43,13 @@ namespace {
         *r = yValue + (1.370705 * (vValue - 128));
         *g = yValue - (0.698001 * (vValue - 128)) - (0.337633 * (uValue - 128));
         *b = yValue + (1.732446 * (uValue - 128));
+
+
+
     }
+        const glm::mat4 kOpengGL_T_Depth =
+                glm::mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                          -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 }  // namespace
 
 namespace tango_augmented_reality {
@@ -167,11 +173,7 @@ namespace tango_augmented_reality {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
-
-        if (mode == TSDF) {
-            std::lock_guard <std::mutex> lock(depth_mutex_);
-            chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
-        }
+        
 
         // draw depth to framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
@@ -185,7 +187,10 @@ namespace tango_augmented_reality {
                 point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
             }
                 break;
-            case TSDF:
+            case TSDF: {
+                std::lock_guard <std::mutex> lock(depth_mutex_);
+                chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+            }
                 break;
             case PLANE:
 

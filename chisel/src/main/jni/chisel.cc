@@ -17,7 +17,37 @@ namespace chisel {
 
     void ChiselApplication::addPoints(JNIEnv *env, jfloatArray vertices,
                                       jfloatArray transformation) {
+        // move jfloatArray vertices to Chisel PointCloud
+        lastPointCloud->Clear();
+        int vertexCount = env->GetArrayLength(vertices) / 3;
+        LOGI("got %d points from as pointcloud data", vertexCount / 3);
+        jfloat *verticesData = env->GetFloatArrayElements(vertices, NULL);
+        for (int i = 0; i < vertexCount; ++i) {
+            Vec3 vec3(verticesData[i * 3], verticesData[i * 3 + 1], verticesData[i * 3 + 2]);
+            lastPointCloud->AddPoint(vec3);
+        }
 
+        // move extrisics to a Eigen transformation
+        jfloat *transformationData = env->GetFloatArrayElements(transformation, NULL);
+        Transform extrinsic = Transform();
+        for (int j = 0; j < 4; ++j) {
+            for (int k = 0; k < 4; ++k) {
+                extrinsic(j, k) = transformationData[j * 4 + k];
+            }
+        }
+
+        LOGD("%lf %lf %lf %lf", extrinsic(0, 0), extrinsic(1, 0), extrinsic(2, 0), extrinsic(3, 0));
+        LOGD("%lf %lf %lf %lf", extrinsic(0, 1), extrinsic(1, 1), extrinsic(2, 1), extrinsic(3, 1));
+        LOGD("%lf %lf %lf %lf", extrinsic(0, 2), extrinsic(1, 2), extrinsic(2, 2), extrinsic(3, 2));
+        LOGD("%lf %lf %lf %lf", extrinsic(0, 3), extrinsic(1, 3), extrinsic(2, 3), extrinsic(3, 3));
+
+        chiselMap->IntegratePointCloud(
+                projectionIntegrator,
+                *lastPointCloud,
+                extrinsic,
+                rayTruncation,
+                farClipping
+        );
 
     }
 

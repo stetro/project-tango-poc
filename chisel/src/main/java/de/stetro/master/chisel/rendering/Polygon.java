@@ -48,4 +48,5 @@ public class Polygon extends Object3D {
     public void clear() {
 
     }
+
 }

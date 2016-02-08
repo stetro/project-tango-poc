@@ -161,6 +161,8 @@ namespace tango_augmented_reality {
 
         void SetMode(int id);
 
+        ARMode GetMode() { return mode; }
+
     private:
         // Video overlay drawable object to display the camera image.
         YUVDrawable *yuv_drawable_;

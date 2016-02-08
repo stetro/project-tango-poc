@@ -17,6 +17,15 @@
 #include "tango-augmented-reality/chisel_mesh.h"
 #include <tango-gl/shaders.h>
 
+namespace{
+    const glm::mat4 kOpengGL_T_Depth =
+            glm::mat4(      1.0f, 0.0f, 0.0f, 0.0f,
+                            0.0f, -1.0f, 0.0f, 0.0f,
+                            0.0f, 0.0f,  -1.0f, 0.0f,
+                            0.0f, 0.0f, 0.0f, 1.0f);
+
+}
+
 namespace tango_augmented_reality {
     ChiselMesh::ChiselMesh() {
         render_mode_ = GL_TRIANGLES;
@@ -39,9 +48,6 @@ namespace tango_augmented_reality {
         projectionIntegrator = chisel::ProjectionIntegrator(truncator, weighter, carvingDistance, enableCarving, centroids);
         projectionIntegrator.SetCentroids(chiselMap->GetChunkManager().GetCentroids());
         LOGI("chisel container was created in native environment");
-
-
-
     }
 
     void ChiselMesh::addPoints(std::vector<float> vertices, glm::mat4 transformation) {
@@ -58,7 +64,7 @@ namespace tango_augmented_reality {
         chisel::Transform extrinsic = chisel::Transform();
         for (int j = 0; j < 4; ++j) {
             for (int k = 0; k < 4; ++k) {
-                extrinsic(j, k) = transformation[j][k];
+                extrinsic(k, j) = transformation[j][k];
             }
         }
 
@@ -95,61 +101,18 @@ namespace tango_augmented_reality {
     }
 
     void ChiselMesh::SetShader() {
-        tango_gl::DrawableObject::SetShader();
-        // Default mode set to no lighting.
-        is_lighting_on_ = false;
-        // Default mode set to without bounding box detection.
-        is_bounding_box_on_ = false;
-    }
-
-    void ChiselMesh::SetShader(bool is_lighting_on) {
-        if (is_lighting_on) {
-            shader_program_ =
-                    tango_gl::util::CreateProgram(tango_gl::shaders::GetShadedVertexShader().c_str(),
-                                                  tango_gl::shaders::GetBasicFragmentShader().c_str());
-            if (!shader_program_) {
-                LOGE("Could not create program.");
-            }
-            uniform_mvp_mat_ = glGetUniformLocation(shader_program_, "mvp");
-            uniform_mv_mat_ = glGetUniformLocation(shader_program_, "mv");
-            uniform_light_vec_ = glGetUniformLocation(shader_program_, "lightVec");
-            uniform_color_ = glGetUniformLocation(shader_program_, "color");
-
-            attrib_vertices_ = glGetAttribLocation(shader_program_, "vertex");
-            attrib_normals_ = glGetAttribLocation(shader_program_, "normal");
-            is_lighting_on_ = true;
-            // Set a defualt direction for directional light.
-            light_direction_ = glm::vec3(-1.0f, -3.0f, -1.0f);
-            light_direction_ = glm::normalize(light_direction_);
-        } else {
-            SetShader();
+        shader_program_ = tango_gl::util::CreateProgram(
+                tango_gl::shaders::GetBasicVertexShader().c_str(),
+                tango_gl::shaders::GetBasicFragmentShader().c_str());
+        if (!shader_program_) {
+            LOGE("Could not create program.");
         }
-    }
+        uniform_mvp_mat_ = glGetUniformLocation(shader_program_, "mvp");
+        attrib_vertices_ = glGetAttribLocation(shader_program_, "vertex");
+        uniform_color_ = glGetUniformLocation(shader_program_, "color");
 
-    void ChiselMesh::SetBoundingBox() {
-        // Traverse all the vertices to define an axis-aligned
-        // bounding box for this ChiselMesh, needs to be called after SetVertices().
-        if (vertices_.size() == 0) {
-            LOGE("Please set up vertices first!");
-            return;
-        }
-        is_bounding_box_on_ = true;
-        bounding_box_ = new tango_gl::BoundingBox(vertices_);
-    }
-
-    void ChiselMesh::SetLightDirection(const glm::vec3 &light_direction) {
-        light_direction_ = light_direction;
-    }
-
-    bool ChiselMesh::IsIntersecting(const tango_gl::Segment &segment) {
-        // If there is no bounding box defined based on all vertices,
-        // we can not calculate intersection.
-        if (!is_bounding_box_on_) {
-            LOGE("ChiselMesh::IsIntersecting, bounding box is not available.");
-            return false;
-        }
-        return bounding_box_->IsIntersecting(segment, GetRotation(),
-                                             GetTransformationMatrix());
+        SetColor(1.0, 0.0, 0.0);
+        SetAlpha(0.4);
     }
 
     void ChiselMesh::Render(const glm::mat4 &projection_mat,
@@ -160,16 +123,6 @@ namespace tango_augmented_reality {
         glm::mat4 mvp_mat = projection_mat * mv_mat;
         glUniformMatrix4fv(uniform_mvp_mat_, 1, GL_FALSE, glm::value_ptr(mvp_mat));
         glUniform4f(uniform_color_, red_, green_, blue_, alpha_);
-
-        if (is_lighting_on_) {
-            glUniformMatrix4fv(uniform_mv_mat_, 1, GL_FALSE, glm::value_ptr(mv_mat));
-
-            glEnableVertexAttribArray(attrib_normals_);
-            glVertexAttribPointer(attrib_normals_, 3, GL_FLOAT, GL_FALSE,
-                                  3 * sizeof(GLfloat), &normals_[0]);
-            glm::vec3 light_direction = glm::mat3(view_mat) * light_direction_;
-            glUniform3fv(uniform_light_vec_, 1, glm::value_ptr(light_direction));
-        }
 
         glEnableVertexAttribArray(attrib_vertices_);
 
@@ -185,9 +138,6 @@ namespace tango_augmented_reality {
         }
 
         glDisableVertexAttribArray(attrib_vertices_);
-        if (is_lighting_on_) {
-            glDisableVertexAttribArray(attrib_normals_);
-        }
         glUseProgram(0);
     }
 }  // namespace tango_augmented_reality

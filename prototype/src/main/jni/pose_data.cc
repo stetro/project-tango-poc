@@ -87,6 +87,20 @@ namespace tango_augmented_reality {
         return matrix;
     }
 
+    glm::mat4 PoseData::GetExtrinsicsAppliedOpenGLWorldDepthCameraFrame(const glm::mat4 &pose_matrix){
+        glm::mat4 invertYandZMatrix = glm::mat4(
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, -1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, -1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f);
+
+        glm::mat4 mDeviceTDepthCamera = glm::inverse(imu_T_device_) * imu_T_depth_camera_;
+
+        glm::mat4 openglTDevice = tango_gl::conversions::opengl_world_T_tango_world() * pose_matrix;
+        glm::mat4 openglWorldTOpenglCamera = openglTDevice * mDeviceTDepthCamera * tango_gl::conversions::depth_camera_T_opengl_camera() * invertYandZMatrix;
+        return openglWorldTOpenglCamera;
+    }
+
     std::string PoseData::GetStringFromStatusCode(TangoPoseStatusType status) {
         std::string ret_string;
         switch (status) {

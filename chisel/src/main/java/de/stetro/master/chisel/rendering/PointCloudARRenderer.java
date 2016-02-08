@@ -136,6 +136,7 @@ public class PointCloudARRenderer extends TangoRajawaliRenderer {
                     polygon = new Polygon(faces);
                     polygon.setTransparent(true);
                     polygon.setMaterial(Materials.getDepthMaterial());
+                    polygon.setDepthTestEnabled(true);
                     polygon.setDoubleSided(true);
                     getCurrentScene().addChild(polygon);
                 }
