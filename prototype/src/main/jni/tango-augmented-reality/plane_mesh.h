@@ -18,6 +18,8 @@
 #define TANGO_AUGMENTED_REALITY_PLANE_MESH_H_
 
 #include <tango-gl/drawable_object.h>
+#include "tango-augmented-reality/reconstruction_octree.h"
+
 
 namespace tango_augmented_reality {
     class PlaneMesh : public tango_gl::DrawableObject {
@@ -30,7 +32,7 @@ namespace tango_augmented_reality {
 
         void Render(const glm::mat4 &projection_mat, const glm::mat4 &view_mat) const;
 
-        void addPoints(std::vector<float> vertices, glm::mat4 transformation);
+        void addPoints(std::vector <float> vertices, glm::mat4 transformation);
 
         void updateVertices();
 
@@ -38,6 +40,9 @@ namespace tango_augmented_reality {
 
         GLuint uniform_mv_mat_;
 
+        ReconstructionOcTree* tree;
+
     };
+
 }  // namespace tango_augmented_reality
 #endif  // TANGO_AUGMENTED_REALITY_PLANE_MESH_H_
