@@ -48,6 +48,7 @@
 #include <tango-augmented-reality/yuv_drawable.h>
 #include <tango-augmented-reality/depth_drawable.h>
 #include <tango-augmented-reality/chisel_mesh.h>
+#include <tango-augmented-reality/plane_mesh.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -189,6 +190,8 @@ namespace tango_augmented_reality {
         tango_gl::Cube *cube_;
 
         ChiselMesh *chisel_mesh_;
+
+        PlaneMesh *plane_mesh_;
 
         PointCloudDrawable *point_cloud_drawable_;
 

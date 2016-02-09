@@ -14,84 +14,32 @@
  * limitations under the License.
  */
 
-#include "tango-augmented-reality/chisel_mesh.h"
+#include "tango-augmented-reality/plane_mesh.h"
 #include <tango-gl/shaders.h>
 
 namespace tango_augmented_reality {
-    ChiselMesh::ChiselMesh() {
+
+    PlaneMesh::PlaneMesh() {
         render_mode_ = GL_TRIANGLES;
         SetShader();
-
-        chunkSize = 16;
-        truncationDistScale = 8.0;
-        weighting = 1.0;
-        enableCarving = true;
-        carvingDistance = 0.5;
-        chunkResolution = 0.06;
-        farClipping = 2.0;
-        rayTruncation = 0.5;
-
-        chiselMap = chisel::ChiselPtr(new chisel::Chisel(Eigen::Vector3i(chunkSize, chunkSize, chunkSize), chunkResolution, false));
-        chisel::TruncatorPtr truncator(new chisel::ConstantTruncator(truncationDistScale));
-        chisel::ConstantWeighterPtr weighter(new chisel::ConstantWeighter(weighting));
-
-        chisel::Vec3List centroids;
-        projectionIntegrator = chisel::ProjectionIntegrator(truncator, weighter, carvingDistance, enableCarving, centroids);
-        projectionIntegrator.SetCentroids(chiselMap->GetChunkManager().GetCentroids());
-        LOGI("chisel container was created in native environment");
     }
 
-    void ChiselMesh::addPoints(std::vector<float> vertices, glm::mat4 transformation) {
-
-        // move jfloatArray vertices to Chisel PointCloud
-        lastPointCloud->Clear();
-        int vertexCount = vertices.size() / 3;
-        LOGE("got %d points from as pointcloud data", vertexCount / 3);
-        for (int i = 0; i < vertexCount; ++i) {
-            chisel::Vec3 vec3(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
-            lastPointCloud->AddPoint(vec3);
-        }
-
-        chisel::Transform extrinsic = chisel::Transform();
-        for (int j = 0; j < 4; ++j) {
-            for (int k = 0; k < 4; ++k) {
-                extrinsic(k, j) = transformation[j][k];
-            }
-        }
-
-        chiselMap->IntegratePointCloud(
-                projectionIntegrator,
-                *lastPointCloud,
-                extrinsic,
-                rayTruncation,
-                farClipping
-        );
+    void PlaneMesh::addPoints(std::vector<float> vertices, glm::mat4 transformation) {
 
     }
 
-    void ChiselMesh::updateVertices() {
-        chiselMap->UpdateMeshes();
-        LOGI("Generating Mesh ...");
-        chisel::MeshMap meshMap = chiselMap->GetChunkManager().GetAllMeshes();
-        LOGI("Map with %d items", meshMap.size());
-
+    void PlaneMesh::updateVertices() {
         std::vector <GLfloat> mesh;
-        for (const std::pair <chisel::ChunkID, chisel::MeshPtr> &meshes : meshMap) {
-            for (size_t &index: meshes.second->indices) {
-                mesh.push_back(meshes.second->vertices[index](0));
-                mesh.push_back(meshes.second->vertices[index](1));
-                mesh.push_back(meshes.second->vertices[index](2));
-            }
-        }
+        // TODO: Load Mesh from octree
         LOGI("Got %d polygons", mesh.size() / 3);
         SetVertices(mesh);
     }
 
-    ChiselMesh::ChiselMesh(GLenum render_mode) {
+    PlaneMesh::PlaneMesh(GLenum render_mode) {
         render_mode_ = render_mode;
     }
 
-    void ChiselMesh::SetShader() {
+    void PlaneMesh::SetShader() {
         shader_program_ = tango_gl::util::CreateProgram(
                 tango_gl::shaders::GetBasicVertexShader().c_str(),
                 tango_gl::shaders::GetBasicFragmentShader().c_str());
@@ -106,7 +54,7 @@ namespace tango_augmented_reality {
         SetAlpha(0.4);
     }
 
-    void ChiselMesh::Render(const glm::mat4 &projection_mat,
+    void PlaneMesh::Render(const glm::mat4 &projection_mat,
                             const glm::mat4 &view_mat) const {
         glUseProgram(shader_program_);
         glm::mat4 model_mat = GetTransformationMatrix();

@@ -16,8 +16,6 @@
 
 #include <tango-gl/conversions.h>
 
-#include "tango-augmented-reality/scene.h"
-
 
 namespace {
     // We want to represent the device properly with respect to the ground so we'll
@@ -43,13 +41,8 @@ namespace {
         *r = yValue + (1.370705 * (vValue - 128));
         *g = yValue - (0.698001 * (vValue - 128)) - (0.337633 * (uValue - 128));
         *b = yValue + (1.732446 * (uValue - 128));
-
-
-
+        
     }
-        const glm::mat4 kOpengGL_T_Depth =
-                glm::mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-                          -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 }  // namespace
 
 namespace tango_augmented_reality {
@@ -184,8 +177,10 @@ namespace tango_augmented_reality {
                     chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
                 }
                     break;
-                case PLANE:
-
+                case PLANE: {
+                    std::lock_guard <std::mutex> lock(depth_mutex_);
+                    plane_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+                }
                     break;
             }
         }
@@ -203,16 +198,22 @@ namespace tango_augmented_reality {
         switch (mode) {
             case POINTCLOUD: {
                 std::lock_guard <std::mutex> lock(depth_mutex_);
-                point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
+                point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(),
+                                              gesture_camera_->GetViewMatrix(),
+                                              point_cloud_transformation, vertices);
             }
                 break;
             case TSDF: {
                 std::lock_guard <std::mutex> lock(depth_mutex_);
-                chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+                chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(),
+                                     gesture_camera_->GetViewMatrix());
             }
                 break;
-            case PLANE:
-
+            case PLANE: {
+                std::lock_guard <std::mutex> lock(depth_mutex_);
+                plane_mesh_->Render(gesture_camera_->GetProjectionMatrix(),
+                                    gesture_camera_->GetViewMatrix());
+            }
                 break;
         }
 
@@ -371,6 +372,13 @@ namespace tango_augmented_reality {
                 chisel_mesh_->addPoints(vertices, point_cloud_transformation);
                 chisel_mesh_->updateVertices();
             }
+        } else if (mode == PLANE) {
+            LOGD("Collect Points for Plane Reconstruction");
+            {
+                std::lock_guard <std::mutex> lock(depth_mutex_);
+                plane_mesh_->addPoints(vertices, point_cloud_transformation);
+                plane_mesh_->updateVertices();
+            }
         }
     }
 
@@ -378,6 +386,8 @@ namespace tango_augmented_reality {
         mode = (ARMode) id;
         if (mode == TSDF) {
             chisel_mesh_ = new ChiselMesh();
+        } else if (mode == PLANE) {
+            plane_mesh_ = new PlaneMesh();
         }
     }
 
