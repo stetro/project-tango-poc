@@ -132,6 +132,12 @@ app.setShowOcclusion(show);
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_setDepthFullscreen(
+        JNIEnv*, jobject, jboolean show) {
+app.setDepthFullscreen(show);
+}
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_prototype_TangoJNINative_onTouchEvent(
     JNIEnv*, jobject, int touch_count, int event, float x0, float y0, float x1,
     float y1) {

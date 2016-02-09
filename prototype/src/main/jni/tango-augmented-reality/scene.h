@@ -162,6 +162,7 @@ namespace tango_augmented_reality {
 
         void SetMode(int id);
         void SetShowOcclusion(bool show){show_occlusion = show;}
+        void SetDepthFullscreen(bool show){depth_fullscreen= show;}
 
         ARMode GetMode() { return mode; }
 
@@ -240,6 +241,7 @@ namespace tango_augmented_reality {
 
         bool do_filtering = false;
         bool show_occlusion = false;
+        bool depth_fullscreen = false;
         ARMode mode = POINTCLOUD;
     };
 }  // namespace tango_augmented_reality

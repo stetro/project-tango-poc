@@ -96,6 +96,7 @@ public class MainActivity extends Activity implements
         findViewById(R.id.third_person_button).setOnClickListener(this);
         findViewById(R.id.top_down_button).setOnClickListener(this);
         findViewById(R.id.show_occlusion).setOnClickListener(this);
+        findViewById(R.id.depth_fullscreen).setOnClickListener(this);
 
         ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
         Button button = (Button) findViewById(R.id.toggle_filter);
@@ -206,6 +207,9 @@ public class MainActivity extends Activity implements
                 do_filtering = !do_filtering;
                 changeFilterButtonLabel((Button) v);
                 TangoJNINative.toggleFilter();
+                break;
+            case R.id.depth_fullscreen:
+                TangoJNINative.setDepthFullscreen(((CheckBox)v).isChecked());
                 break;
             case R.id.show_occlusion:
                 TangoJNINative.setShowOcclusion(((CheckBox)v).isChecked());

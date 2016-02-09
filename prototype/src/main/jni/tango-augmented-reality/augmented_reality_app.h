@@ -93,6 +93,7 @@ namespace tango_augmented_reality {
         void setMode(int id);
 
         void setShowOcclusion(bool show);
+        void setDepthFullscreen(bool show);
 
         // Tango service event callback function for pose data. Called when new events
         // are available from the Tango Service.

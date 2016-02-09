@@ -29,6 +29,7 @@
     <string name="tsdf">TSDF Reconstruciton</string>
     <string name="plane">PlaneReconstruciton</string>
     <string name="show_occlusion">Show Occlusion</string>
+    <string name="depth_fullscreen">Depth Fullscreen</string>
 
 </resources>
 

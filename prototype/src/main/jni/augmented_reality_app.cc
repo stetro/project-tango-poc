@@ -394,4 +394,8 @@ namespace tango_augmented_reality {
         main_scene_.SetShowOcclusion(show);
     }
 
+    void AugmentedRealityApp::setDepthFullscreen(bool show){
+        main_scene_.SetDepthFullscreen(show);
+    }
+
 }  // namespace tango_augmented_reality

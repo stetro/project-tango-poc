@@ -15,6 +15,7 @@
  */
 
 #include <tango-gl/conversions.h>
+#include "tango-augmented-reality/scene.h"
 
 
 namespace {
@@ -61,21 +62,17 @@ namespace tango_augmented_reality {
         // temporary depth_frame cv buffer
         depth_frame = cv::Mat(depth_height_, depth_width_, cv_depth_format_);
 
-        // create drawable with rgb texture
+        // create drawable with drawable texture
         depth_drawable_ = new DepthDrawable();
-        glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_width_, depth_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
         // create depth texture
-        glGenTextures(1, &depth_frame_buffer_depth_texture_);
-        glBindTexture(GL_TEXTURE_2D, depth_frame_buffer_depth_texture_);
+        glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_width_, depth_height_, 0, GL_DEPTH_COMPONENT, gl_depth_format_, NULL);
 
         // create frame buffer with color texture and depth
         glGenFramebuffers(1, &depth_frame_buffer_);
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, depth_drawable_->GetTextureId(), 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_frame_buffer_depth_texture_, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_drawable_->GetTextureId(), 0);
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
         // check for errors of framebuffer
@@ -129,6 +126,18 @@ namespace tango_augmented_reality {
     void Scene::Render(const glm::mat4 &cur_pose_transformation) {
         if (!is_yuv_texture_available_) {
             return;
+        }
+
+        if(depth_fullscreen){
+            depth_drawable_->SetParent(nullptr);
+            depth_drawable_->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+            depth_drawable_->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+            depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+        }else{
+            depth_drawable_->SetParent(nullptr);
+            depth_drawable_->SetScale(glm::vec3(0.3f, 0.3f, 0.3f));
+            depth_drawable_->SetPosition(glm::vec3(+0.6f, -0.6f, 0.0f));
+            depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
         }
 
         ConvertYuvToRGBMat();
@@ -191,7 +200,7 @@ namespace tango_augmented_reality {
 
         // draw depth to framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
-        glClearColor(1.0, 1.0, 1.0, 1.0);
+        glClearColor(0.0, 0.0, 0.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render reconstructions or pointcloud, depending on mode
@@ -219,9 +228,6 @@ namespace tango_augmented_reality {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // render colored depth
-        depth_drawable_->Render(glm::mat4(1.0f), glm::mat4(1.0f));
-
         if (do_filtering) {
             // DEPTH FILTERING ...
             // convert from depth component to mat
@@ -235,11 +241,13 @@ namespace tango_augmented_reality {
             temp_frame.convertTo(depth_frame, CV_16UC1, 255);
 
             // copy back to depth texture
-            glBindTexture(GL_TEXTURE_2D, depth_frame_buffer_depth_texture_);
+            glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
             glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.cols, depth_frame.rows, 0, GL_DEPTH_COMPONENT, gl_depth_format_, depth_frame.ptr());
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         }
+
+        // render drawable depth
+        depth_drawable_->Render(glm::mat4(1.0f), glm::mat4(1.0f));
 
         // copy depth to main framebuffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, depth_frame_buffer_);
@@ -255,11 +263,6 @@ namespace tango_augmented_reality {
 
     void Scene::SetCameraType(tango_gl::GestureCamera::CameraType camera_type) {
         gesture_camera_->SetCameraType(camera_type);
-
-        depth_drawable_->SetParent(nullptr);
-        depth_drawable_->SetScale(glm::vec3(0.3f, 0.3f, 0.3f));
-        depth_drawable_->SetPosition(glm::vec3(+0.6f, -0.6f, 0.0f));
-        depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
         if (camera_type == tango_gl::GestureCamera::CameraType::kFirstPerson) {
             yuv_drawable_->SetParent(nullptr);
@@ -352,7 +355,7 @@ namespace tango_augmented_reality {
                 rgb_frame.at<cv::Vec3b>(i/ x_factor, j/ y_factor) = rgb_dot;
             }
         }
-
+        flip(rgb_frame, rgb_frame, 0);
     }
 
     void Scene::BindRGBMatAsTexture() {
