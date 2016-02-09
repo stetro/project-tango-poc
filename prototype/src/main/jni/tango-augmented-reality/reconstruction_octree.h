@@ -9,6 +9,11 @@
 
 namespace tango_augmented_reality {
 
+    class Reconstructor{
+
+    };
+
+
     class ReconstructionOcTree {
     public:
 
@@ -17,11 +22,23 @@ namespace tango_augmented_reality {
         // get global point count in Octree
         int getSize();
 
+        // counts the filled cluster in Octree
+        int getClusterCount();
+
         // add a single point to the deepest level
         void addPoint(glm::vec3 point);
 
         // gets a set of points on a last child nodes position
         std::vector <glm::vec3> getPoints(glm::vec3 position);
+
+        // triggers the clusters reconstruction
+        void reconstruct();
+
+        // collects the reconstructed mesg from each cluster
+        std::vector <glm::vec3> getMesh();
+
+        // instance of a reconstructor for mesh generation
+        Reconstructor *reconstructor;
 
     private:
         // size of a cubic node
@@ -45,6 +62,8 @@ namespace tango_augmented_reality {
         // initializes an Octree child node at a given location
         void initChild(glm::vec3 location, int index);
     };
+
+
 
 }
 
