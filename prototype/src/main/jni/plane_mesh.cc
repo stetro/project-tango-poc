@@ -24,6 +24,14 @@ namespace tango_augmented_reality {
         SetShader();
 
         tree = new ReconstructionOcTree(glm::vec3(-20, -20, -20), 40, 9);
+        ReconstructionOcTree a = ReconstructionOcTree(glm::vec3(-4, -4, -4), 8, 2);
+        a.addPoint(glm::vec3(0,0,0));
+        a.addPoint(glm::vec3(1,0,0));
+        a.addPoint(glm::vec3(0,1,0));
+        a.addPoint(glm::vec3(0,0,1));
+        LOGE("we got %d cluster", a.getClusterCount());
+        a.reconstruct();
+
     }
 
     void PlaneMesh::addPoints(std::vector<float> vertices, glm::mat4 transformation) {
