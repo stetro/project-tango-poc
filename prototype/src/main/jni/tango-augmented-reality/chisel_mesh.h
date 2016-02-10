@@ -45,7 +45,7 @@ namespace tango_augmented_reality {
 
         void Render(const glm::mat4 &projection_mat, const glm::mat4 &view_mat) const;
 
-        void addPoints(std::vector<float> vertices, glm::mat4 transformation);
+        void addPoints(glm::mat4 transformation, std::vector<float> &vertices);
 
         void updateVertices();
 

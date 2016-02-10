@@ -18,7 +18,7 @@
 #define TANGO_VIDEO_OVERLAY_YUV_DRAWABLE_H_
 
 #include "tango-gl/drawable_object.h"
-
+#include <string>
 namespace tango_augmented_reality {
     class YUVDrawable : public tango_gl::DrawableObject {
     public:

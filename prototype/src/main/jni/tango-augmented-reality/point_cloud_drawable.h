@@ -18,6 +18,7 @@
 #define TANGO_POINT_CLOUD_POINT_CLOUD_DRAWABLE_H_
 
 #include <jni.h>
+#include <vector>
 
 #include <tango-gl/util.h>
 

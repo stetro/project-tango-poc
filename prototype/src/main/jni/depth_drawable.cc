@@ -15,6 +15,7 @@
  */
 
 #include "tango-augmented-reality/depth_drawable.h"
+#include <string>
 
 namespace {
     const GLfloat kVertices[] = { -1.0, -1.0, 0.0,-1.0, 1.0, 0.0,

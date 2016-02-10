@@ -372,14 +372,14 @@ namespace tango_augmented_reality {
             LOGD("Collect Points for Chisel");
             {
                 std::lock_guard <std::mutex> lock(depth_mutex_);
-                chisel_mesh_->addPoints(vertices, point_cloud_transformation);
+                chisel_mesh_->addPoints(point_cloud_transformation, vertices);
                 chisel_mesh_->updateVertices();
             }
         } else if (mode == PLANE) {
             LOGD("Collect Points for Plane Reconstruction");
             {
                 std::lock_guard <std::mutex> lock(depth_mutex_);
-                plane_mesh_->addPoints(vertices, point_cloud_transformation);
+                plane_mesh_->addPoints(point_cloud_transformation, vertices);
                 plane_mesh_->updateVertices();
             }
         }

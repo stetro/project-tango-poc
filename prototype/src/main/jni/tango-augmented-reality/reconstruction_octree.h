@@ -3,6 +3,7 @@
 //
 
 #include <tango-gl/util.h>
+#include <vector>
 #include "reconstructor.h"
 
 #ifndef MASTERPROTOTYPE_RECONSTRUCTION_OCTREE_H
@@ -13,7 +14,7 @@ namespace tango_augmented_reality {
     class ReconstructionOcTree {
     public:
 
-        ReconstructionOcTree(glm::vec3 position, double range, int depth);
+        ReconstructionOcTree(glm::vec3 position, float range, int depth);
 
         // get global point count in Octree
         int getSize();
@@ -38,9 +39,9 @@ namespace tango_augmented_reality {
 
     private:
         // size of a cubic node
-        double range_;
+        float range_;
         // size / 2 of a cubic node
-        double halfRange_;
+        float halfRange_;
         // depth tree depth of current node
         int depth_;
         // spatial position of node

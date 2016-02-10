@@ -31,17 +31,20 @@ namespace tango_augmented_reality {
         farClipping = 2.0;
         rayTruncation = 0.5;
 
-        chiselMap = chisel::ChiselPtr(new chisel::Chisel(Eigen::Vector3i(chunkSize, chunkSize, chunkSize), chunkResolution, false));
+        chiselMap = chisel::ChiselPtr(
+                new chisel::Chisel(Eigen::Vector3i(chunkSize, chunkSize, chunkSize),
+                                   chunkResolution, false));
         chisel::TruncatorPtr truncator(new chisel::ConstantTruncator(truncationDistScale));
         chisel::ConstantWeighterPtr weighter(new chisel::ConstantWeighter(weighting));
 
         chisel::Vec3List centroids;
-        projectionIntegrator = chisel::ProjectionIntegrator(truncator, weighter, carvingDistance, enableCarving, centroids);
+        projectionIntegrator = chisel::ProjectionIntegrator(truncator, weighter, carvingDistance,
+                                                            enableCarving, centroids);
         projectionIntegrator.SetCentroids(chiselMap->GetChunkManager().GetCentroids());
         LOGI("chisel container was created in native environment");
     }
 
-    void ChiselMesh::addPoints(std::vector < float >  vertices, glm::mat4 transformation) {
+    void ChiselMesh::addPoints(glm::mat4 transformation, std::vector <float> &vertices) {
 
         // move jfloatArray vertices to Chisel PointCloud
         lastPointCloud->Clear();
