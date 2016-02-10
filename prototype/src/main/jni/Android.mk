@@ -74,6 +74,7 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    chisel_mesh.cc \
                    plane_mesh.cc \
                    reconstruction_octree.cc \
+                   reconstructor.cc \
                    point_cloud_drawable.cc \
                    yuv_drawable.cc \
                    depth_drawable.cc \

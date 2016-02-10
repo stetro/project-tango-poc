@@ -41,7 +41,7 @@ namespace tango_augmented_reality {
         LOGI("chisel container was created in native environment");
     }
 
-    void ChiselMesh::addPoints(std::vector<float> vertices, glm::mat4 transformation) {
+    void ChiselMesh::addPoints(std::vector < float >  vertices, glm::mat4 transformation) {
 
         // move jfloatArray vertices to Chisel PointCloud
         lastPointCloud->Clear();

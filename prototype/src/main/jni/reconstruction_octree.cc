@@ -12,11 +12,11 @@ namespace tango_augmented_reality {
         range_ = range;
         halfRange_ = range / 2;
         depth_ = depth;
-        children = (ReconstructionOcTree **) malloc(sizeof(ReconstructionOcTree *) * 8);
+        children_ = (ReconstructionOcTree **) malloc(sizeof(ReconstructionOcTree *) * 8);
         for (int i = 0; i < 8; ++i) {
-            is_available[i] = false;
+            is_available_[i] = false;
         }
-        if(depth_==0){
+        if (depth_ == 0) {
             reconstructor = new Reconstructor();
         }
     }
@@ -24,11 +24,11 @@ namespace tango_augmented_reality {
     int ReconstructionOcTree::getSize() {
         int size = 0;
         if (depth_ == 0) {
-            size = points.size();
+            size = points_.size();
         } else {
             for (int i = 0; i < 8; ++i) {
-                if (is_available[i]) {
-                    size += children[i]->getSize();
+                if (is_available_[i]) {
+                    size += children_[i]->getSize();
                 }
             }
         }
@@ -37,22 +37,22 @@ namespace tango_augmented_reality {
 
     void ReconstructionOcTree::addPoint(glm::vec3 point) {
         if (depth_ == 0) {
-            points.push_back(point);
+            points_.push_back(point);
         } else {
             int index = getChildIndex(point);
-            if (!is_available[index]) {
+            if (!is_available_[index]) {
                 initChild(point, index);
             }
-            children[index]->addPoint(point);
+            children_[index]->addPoint(point);
         }
     }
 
     std::vector <glm::vec3> ReconstructionOcTree::getPoints(glm::vec3 location) {
         int index = getChildIndex(location);
-        if (depth_ == 0 || !is_available[index]) {
-            return points;
+        if (depth_ == 0 || !is_available_[index]) {
+            return points_;
         } else {
-            return children[index]->getPoints(location);
+            return children_[index]->getPoints(location);
         }
     }
 
@@ -60,8 +60,8 @@ namespace tango_augmented_reality {
         if (depth_ != 0) {
             int size = 0;
             for (int i = 0; i < 8; ++i) {
-                if (is_available[i]) {
-                    size += children[i]->getClusterCount();
+                if (is_available_[i]) {
+                    size += children_[i]->getClusterCount();
                 }
             }
             return size;
@@ -71,21 +71,30 @@ namespace tango_augmented_reality {
 
     void ReconstructionOcTree::reconstruct() {
         if (depth_ == 0) {
-            //TODO: Reconstructor
-
+            reconstructor->points = points_;
+            reconstructor->reconstruct();
         } else {
             for (int i = 0; i < 8; ++i) {
-                if (is_available[i]) {
-                    children[i]->reconstruct();
+                if (is_available_[i]) {
+
+                    children_[i]->reconstruct();
                 }
             }
         }
     }
 
     std::vector <glm::vec3> ReconstructionOcTree::getMesh() {
-        std::vector <glm::vec3> mesh;
-        //TODO: Collect Mesh
-        return mesh;
+        if (depth_ != 0) {
+            std::vector <glm::vec3> mesh;
+            for (int i = 0; i < 8; ++i) {
+                if (is_available_[i]) {
+                    std::vector <glm::vec3> childMesh = children_[i]->getMesh();
+                    mesh.insert(mesh.end(), childMesh.begin(), childMesh.end());
+                }
+            }
+            return mesh;
+        }
+        return reconstructor->getMesh();
     }
 
 
@@ -97,8 +106,8 @@ namespace tango_augmented_reality {
                           ? (position_.y + halfRange_) : (position_.y);
         childPosition.z = (location.z > (position_.z + halfRange_))
                           ? (position_.z + halfRange_) : (position_.z);
-        children[index] = new ReconstructionOcTree(childPosition, halfRange_, depth_ - 1);
-        is_available[index] = true;
+        children_[index] = new ReconstructionOcTree(childPosition, halfRange_, depth_ - 1);
+        is_available_[index] = true;
     }
 
 

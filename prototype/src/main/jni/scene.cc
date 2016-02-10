@@ -307,7 +307,7 @@ namespace tango_augmented_reality {
             rgb_frame = cv::Mat(depth_height_, depth_width_, CV_8UC3);
 
             glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_frame.ptr());
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
             is_yuv_texture_available_ = true;
         }

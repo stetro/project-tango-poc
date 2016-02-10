@@ -3,16 +3,12 @@
 //
 
 #include <tango-gl/util.h>
+#include "reconstructor.h"
 
 #ifndef MASTERPROTOTYPE_RECONSTRUCTION_OCTREE_H
 #define MASTERPROTOTYPE_RECONSTRUCTION_OCTREE_H
 
 namespace tango_augmented_reality {
-
-    class Reconstructor{
-
-    };
-
 
     class ReconstructionOcTree {
     public:
@@ -50,11 +46,11 @@ namespace tango_augmented_reality {
         // spatial position of node
         glm::vec3 position_;
         // array of child node status
-        bool is_available[8];
+        bool is_available_[8];
         // 8 children of a node
-        ReconstructionOcTree **children;
+        ReconstructionOcTree **children_;
         // container for points per node
-        std::vector <glm::vec3> points;
+        std::vector <glm::vec3> points_;
 
         // get Octree child index of a given point
         int getChildIndex(glm::vec3 point);
@@ -62,8 +58,6 @@ namespace tango_augmented_reality {
         // initializes an Octree child node at a given location
         void initChild(glm::vec3 location, int index);
     };
-
-
 
 }
 
