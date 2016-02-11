@@ -22,7 +22,6 @@ OPENCV:=/home/stetro/Source/opencv/platforms/build_android_arm/
 BOOST_ANDROID_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/boost
 EIGEN_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/eigen
 CHISEL := $(LOCAL_PATH)/../../../../native-libraries/open_chisel
-DELAUNAY := $(LOCAL_PATH)/../../../../native-libraries/delaunay
 
 
 include $(CLEAR_VARS)
@@ -68,7 +67,7 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    $(CHISEL)/src/marching_cubes/MarchingCubes.cpp \
                    $(CHISEL)/src/io/PLY.cpp \
                    $(CHISEL)/src/geometry/Raycast.cpp \
-                   $(DELAUNAY)/delaunay.c \
+                   delaunay.c \
                    augmented_reality_app.cc \
                    jni_interface.cc \
                    pose_data.cc \
@@ -87,7 +86,6 @@ LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango-gl/include \
                     $(TANGO_C_EXAMPLES)/third-party/glm/ \
                     $(BOOST_ANDROID_INCLUDE)/include \
                     $(EIGEN_INCLUDE) \
-                    $(DELAUNAY)/ \
                     $(CHISEL)/include
 
 

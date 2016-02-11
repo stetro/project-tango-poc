@@ -7,8 +7,8 @@
 #include <glm/ext.hpp>
 #include <vector>
 #include <vector>
-#include <delaunay.h>
 
+#include "delaunay.h"
 #include "convex_hull.h"
 
 #ifndef MASTERPROTOTYPE_RECONSTRUCTOR_H
