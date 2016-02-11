@@ -27,6 +27,8 @@ namespace tango_augmented_reality {
         ReconstructionOcTree a = ReconstructionOcTree(glm::vec3(-4, -4, -4), 8, 2);
         a.addPoint(glm::vec3(0.8, .1, .05));
         a.addPoint(glm::vec3(0.1, .8, -.05));
+        a.addPoint(glm::vec3(0.05, .8, 0.0));
+        a.addPoint(glm::vec3(0.1, .8, 0.0));
         a.addPoint(glm::vec3(0.0, 0.1, .8));
         LOGE("we got %d cluster", a.getClusterCount());
         a.reconstruct();

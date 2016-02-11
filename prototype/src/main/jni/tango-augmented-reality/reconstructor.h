@@ -8,6 +8,9 @@
 #include <vector>
 #include <vector>
 
+#include "convex_hull.h"
+#include <poly2tri.h>
+
 #ifndef MASTERPROTOTYPE_RECONSTRUCTOR_H
 #define MASTERPROTOTYPE_RECONSTRUCTOR_H
 
@@ -63,10 +66,10 @@ namespace tango_augmented_reality {
         Plane detectPlane();
 
         // project points onto the plane
-        std::vector <glm::vec2> project(Plane plane, std::vector <glm::vec3> &points);
+        std::vector <p2t::Point> project(Plane plane, std::vector <glm::vec3> &points);
 
         // project points back from the plane
-        std::vector <glm::vec3> project(Plane plane, std::vector <glm::vec2> &points);
+        std::vector <glm::vec3> project(Plane plane, std::vector <p2t::Point> &points);
 
         // computes the support of the plane against points with ransac_threshold
         int ransacEstimateSupportingPoints(Plane plane);

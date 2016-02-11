@@ -6,27 +6,29 @@ namespace tango_augmented_reality {
         mesh_.clear();
         if (points.size() < 3) return;
         Plane plane = detectPlane();
-        std::vector <glm::vec2> projection = project(plane, ransac_best_supporting_points);
-
-        
-        std::vector <glm::vec3> back_projection = project(plane, projection);
+        std::vector <p2t::Point> projection = project(plane, ransac_best_supporting_points);
+        LOGE("got %d points", projection.size());
+        ConvexHull *h = new ConvexHull();
+        std::vector <p2t::Point> hull = h->generateConvexHull(projection);
+        LOGE("results in %d points", hull.size());
+        std::vector <glm::vec3> back_projection = project(plane, hull);
     }
 
-    std::vector <glm::vec2> Reconstructor::project(Plane plane, std::vector <glm::vec3> &points) {
-        std::vector <glm::vec2> result;
+    std::vector <p2t::Point> Reconstructor::project(Plane plane, std::vector <glm::vec3> &points) {
+        std::vector <p2t::Point> result;
         for (int i = 0; i < points.size(); ++i) {
             glm::vec3 point = points[i];
             point = point - plane.plane_origin;
             point = plane.plane_z_rotation * point;
-            result.push_back(glm::vec2(point[0], point[1]));
+            result.push_back(p2t::Point(point[0], point[1]));
         }
         return result;
     }
 
-    std::vector <glm::vec3> Reconstructor::project(Plane plane, std::vector <glm::vec2> &points) {
+    std::vector <glm::vec3> Reconstructor::project(Plane plane, std::vector <p2t::Point> &points) {
         std::vector <glm::vec3> result;
         for (int i = 0; i < points.size(); ++i) {
-            glm::vec3 point = glm::vec3(points[i][0], points[i][1], 0.0);
+            glm::vec3 point = glm::vec3(points[i].x, points[i].y, 0.0);
             point = plane.inverse_plane_z_rotation * point;
             point = point + plane.plane_origin;
             result.push_back(point);
