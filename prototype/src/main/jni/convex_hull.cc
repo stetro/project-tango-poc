@@ -3,11 +3,11 @@
 
 namespace tango_augmented_reality {
 
-    double ConvexHull::isLeft(p2t::Point P0, p2t::Point P1, p2t::Point P2) {
+    double ConvexHull::isLeft(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2) {
         return (P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y);
     }
 
-    std::vector <p2t::Point> ConvexHull::generateConvexHull(std::vector < p2t::Point > &P) {
+    std::vector <glm::vec2> ConvexHull::generateConvexHull(std::vector < glm::vec2 > &P) {
         // http://geomalgorithms.com/a10-_hull-1.html
 
         int bot = 0;
@@ -15,7 +15,7 @@ namespace tango_augmented_reality {
         int i;
         int n = P.size();
 
-        std::vector <p2t::Point> H;
+        std::vector <glm::vec2> H;
         H.resize(P.size());
 
         int minmin = 0, minmax;

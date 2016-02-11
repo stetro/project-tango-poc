@@ -5,27 +5,60 @@ namespace tango_augmented_reality {
     void Reconstructor::reconstruct() {
         mesh_.clear();
         if (points.size() < 3) return;
+
         Plane plane = detectPlane();
-        std::vector <p2t::Point> projection = project(plane, ransac_best_supporting_points);
-        LOGE("got %d points", projection.size());
+        std::vector <glm::vec2> projection = project(plane, ransac_best_supporting_points);
+        LOGE("%d points in cluster", projection.size());
+
         ConvexHull *h = new ConvexHull();
-        std::vector <p2t::Point> hull = h->generateConvexHull(projection);
-        LOGE("results in %d points", hull.size());
-        std::vector <glm::vec3> back_projection = project(plane, hull);
+        std::vector <glm::vec2> hull = h->generateConvexHull(projection);
+        hull.pop_back();
+        LOGE("%d points for the convex hull", hull.size());
+
+        del_point2d_t *delaunay_points = (del_point2d_t *) malloc(
+                sizeof(del_point2d_t) * hull.size());
+        for (int i = 0; i < hull.size(); ++i) {
+            delaunay_points[i] = {hull[i].x, hull[i].y};
+        }
+        delaunay2d_t *result = delaunay2d_from(delaunay_points, hull.size());
+        tri_delaunay2d_t *tri_result = tri_delaunay2d_from(result);
+
+        LOGE("%d faces", result->num_faces);
+        LOGE("%d triangles", tri_result->num_triangles);
+
+
+        std::vector <glm::vec2> mesh_points;
+        for (int k = 0; k < tri_result->num_triangles; ++k) {
+            mesh_points.push_back(glm::vec2(tri_result->points[tri_result->tris[k * 3]].x,
+                                            tri_result->points[tri_result->tris[k * 3]].y));
+            mesh_points.push_back(glm::vec2(tri_result->points[tri_result->tris[k * 3 + 1]].x,
+                                            tri_result->points[tri_result->tris[k * 3 + 1]].y));
+            mesh_points.push_back(glm::vec2(tri_result->points[tri_result->tris[k * 3 + 2]].x,
+                                            tri_result->points[tri_result->tris[k * 3 + 2]].y));
+        }
+
+        delaunay2d_release(result);
+        tri_delaunay2d_release(tri_result);
+        free(delaunay_points);
+
+        std::vector <glm::vec3> back_projection = project(plane, mesh_points);
+        for (int l = 0; l < back_projection.size(); ++l) {
+            mesh_.push_back(back_projection[l]);
+        }
     }
 
-    std::vector <p2t::Point> Reconstructor::project(Plane plane, std::vector <glm::vec3> &points) {
-        std::vector <p2t::Point> result;
+    std::vector <glm::vec2> Reconstructor::project(Plane plane, std::vector <glm::vec3> &points) {
+        std::vector <glm::vec2> result;
         for (int i = 0; i < points.size(); ++i) {
             glm::vec3 point = points[i];
             point = point - plane.plane_origin;
             point = plane.plane_z_rotation * point;
-            result.push_back(p2t::Point(point[0], point[1]));
+            result.push_back(glm::vec2(point.x, point.y));
         }
         return result;
     }
 
-    std::vector <glm::vec3> Reconstructor::project(Plane plane, std::vector <p2t::Point> &points) {
+    std::vector <glm::vec3> Reconstructor::project(Plane plane, std::vector <glm::vec2> &points) {
         std::vector <glm::vec3> result;
         for (int i = 0; i < points.size(); ++i) {
             glm::vec3 point = glm::vec3(points[i].x, points[i].y, 0.0);

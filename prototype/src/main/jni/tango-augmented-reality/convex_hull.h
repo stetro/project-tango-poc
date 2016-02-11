@@ -6,7 +6,6 @@
 #include <tango-gl/util.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include <poly2tri.h>
 
 namespace tango_augmented_reality {
 
@@ -14,10 +13,10 @@ namespace tango_augmented_reality {
     public:
 
         // applies the convex hull algorithm to determine the convex hull
-        std::vector <p2t::Point> generateConvexHull(std::vector <p2t::Point> &points);
+        std::vector <glm::vec2> generateConvexHull(std::vector <glm::vec2> &points);
 
         // tests if a point is Left|On|Right of an infinite line.
-        double isLeft(p2t::Point P0, p2t::Point P1, p2t::Point P2);
+        double isLeft(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2);
 
     };
 }
