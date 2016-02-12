@@ -8,7 +8,7 @@
 namespace tango_augmented_reality {
 
     ReconstructionOcTree::ReconstructionOcTree(glm::vec3 position, float range, int depth) {
-        position_ = position_;
+        position_ = position;
         range_ = range;
         halfRange_ = range / 2;
         depth_ = depth;
