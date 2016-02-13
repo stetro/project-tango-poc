@@ -17,8 +17,10 @@
 #include "tango-augmented-reality/yuv_drawable.h"
 
 namespace {
-    const GLfloat kVertices[] = { -1.0, -1.0, 0.0,-1.0, 1.0, 0.0,
-                                  1.0, -1.0, 0.0,1.0, 1.0, 0.0};
+    const GLfloat kVertices[] = {-1.0, 1.0, 0.0,
+                                 -1.0, -1.0, 0.0,
+                                 1.0, 1.0, 0.0,
+                                 1.0, -1.0, 0.0};
 
     const GLushort kIndices[] = {0, 1, 2, 2, 1, 3};
 

@@ -42,7 +42,7 @@ namespace {
         *r = yValue + (1.370705 * (vValue - 128));
         *g = yValue - (0.698001 * (vValue - 128)) - (0.337633 * (uValue - 128));
         *b = yValue + (1.732446 * (uValue - 128));
-        
+
     }
 }  // namespace
 
@@ -54,8 +54,8 @@ namespace tango_augmented_reality {
 
     void Scene::InitGLContent() {
 
-        depth_width_ = 1280/2;
-        depth_height_ = 720/2;
+        depth_width_ = 1280 / 2;
+        depth_height_ = 720 / 2;
         gl_depth_format_ = GL_UNSIGNED_SHORT;       // 16 Bit
         cv_depth_format_ = CV_16UC1;                // 16 Bit
 
@@ -67,12 +67,14 @@ namespace tango_augmented_reality {
 
         // create depth texture
         glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_width_, depth_height_, 0, GL_DEPTH_COMPONENT, gl_depth_format_, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_width_, depth_height_, 0,
+                     GL_DEPTH_COMPONENT, gl_depth_format_, NULL);
 
         // create frame buffer with color texture and depth
         glGenFramebuffers(1, &depth_frame_buffer_);
         glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_drawable_->GetTextureId(), 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                               depth_drawable_->GetTextureId(), 0);
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
         // check for errors of framebuffer
@@ -128,12 +130,12 @@ namespace tango_augmented_reality {
             return;
         }
 
-        if(depth_fullscreen){
+        if (depth_fullscreen) {
             depth_drawable_->SetParent(nullptr);
             depth_drawable_->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
             depth_drawable_->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
             depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-        }else{
+        } else {
             depth_drawable_->SetParent(nullptr);
             depth_drawable_->SetScale(glm::vec3(0.3f, 0.3f, 0.3f));
             depth_drawable_->SetPosition(glm::vec3(+0.6f, -0.6f, 0.0f));
@@ -147,7 +149,8 @@ namespace tango_augmented_reality {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        glm::vec3 position = glm::vec3(cur_pose_transformation[3][0], cur_pose_transformation[3][1], cur_pose_transformation[3][2]);
+        glm::vec3 position = glm::vec3(cur_pose_transformation[3][0], cur_pose_transformation[3][1],
+                                       cur_pose_transformation[3][2]);
 
         trace_->UpdateVertexArray(position);
 
@@ -173,22 +176,26 @@ namespace tango_augmented_reality {
         }
 
 
-        if(show_occlusion){
+        if (show_occlusion) {
             // render reconstructions or pointcloud, depending on mode
             switch (mode) {
                 case POINTCLOUD: {
                     std::lock_guard <std::mutex> lock(depth_mutex_);
-                    point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix(), point_cloud_transformation, vertices);
+                    point_cloud_drawable_->Render(gesture_camera_->GetProjectionMatrix(),
+                                                  gesture_camera_->GetViewMatrix(),
+                                                  point_cloud_transformation, vertices);
                 }
                     break;
                 case TSDF: {
                     std::lock_guard <std::mutex> lock(depth_mutex_);
-                    chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+                    chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(),
+                                         gesture_camera_->GetViewMatrix());
                 }
                     break;
                 case PLANE: {
                     std::lock_guard <std::mutex> lock(depth_mutex_);
-                    plane_mesh_->Render(gesture_camera_->GetProjectionMatrix(), gesture_camera_->GetViewMatrix());
+                    plane_mesh_->Render(gesture_camera_->GetProjectionMatrix(),
+                                        gesture_camera_->GetViewMatrix());
                 }
                     break;
             }
@@ -232,7 +239,8 @@ namespace tango_augmented_reality {
             // DEPTH FILTERING ...
             // convert from depth component to mat
             glBindFramebuffer(GL_FRAMEBUFFER, depth_frame_buffer_);
-            glReadPixels(0, 0, depth_frame.cols, depth_frame.rows, GL_DEPTH_COMPONENT, gl_depth_format_, depth_frame.ptr());
+            glReadPixels(0, 0, depth_frame.cols, depth_frame.rows, GL_DEPTH_COMPONENT,
+                         gl_depth_format_, depth_frame.ptr());
 
             // apply opencv filters
             cv::Mat temp_frame(depth_frame.size(), CV_8UC1);
@@ -242,7 +250,8 @@ namespace tango_augmented_reality {
 
             // copy back to depth texture
             glBindTexture(GL_TEXTURE_2D, depth_drawable_->GetTextureId());
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.cols, depth_frame.rows, 0, GL_DEPTH_COMPONENT, gl_depth_format_, depth_frame.ptr());
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_frame.cols, depth_frame.rows,
+                         0, GL_DEPTH_COMPONENT, gl_depth_format_, depth_frame.ptr());
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
@@ -252,7 +261,8 @@ namespace tango_augmented_reality {
         // copy depth to main framebuffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, depth_frame_buffer_);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, depth_width_, depth_height_, 0, 0, depth_width_, depth_height_, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0, 0, depth_width_, depth_height_, 0, 0, depth_width_, depth_height_,
+                          GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // render rest of drawables
@@ -277,7 +287,8 @@ namespace tango_augmented_reality {
         }
     }
 
-    void Scene::OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event, float x0, float y0, float x1, float y1) {
+    void Scene::OnTouchEvent(int touch_count, tango_gl::GestureCamera::TouchEvent event, float x0,
+                             float y0, float x1, float y1) {
         gesture_camera_->OnTouchEvent(touch_count, event, x0, y0, x1, y1);
     }
 
@@ -307,7 +318,8 @@ namespace tango_augmented_reality {
             rgb_frame = cv::Mat(depth_height_, depth_width_, CV_8UC3);
 
             glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
+                         GL_UNSIGNED_BYTE, NULL);
 
             is_yuv_texture_available_ = true;
         }
@@ -338,8 +350,8 @@ namespace tango_augmented_reality {
                 swap_buffer_signal_ = false;
             }
         }
-        size_t x_factor = yuv_height_/depth_height_;
-        size_t y_factor = yuv_width_/depth_width_;
+        size_t x_factor = yuv_height_ / depth_height_;
+        size_t y_factor = yuv_width_ / depth_width_;
         for (size_t i = 0; i < yuv_height_; ++i) {
             for (size_t j = 0; j < yuv_width_; ++j) {
                 size_t x_index = j;
@@ -347,20 +359,34 @@ namespace tango_augmented_reality {
                     x_index = j - 1;
                 }
                 size_t rgb_index = (i * yuv_width_ + j) * 3;
-                cv::Vec3b rgb_dot;
-                Yuv2Rgb(yuv_buffer_[i * yuv_width_ + j],
-                        yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
-                        yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
-                        &rgb_dot[0], &rgb_dot[1], &rgb_dot[2]);
-                rgb_frame.at<cv::Vec3b>(i/ x_factor, j/ y_factor) = rgb_dot;
+                if (do_filtering) {
+                    cv::Vec3b rgb_dot;
+                    Yuv2Rgb(yuv_buffer_[i * yuv_width_ + j],
+                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
+                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
+                            &rgb_dot[0], &rgb_dot[1], &rgb_dot[2]);
+                    rgb_frame.at<cv::Vec3b>(i / x_factor, j / y_factor) = rgb_dot;
+                } else {
+                    Yuv2Rgb(yuv_buffer_[i * yuv_width_ + j],
+                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
+                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
+                            &rgb_buffer_[rgb_index], &rgb_buffer_[rgb_index + 1],
+                            &rgb_buffer_[rgb_index + 2]);
+                }
             }
         }
-        flip(rgb_frame, rgb_frame, 0);
+       // flip(rgb_frame, rgb_frame, 0);
     }
 
     void Scene::BindRGBMatAsTexture() {
         glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_frame.ptr());
+        if (do_filtering) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
+                         GL_UNSIGNED_BYTE, rgb_frame.ptr());
+        } else {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, yuv_width_, yuv_height_, 0, GL_RGB,
+                         GL_UNSIGNED_BYTE, rgb_buffer_.data());
+        }
     }
 
     void Scene::ToggleFilter() {
