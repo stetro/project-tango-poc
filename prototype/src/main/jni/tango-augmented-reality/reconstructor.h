@@ -80,12 +80,14 @@ namespace tango_augmented_reality {
         // method to apply linear regression with best supporting points and plane
         Plane ransacApplyLinearRegression(Plane plane);
 
+        // last convex hull of the best supporting plane
+        std::vector <glm::vec3> last_convex_hull;
         // how many random samples we're going to test
         int ransac_iterations = 10;
         // threshold between plane and point to count a point as supporting
         float ransac_threshold = 0.05;
         // amount of points, which should support the plane model to be sufficient
-        int ransac_sufficient_support;
+        float ransac_sufficient_support = 0.60;
         // supporting points of ransac estimation
         std::vector <glm::vec3> ransac_supporting_points;
         // supporting points of best ransac estimation

@@ -105,6 +105,7 @@ namespace tango_augmented_reality {
             }
             return mesh;
         }
+        points_.clear();
         return reconstructor->getMesh();
     }
 

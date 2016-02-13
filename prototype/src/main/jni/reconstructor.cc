@@ -3,10 +3,15 @@
 namespace tango_augmented_reality {
 
     void Reconstructor::reconstruct() {
-        mesh_.clear();
         if (points.size() < 4) {
             LOGE("exit because only %d points in cluster", points.size());
             return;
+        }
+
+        // ADD LAST CONVEX HULL IF AVAILABLE
+        if (last_convex_hull.size() > 0) {
+            points.insert(points.end(), last_convex_hull.begin(), last_convex_hull.end());
+            points.insert(points.end(), last_convex_hull.begin(), last_convex_hull.end());
         }
 
         // RANSAC PLANE DETECTION
@@ -28,6 +33,7 @@ namespace tango_augmented_reality {
             LOGE("exit because convex hull has only %d points", hull.size());
             return;
         }
+        last_convex_hull = project(plane, hull);    // store convex hull for next iteration
 
         // CALCULATE DELAUNAY TRIANGULATION
         del_point2d_t *delaunay_points = (del_point2d_t *) malloc(
@@ -37,9 +43,6 @@ namespace tango_augmented_reality {
         }
         delaunay2d_t *result = delaunay2d_from(delaunay_points, hull.size());
         tri_delaunay2d_t *tri_result = tri_delaunay2d_from(result);
-
-        LOGE("%d faces", result->num_faces);
-        LOGE("%d triangles", tri_result->num_triangles);
 
         // PUSH TRIANGLES TO THE CLUSTERS MESH
         std::vector <glm::vec2> mesh_points;
@@ -58,6 +61,7 @@ namespace tango_augmented_reality {
         free(delaunay_points);
 
         // PROJECT MESH POINTS BACK TO 3D
+        mesh_.clear();
         std::vector <glm::vec3> back_projection = project(plane, mesh_points);
         for (int l = 0; l < back_projection.size(); ++l) {
             mesh_.push_back(back_projection[l]);
@@ -89,6 +93,7 @@ namespace tango_augmented_reality {
     Plane Reconstructor::detectPlane() {
         int best_support = 0;
         Plane result;
+        int ransac_sufficient_support_count = ransac_sufficient_support * points.size();
 
         int iterations = ransac_iterations;
         while (iterations > 0) {
@@ -109,7 +114,7 @@ namespace tango_augmented_reality {
                 result = plane;
             }
             // 5. stop if support is already sufficient
-            if (best_support >= ransac_sufficient_support) {
+            if (best_support >= ransac_sufficient_support_count) {
                 break;
             }
         }
