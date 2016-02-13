@@ -20,5 +20,4 @@ namespace tango_augmented_reality {
 
     };
 }
-
 #endif

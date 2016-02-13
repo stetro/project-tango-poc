@@ -1,80 +1,39 @@
 #include "tango-augmented-reality/convex_hull.h"
 
 
+namespace {
+    // less_equal operator for std::sort function
+    bool less_equal(const glm::vec2 p1, const glm::vec2 p2) {
+        return p1.x < p2.x || (p1.x == p2.x && p1.y < p2.y);
+    }
+}
 namespace tango_augmented_reality {
 
     double ConvexHull::isLeft(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2) {
         return (P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y);
     }
 
-    std::vector <glm::vec2> ConvexHull::generateConvexHull(std::vector < glm::vec2 > &P) {
-        // http://geomalgorithms.com/a10-_hull-1.html
+    std::vector <glm::vec2> ConvexHull::generateConvexHull(std::vector < glm::vec2 > &points) {
 
-        int bot = 0;
-        int top = (-1);
-        int i;
-        int n = P.size();
+        int n = points.size(), k = 0;
+        std::vector <glm::vec2> hull(2 * n);
 
-        if (n <= 3) {
-            return P;
+        // Sort points lexicographically
+        std::sort(points.begin(), points.end(), less_equal);
+
+        // Build lower hull
+        for (int i = 0; i < n; ++i) {
+            while (k >= 2 && isLeft(hull[k - 2], hull[k - 1], points[i]) <= 0) k--;
+            hull[k++] = points[i];
         }
 
-        std::vector <glm::vec2> H;
-        H.resize(P.size());
-
-        int minmin = 0, minmax;
-        float xmin = P[0].x;
-        for (i = 1; i < n; i++)
-            if (P[i].x != xmin) break;
-        minmax = i - 1;
-        if (minmax == n - 1) {
-            H[++top] = P[minmin];
-            if (P[minmax].y != P[minmin].y)
-                H[++top] = P[minmax];
-            H[++top] = P[minmin];
-            H.resize(top + 1);
-            return H;
+        // Build upper hull
+        for (int i = n - 2, t = k + 1; i >= 0; i--) {
+            while (k >= t && isLeft(hull[k - 2], hull[k - 1], points[i]) <= 0) k--;
+            hull[k++] = points[i];
         }
 
-        int maxmin, maxmax = n - 1;
-        float xmax = P[n - 1].x;
-        for (i = n - 2; i >= 0; i--)
-            if (P[i].x != xmax) break;
-        maxmin = i + 1;
-
-        H[++top] = P[minmin];
-        i = minmax;
-        while (++i <= maxmin) {
-            if (isLeft(P[minmin], P[maxmin], P[i]) >= 0 && i < maxmin)
-                continue;
-            while (top > 0) {
-                if (isLeft(H[top - 1], H[top], P[i]) > 0)
-                    break;
-                else
-                    top--;
-            }
-            H[++top] = P[i];
-        }
-
-        if (maxmax != maxmin)
-            H[++top] = P[maxmax];
-        bot = top;
-        i = maxmin;
-        while (--i >= minmax) {
-            if (isLeft(P[maxmax], P[minmax], P[i]) >= 0 && i > minmax)
-                continue;
-            while (top > bot) {
-                if (isLeft(H[top - 1], H[top], P[i]) > 0)
-                    break;
-                else
-                    top--;
-            }
-            H[++top] = P[i];
-        }
-        if (minmax != minmin)
-            H[++top] = P[minmin];
-
-        H.resize(top + 1);
-        return H;
+        hull.resize(k);
+        return hull;
     }
 }
