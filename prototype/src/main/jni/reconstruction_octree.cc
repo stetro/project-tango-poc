@@ -36,6 +36,15 @@ namespace tango_augmented_reality {
     }
 
     void ReconstructionOcTree::addPoint(glm::vec3 point) {
+        if (point.x < position_.x ||
+            point.y < position_.y ||
+            point.z < position_.z ||
+            point.x > position_.x + range_ ||
+            point.y > position_.y + range_ ||
+            point.z > position_.z + range_) {
+            LOGE("Out of range!");
+            return;
+        }
         if (depth_ == 0) {
             points_.push_back(point);
         } else {
@@ -87,7 +96,7 @@ namespace tango_augmented_reality {
         if (depth_ != 0) {
             std::vector <glm::vec3> mesh;
             for (int i = 0; i < 8; ++i) {
-                if (is_available_[i]) {
+                if (is_available_[i] && children_[i]->getMesh().size() > 0) {
                     std::vector <glm::vec3> childMesh = children_[i]->getMesh();
                     mesh.insert(mesh.end(), childMesh.begin(), childMesh.end());
                 }

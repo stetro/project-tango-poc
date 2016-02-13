@@ -15,6 +15,10 @@ namespace tango_augmented_reality {
         int i;
         int n = P.size();
 
+        if (n <= 3) {
+            return P;
+        }
+
         std::vector <glm::vec2> H;
         H.resize(P.size());
 

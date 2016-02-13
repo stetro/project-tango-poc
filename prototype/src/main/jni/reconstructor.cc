@@ -4,17 +4,31 @@ namespace tango_augmented_reality {
 
     void Reconstructor::reconstruct() {
         mesh_.clear();
-        if (points.size() < 3) return;
+        if (points.size() < 4) {
+            LOGE("exit because only %d points in cluster", points.size());
+            return;
+        }
 
+        // RANSAC PLANE DETECTION
         Plane plane = detectPlane();
-        std::vector <glm::vec2> projection = project(plane, ransac_best_supporting_points);
-        LOGE("%d points in cluster", projection.size());
+        if (ransac_best_supporting_points.size() < 4) {
+            LOGE("exit because only %d points in supporting points",
+                 ransac_best_supporting_points.size());
+            return;
+        }
 
+        // PROJECT SUPPORTING POINTS TO 2D
+        std::vector <glm::vec2> projection = project(plane, ransac_best_supporting_points);
+
+        // CALCULATE THE CONVEX HULL
         ConvexHull *h = new ConvexHull();
         std::vector <glm::vec2> hull = h->generateConvexHull(projection);
         hull.pop_back();
-        LOGE("%d points for the convex hull", hull.size());
+        if (hull.size() < 3) {
+            LOGE("exit because convex hull has only %d points", hull.size());
+        }
 
+        // CALCULATE DELAUNAY TRIANGULATION
         del_point2d_t *delaunay_points = (del_point2d_t *) malloc(
                 sizeof(del_point2d_t) * hull.size());
         for (int i = 0; i < hull.size(); ++i) {
@@ -26,7 +40,7 @@ namespace tango_augmented_reality {
         LOGE("%d faces", result->num_faces);
         LOGE("%d triangles", tri_result->num_triangles);
 
-
+        // PUSH TRIANGLES TO THE CLUSTERS MESH
         std::vector <glm::vec2> mesh_points;
         for (int k = 0; k < tri_result->num_triangles; ++k) {
             mesh_points.push_back(glm::vec2(tri_result->points[tri_result->tris[k * 3]].x,
@@ -37,10 +51,12 @@ namespace tango_augmented_reality {
                                             tri_result->points[tri_result->tris[k * 3 + 2]].y));
         }
 
+        // FREE MEMORY
         delaunay2d_release(result);
         tri_delaunay2d_release(tri_result);
         free(delaunay_points);
 
+        // PROJECT MESH POINTS BACK TO 3D
         std::vector <glm::vec3> back_projection = project(plane, mesh_points);
         for (int l = 0; l < back_projection.size(); ++l) {
             mesh_.push_back(back_projection[l]);
