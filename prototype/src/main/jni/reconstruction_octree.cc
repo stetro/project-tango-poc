@@ -96,9 +96,11 @@ namespace tango_augmented_reality {
         if (depth_ != 0) {
             std::vector <glm::vec3> mesh;
             for (int i = 0; i < 8; ++i) {
-                if (is_available_[i] && children_[i]->getMesh().size() > 0) {
+                if (is_available_[i]) {
                     std::vector <glm::vec3> childMesh = children_[i]->getMesh();
-                    mesh.insert(mesh.end(), childMesh.begin(), childMesh.end());
+                    if (childMesh.size() > 0) {
+                        mesh.insert(mesh.end(), childMesh.begin(), childMesh.end());
+                    }
                 }
             }
             return mesh;

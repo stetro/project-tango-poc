@@ -58,7 +58,7 @@ namespace tango_augmented_reality {
         chisel::Transform extrinsic = chisel::Transform();
         for (int j = 0; j < 4; ++j) {
             for (int k = 0; k < 4; ++k) {
-                extrinsic(k, j) = transformation[j][k];
+                extrinsic(k, j) = transformation[k][j];
             }
         }
 

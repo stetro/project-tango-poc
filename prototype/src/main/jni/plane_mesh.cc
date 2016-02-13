@@ -45,7 +45,9 @@ namespace tango_augmented_reality {
             mesh.push_back(reconstruction[i].z);
         }
         LOGI("Got %d polygons", mesh.size() / 9);
-        SetVertices(mesh);
+        if (mesh.size() >= 0) {
+            SetVertices(mesh);
+        }
     }
 
     PlaneMesh::PlaneMesh(GLenum render_mode) {

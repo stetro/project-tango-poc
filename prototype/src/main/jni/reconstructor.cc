@@ -26,6 +26,7 @@ namespace tango_augmented_reality {
         hull.pop_back();
         if (hull.size() < 3) {
             LOGE("exit because convex hull has only %d points", hull.size());
+            return;
         }
 
         // CALCULATE DELAUNAY TRIANGULATION
