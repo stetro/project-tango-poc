@@ -83,7 +83,7 @@ namespace tango_augmented_reality {
         // last convex hull of the best supporting plane
         std::vector <glm::vec3> last_convex_hull;
         // how many random samples we're going to test
-        int ransac_iterations = 10;
+        int ransac_iterations = 20;
         // threshold between plane and point to count a point as supporting
         float ransac_threshold = 0.05;
         // amount of points, which should support the plane model to be sufficient
