@@ -205,6 +205,8 @@ namespace tango_augmented_reality {
         // as close as possible.
         TangoCameraIntrinsics color_camera_intrinsics_;
 
+        TangoCameraIntrinsics depth_camera_intrinsics_;
+
         // Tango service version string.
         std::string tango_core_version_string_;
 

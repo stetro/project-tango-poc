@@ -24,17 +24,19 @@ namespace tango_augmented_reality {
 
         chunkSize = 16;
         truncationDistScale = 8.0;
-        weighting = 1.0;
+        weighting = 0.5;
         enableCarving = true;
         carvingDistance = 0.5;
-        chunkResolution = 0.06;
+        chunkResolution = 0.05;
         farClipping = 2.0;
         rayTruncation = 0.5;
+
 
         chiselMap = chisel::ChiselPtr(
                 new chisel::Chisel(Eigen::Vector3i(chunkSize, chunkSize, chunkSize),
                                    chunkResolution, false));
-        chisel::TruncatorPtr truncator(new chisel::ConstantTruncator(truncationDistScale));
+        // float quadratic, float linear, float constant, float scale
+        chisel::TruncatorPtr truncator(new chisel::QuadraticTruncator(0.0019, 0.00152, 0.001504, 8.0));
         chisel::ConstantWeighterPtr weighter(new chisel::ConstantWeighter(weighting));
 
         chisel::Vec3List centroids;
@@ -44,16 +46,37 @@ namespace tango_augmented_reality {
         LOGI("chisel container was created in native environment");
     }
 
-    void ChiselMesh::addPoints(glm::mat4 transformation, std::vector <float> &vertices) {
+    void ChiselMesh::addPoints(glm::mat4 transformation, TangoCameraIntrinsics intrinsics,
+                               TangoXYZij *XYZij) {
 
-        // move jfloatArray vertices to Chisel PointCloud
-        lastPointCloud->Clear();
-        int vertexCount = vertices.size() / 3;
-        LOGE("got %d points from as pointcloud data", vertexCount / 3);
-        for (int i = 0; i < vertexCount; ++i) {
-            chisel::Vec3 vec3(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
-            lastPointCloud->AddPoint(vec3);
+        LOGE("Interpolating depth %d x %d", intrinsics.width, intrinsics.height);
+
+        TangoSupportDepthInterpolator *depth_interpolator;
+        TangoSupport_createDepthInterpolator(&intrinsics, &depth_interpolator);
+
+        TangoSupportDepthBuffer depth_buffer;
+        TangoSupport_initializeDepthBuffer(intrinsics.width, intrinsics.height, &depth_buffer);
+
+
+        TangoPoseData pose;
+
+        pose.orientation[0] = 0;
+        pose.orientation[1] = 0;
+        pose.orientation[2] = 0;
+        pose.orientation[3] = 0;
+
+        pose.translation[0] = 0;
+        pose.translation[1] = 0;
+        pose.translation[2] = 0;
+
+
+        if (TangoSupport_upsampleImageNearest(depth_interpolator, XYZij, &pose, &depth_buffer) !=
+            TANGO_SUCCESS) {
+            LOGE("Error upsampling the image.");
+            return;
         }
+
+        lastDepthImage->SetData(depth_buffer.depths);
 
         chisel::Transform extrinsic = chisel::Transform();
         for (int j = 0; j < 4; ++j) {
@@ -62,13 +85,33 @@ namespace tango_augmented_reality {
             }
         }
 
-        chiselMap->IntegratePointCloud(
+
+        chiselMap->IntegrateDepthScan<float>(
                 projectionIntegrator,
-                *lastPointCloud,
+                lastDepthImage,
                 extrinsic,
-                rayTruncation,
-                farClipping
+                pinHoleCamera
         );
+
+        TangoSupport_freeDepthBuffer(&depth_buffer);
+        TangoSupport_freeDepthInterpolator(depth_interpolator);
+
+    }
+
+    void ChiselMesh::init(TangoCameraIntrinsics intrinsics) {
+
+        lastDepthImage.reset(new chisel::DepthImage<float>(intrinsics.width, intrinsics.height));
+
+        chiselIntrinsics.SetFx(intrinsics.fx);
+        chiselIntrinsics.SetFy(intrinsics.fy);
+        chiselIntrinsics.SetCx(intrinsics.cx);
+        chiselIntrinsics.SetCy(intrinsics.cy);
+
+        pinHoleCamera.SetWidth(intrinsics.width * 1.1);
+        pinHoleCamera.SetHeight(intrinsics.height);
+        pinHoleCamera.SetNearPlane(0.1);
+        pinHoleCamera.SetFarPlane(2.0);
+        pinHoleCamera.SetIntrinsics(chiselIntrinsics);
 
     }
 

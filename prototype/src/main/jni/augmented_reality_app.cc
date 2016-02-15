@@ -259,6 +259,14 @@ namespace tango_augmented_reality {
             LOGE("Failed to get camera intrinsics with error code: %d", ret);
         }
 
+        ret = TangoService_getCameraIntrinsics(
+                TANGO_CAMERA_DEPTH, &depth_camera_intrinsics_);
+        if (ret != TANGO_SUCCESS) {
+            LOGE("Failed to get depth camera intrinsics with error code: %d", ret);
+        } else {
+            main_scene_.SetDepthIntrinsics(depth_camera_intrinsics_);
+        }
+
         image_width = static_cast<float>(color_camera_intrinsics_.width);
         image_height = static_cast<float>(color_camera_intrinsics_.height);
         fx = static_cast<float>(color_camera_intrinsics_.fx);

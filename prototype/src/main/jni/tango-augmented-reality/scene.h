@@ -52,6 +52,8 @@
 #include <tango-augmented-reality/chisel_mesh.h>
 #include <tango-augmented-reality/plane_mesh.h>
 
+#include <tango_support_api.h>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -172,6 +174,10 @@ namespace tango_augmented_reality {
 
         ARMode GetMode() { return mode; }
 
+        void SetDepthIntrinsics(TangoCameraIntrinsics depth_intrinsics_){
+            depth_intrinsics = depth_intrinsics_;
+        }
+
     private:
         // Video overlay drawable object to display the camera image.
         YUVDrawable *yuv_drawable_;
@@ -244,6 +250,10 @@ namespace tango_augmented_reality {
 
         GLuint depth_frame_buffer_;
         GLuint depth_frame_buffer_depth_texture_;
+
+        TangoCameraIntrinsics depth_intrinsics;
+
+        TangoXYZij XYZij;
 
         bool do_filtering = false;
         bool show_occlusion = false;

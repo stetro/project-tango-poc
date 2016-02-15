@@ -102,6 +102,9 @@ namespace tango_augmented_reality {
         cube_->SetRotation(kCubeRotation);
         cube_->SetColor(kCubeColor);
 
+        int32_t max_point_cloud_elements;
+        TangoSupport_createXYZij(20000, &XYZij);
+
         gesture_camera_->SetCameraType(tango_gl::GestureCamera::CameraType::kThirdPerson);
     }
 
@@ -338,6 +341,7 @@ namespace tango_augmented_reality {
         }
         {
             std::lock_guard <std::mutex> lock(depth_mutex_);
+            TangoSupport_copyXYZij(XYZ_ij, &XYZij);
             vertices = points;
         }
     }
@@ -399,7 +403,7 @@ namespace tango_augmented_reality {
             LOGD("Collect Points for Chisel");
             {
                 std::lock_guard <std::mutex> lock(depth_mutex_);
-                chisel_mesh_->addPoints(transformation, vertices);
+                chisel_mesh_->addPoints(transformation, depth_intrinsics, &XYZij);
                 chisel_mesh_->updateVertices();
             }
         } else if (mode == PLANE) {
@@ -416,6 +420,7 @@ namespace tango_augmented_reality {
         mode = (ARMode) id;
         if (mode == TSDF) {
             chisel_mesh_ = new ChiselMesh();
+            chisel_mesh_->init(depth_intrinsics);
         } else if (mode == PLANE) {
             plane_mesh_ = new PlaneMesh();
         }
