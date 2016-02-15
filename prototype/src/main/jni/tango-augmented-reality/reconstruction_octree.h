@@ -52,6 +52,8 @@ namespace tango_augmented_reality {
         ReconstructionOcTree **children_;
         // container for points per node
         std::vector <glm::vec3> points_;
+        // boolean flag if the points got updated
+        bool updated;
 
         // get Octree child index of a given point
         int getChildIndex(glm::vec3 point);

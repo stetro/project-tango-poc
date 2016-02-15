@@ -23,7 +23,7 @@ namespace {
 
     // Far clipping plane of the AR camera.
     const float kArCameraNearClippingPlane = 0.1f;
-    const float kArCameraFarClippingPlane = 10.0f;
+    const float kArCameraFarClippingPlane = 50.0f;
 
 
     // This function routes onXYZijAvailable callbacks to the application object for

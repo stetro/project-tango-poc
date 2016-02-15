@@ -433,7 +433,7 @@ namespace tango_augmented_reality {
             glm::vec4 n1;
             glm::vec4 p2;
             glm::vec4 n2;
-            if (glm::intersectLineSphere(from_ray, to_ray, point, 0.5, p1, n1, p2, n2)) {
+            if (glm::intersectLineSphere(from_ray, to_ray, point, 0.3, p1, n1, p2, n2)) {
                 cube_->SetPosition(glm::vec3(p1));
                 break;
             }

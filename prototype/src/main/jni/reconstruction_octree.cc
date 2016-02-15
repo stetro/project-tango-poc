@@ -45,6 +45,7 @@ namespace tango_augmented_reality {
             LOGE("Out of range!");
             return;
         }
+        updated = true;
         if (depth_ == 0) {
             points_.push_back(point);
         } else {
@@ -79,17 +80,17 @@ namespace tango_augmented_reality {
     }
 
     void ReconstructionOcTree::reconstruct() {
-        if (depth_ == 0) {
+        if (depth_ == 0 && updated) {
             reconstructor->points = points_;
             reconstructor->reconstruct();
-        } else {
+        } else if (updated) {
             for (int i = 0; i < 8; ++i) {
                 if (is_available_[i]) {
-
                     children_[i]->reconstruct();
                 }
             }
         }
+        updated = false;
     }
 
     std::vector <glm::vec3> ReconstructionOcTree::getMesh() {
