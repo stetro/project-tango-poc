@@ -22,12 +22,12 @@ namespace tango_augmented_reality {
         render_mode_ = GL_TRIANGLES;
         SetShader();
 
-        chunkSize = 16;
+        chunkSize = 8;
         truncationDistScale = 8.0;
         weighting = 0.5;
         enableCarving = true;
         carvingDistance = 0.5;
-        chunkResolution = 0.05;
+        chunkResolution = 0.03;
         farClipping = 2.0;
         rayTruncation = 0.5;
 
@@ -107,7 +107,7 @@ namespace tango_augmented_reality {
         chiselIntrinsics.SetCx(intrinsics.cx);
         chiselIntrinsics.SetCy(intrinsics.cy);
 
-        pinHoleCamera.SetWidth(intrinsics.width * 1.1);
+        pinHoleCamera.SetWidth(intrinsics.width);
         pinHoleCamera.SetHeight(intrinsics.height);
         pinHoleCamera.SetNearPlane(0.1);
         pinHoleCamera.SetFarPlane(2.0);

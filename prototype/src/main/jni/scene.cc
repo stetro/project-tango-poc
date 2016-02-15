@@ -248,7 +248,7 @@ namespace tango_augmented_reality {
             // apply opencv filters
             cv::Mat temp_frame(depth_frame.size(), CV_8UC1);
             depth_frame.convertTo(temp_frame, CV_8U, 0.00390625);
-            cv::ximgproc::guidedFilter(rgb_frame, temp_frame, temp_frame, 13, 0.05);
+            cv::ximgproc::jointBilateralFilter(rgb_frame, temp_frame, temp_frame, 13, 20, 5);
             temp_frame.convertTo(depth_frame, CV_16UC1, 255);
 
             // copy back to depth texture
@@ -335,8 +335,10 @@ namespace tango_augmented_reality {
     void Scene::OnXYZijAvailable(const TangoXYZij *XYZ_ij) {
         std::vector <float> points;
         for (int i = 0; i < XYZ_ij->xyz_count; ++i) {
-            points.push_back(XYZ_ij->xyz[i][0] * .9);
-            points.push_back(XYZ_ij->xyz[i][1] * 1.2);
+            XYZ_ij->xyz[i][0] = XYZ_ij->xyz[i][0] * .9;
+            XYZ_ij->xyz[i][1] = XYZ_ij->xyz[i][1] * 1.2;
+            points.push_back(XYZ_ij->xyz[i][0]);
+            points.push_back(XYZ_ij->xyz[i][1]);
             points.push_back(XYZ_ij->xyz[i][2]);
         }
         {
