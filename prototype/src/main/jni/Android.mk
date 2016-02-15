@@ -33,6 +33,7 @@ include $(OPENCV)/OpenCV.mk
 
 LOCAL_MODULE    := libaugmented_reality_jni_example
 LOCAL_SHARED_LIBRARIES += tango_client_api
+LOCAL_SHARED_LIBRARIES += tango_support_api
 
 
 LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
@@ -97,3 +98,4 @@ include $(BUILD_SHARED_LIBRARY)
 
 $(call import-add-path, $(TANGO_C_EXAMPLES))
 $(call import-module,tango_client_api)
+$(call import-module,tango_support_api)
