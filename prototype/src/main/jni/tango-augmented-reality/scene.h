@@ -24,6 +24,8 @@
 #include <string>
 #include <sstream>
 #include <android/log.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Native",__VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG  , "Native",__VA_ARGS__)
@@ -160,9 +162,13 @@ namespace tango_augmented_reality {
 
         void Tap();
 
+        void AddObject(glm::vec3 from, glm::vec3 to);
+
         void SetMode(int id);
-        void SetShowOcclusion(bool show){show_occlusion = show;}
-        void SetDepthFullscreen(bool show){depth_fullscreen= show;}
+
+        void SetShowOcclusion(bool show) { show_occlusion = show; }
+
+        void SetDepthFullscreen(bool show) { depth_fullscreen = show; }
 
         ARMode GetMode() { return mode; }
 

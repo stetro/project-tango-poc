@@ -38,9 +38,9 @@
 #include <tango-augmented-reality/tango_event_data.h>
 
 #define SKIP_INTERVAL 2
+#define INIT_DELAY_SECONDS 1
 
 namespace tango_augmented_reality {
-
 
 
     // AugmentedRealityApp handles the application lifecycle and resources.
@@ -93,6 +93,7 @@ namespace tango_augmented_reality {
         void setMode(int id);
 
         void setShowOcclusion(bool show);
+
         void setDepthFullscreen(bool show);
 
         // Tango service event callback function for pose data. Called when new events
@@ -150,6 +151,8 @@ namespace tango_augmented_reality {
         //
         // @JavaVM java_vm: the Java VM is using from the Java layer.
         void SetJavaVM(JavaVM *java_vm) { java_vm_ = java_vm; }
+
+        void addObject(float x, float y);
 
     private:
         // Get a pose in matrix format with extrinsics in OpenGl space.
@@ -212,9 +215,18 @@ namespace tango_augmented_reality {
         jobject calling_activity_obj_;
         jmethodID on_demand_render_;
 
+        bool init = true;
+        time_t timev;
+
         cv::Mat rgb;
 
         int skip_value = 0;
+        float image_width;
+        float image_height;
+        float fx;
+        float fy;
+        float cx;
+        float cy;
     };
 }  // namespace tango_augmented_reality
 

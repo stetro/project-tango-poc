@@ -375,7 +375,7 @@ namespace tango_augmented_reality {
                 }
             }
         }
-       // flip(rgb_frame, rgb_frame, 0);
+        // flip(rgb_frame, rgb_frame, 0);
     }
 
     void Scene::BindRGBMatAsTexture() {
@@ -419,6 +419,27 @@ namespace tango_augmented_reality {
         } else if (mode == PLANE) {
             plane_mesh_ = new PlaneMesh();
         }
+    }
+
+    void Scene::AddObject(glm::vec3 from, glm::vec3 to) {
+        std::lock_guard <std::mutex> lock(depth_mutex_);
+        glm::mat4 transformation = glm::transpose(point_cloud_transformation);
+        glm::vec4 from_ray = glm::vec4(from, 1) * transformation;
+        glm::vec4 to_ray = glm::vec4(to, 1) * transformation;
+        for (int i = 0; i < vertices.size() / 3; ++i) {
+            glm::vec4 point(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2], 1);
+            point = point * transformation;
+            glm::vec4 p1;
+            glm::vec4 n1;
+            glm::vec4 p2;
+            glm::vec4 n2;
+            if (glm::intersectLineSphere(from_ray, to_ray, point, 0.5, p1, n1, p2, n2)) {
+                cube_->SetPosition(glm::vec3(p1));
+                break;
+            }
+        }
+
+
     }
 
 }  // namespace tango_augmented_reality

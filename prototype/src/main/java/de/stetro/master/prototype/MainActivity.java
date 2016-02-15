@@ -75,6 +75,8 @@ public class MainActivity extends Activity implements
     };
     private ARMode mode = ARMode.POINTCLOUD;
     private GestureDetector detector;
+    private TapGestureDetector tapGestureDetector;
+    private Button addObjectButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,12 +93,18 @@ public class MainActivity extends Activity implements
         // flag from StartActivity.
         setContentView(R.layout.activity_augmented_reality);
 
+        tapGestureDetector = new TapGestureDetector();
+        detector = new GestureDetector(this, tapGestureDetector);
+
         // Buttons for selecting camera view and Set up button click listeners
         findViewById(R.id.first_person_button).setOnClickListener(this);
         findViewById(R.id.third_person_button).setOnClickListener(this);
         findViewById(R.id.top_down_button).setOnClickListener(this);
         findViewById(R.id.show_occlusion).setOnClickListener(this);
         findViewById(R.id.depth_fullscreen).setOnClickListener(this);
+        addObjectButton = (Button) findViewById(R.id.add_object);
+        addObjectButton.setOnClickListener(this);
+        changeAddObjectLabel();
 
         ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
         Button button = (Button) findViewById(R.id.toggle_filter);
@@ -112,8 +120,6 @@ public class MainActivity extends Activity implements
         // Configure OpenGL renderer
         mGLView.setEGLContextClientVersion(2);
 
-        detector = new GestureDetector(this, new TapGestureDetector());
-
         // Set up button click listeners
         mMotionReset.setOnClickListener(this);
 
@@ -122,7 +128,7 @@ public class MainActivity extends Activity implements
         // by the onTextureAvailable callback from the Tango Service in the native
         // code.
         Renderer mRenderer = new Renderer();
-        mGLView.getHolder().setFixedSize(1280/2, 720/2);
+        mGLView.getHolder().setFixedSize(1280 / 2, 720 / 2);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
@@ -209,13 +215,23 @@ public class MainActivity extends Activity implements
                 TangoJNINative.toggleFilter();
                 break;
             case R.id.depth_fullscreen:
-                TangoJNINative.setDepthFullscreen(((CheckBox)v).isChecked());
+                TangoJNINative.setDepthFullscreen(((CheckBox) v).isChecked());
                 break;
             case R.id.show_occlusion:
-                TangoJNINative.setShowOcclusion(((CheckBox)v).isChecked());
+                TangoJNINative.setShowOcclusion(((CheckBox) v).isChecked());
+                break;
+            case R.id.add_object:
+                tapGestureDetector.setAddObject();
+                changeAddObjectLabel();
+                break;
             default:
                 Log.w(TAG, "Unknown button click");
         }
+    }
+
+    private void changeAddObjectLabel() {
+        String additionalLabel = tapGestureDetector.isAddObject() ? "(PICKING)" : "";
+        addObjectButton.setText(String.format(getString(R.string.add_object), additionalLabel));
     }
 
     private void changeFilterButtonLabel(Button button) {
@@ -232,7 +248,11 @@ public class MainActivity extends Activity implements
             float normalizedX = event.getX(0) / mScreenSize.x;
             float normalizedY = event.getY(0) / mScreenSize.y;
             TangoJNINative.onTouchEvent(1, event.getActionMasked(), normalizedX, normalizedY, 0.0f, 0.0f);
+            tapGestureDetector.setX(event.getX() / mGLView.getWidth());
+            tapGestureDetector.setY(event.getY() / mGLView.getHeight());
             detector.onTouchEvent(event);
+            changeAddObjectLabel();
+
         }
         if (pointCount == 2) {
             if (event.getActionMasked() == MotionEvent.ACTION_POINTER_UP) {

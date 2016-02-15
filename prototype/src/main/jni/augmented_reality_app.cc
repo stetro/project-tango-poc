@@ -70,6 +70,15 @@ namespace tango_augmented_reality {
         skip_value++;
         if (skip_value % SKIP_INTERVAL == 0) {
             skip_value = 0;
+            if (init) {
+                time(&timev);
+                init = false;
+            }
+            time_t now;
+            time(&now);
+            if (timev + 1 > now) {
+                return;
+            }
             main_scene_.OnFrameAvailable(buffer);
             RequestRender();
         }
@@ -250,12 +259,12 @@ namespace tango_augmented_reality {
             LOGE("Failed to get camera intrinsics with error code: %d", ret);
         }
 
-        float image_width = static_cast<float>(color_camera_intrinsics_.width);
-        float image_height = static_cast<float>(color_camera_intrinsics_.height);
-        float fx = static_cast<float>(color_camera_intrinsics_.fx);
-        float fy = static_cast<float>(color_camera_intrinsics_.fy);
-        float cx = static_cast<float>(color_camera_intrinsics_.cx);
-        float cy = static_cast<float>(color_camera_intrinsics_.cy);
+        image_width = static_cast<float>(color_camera_intrinsics_.width);
+        image_height = static_cast<float>(color_camera_intrinsics_.height);
+        fx = static_cast<float>(color_camera_intrinsics_.fx);
+        fy = static_cast<float>(color_camera_intrinsics_.fy);
+        cx = static_cast<float>(color_camera_intrinsics_.cx);
+        cy = static_cast<float>(color_camera_intrinsics_.cy);
 
         float image_plane_ratio = image_height / image_width;
         float image_plane_distance = 2.0f * fx / image_width;
@@ -387,6 +396,7 @@ namespace tango_augmented_reality {
     }
 
     void AugmentedRealityApp::setMode(int id) {
+        init = true;
         main_scene_.SetMode(id);
     }
 
@@ -394,8 +404,25 @@ namespace tango_augmented_reality {
         main_scene_.SetShowOcclusion(show);
     }
 
-    void AugmentedRealityApp::setDepthFullscreen(bool show){
+    void AugmentedRealityApp::setDepthFullscreen(bool show) {
         main_scene_.SetDepthFullscreen(show);
+    }
+
+    void AugmentedRealityApp::addObject(float x, float y) {
+        x *= image_width;
+        y *= image_height;
+
+        float Z = kArCameraNearClippingPlane;
+        float Y = (y - cy) / fy * Z;
+        float X = (x - cx) / fx * Z;
+        glm::vec3 from(X, Y, Z);
+
+        Z = kArCameraFarClippingPlane;
+        Y = (y - cy) / fy * Z;
+        X = (x - cx) / fx * Z;
+        glm::vec3 to(X, Y, Z);
+
+        main_scene_.AddObject(from, to);
     }
 
 }  // namespace tango_augmented_reality

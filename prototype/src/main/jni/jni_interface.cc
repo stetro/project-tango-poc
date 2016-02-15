@@ -138,6 +138,12 @@ app.setDepthFullscreen(show);
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_addObject(
+        JNIEnv*, jobject, float x, float y) {
+app.addObject(x,y);
+}
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_prototype_TangoJNINative_onTouchEvent(
     JNIEnv*, jobject, int touch_count, int event, float x0, float y0, float x1,
     float y1) {

@@ -79,4 +79,6 @@ public class TangoJNINative {
     public static native void setShowOcclusion(boolean checked);
 
     public static native void setDepthFullscreen(boolean checked);
+
+    public static native void addObject(float x, float y);
 }
