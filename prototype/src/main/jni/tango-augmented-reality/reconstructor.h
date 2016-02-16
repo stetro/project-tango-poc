@@ -58,6 +58,10 @@ namespace tango_augmented_reality {
         // triggers the mesh reconstruction from points
         void reconstruct();
 
+        // resets the reconstructor
+        void reset();
+
+
     private:
         // the resulting mesh
         std::vector <glm::vec3> mesh_;

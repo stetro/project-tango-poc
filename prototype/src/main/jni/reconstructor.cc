@@ -140,6 +140,11 @@ namespace tango_augmented_reality {
         return support;
     }
 
+    void Reconstructor::reset() {
+        last_convex_hull.clear();
+        mesh_.clear();
+        points.clear();
+    }
 
     int *Reconstructor::ransacPickThreeRandomPoints() {
         int *selected_index = (int *) malloc(sizeof(int) * 3);

@@ -37,6 +37,9 @@ namespace tango_augmented_reality {
         // instance of a reconstructor for mesh generation
         Reconstructor *reconstructor;
 
+        // removes the current plane reconstruction
+        void clear();
+
     private:
         // size of a cubic node
         float range_;

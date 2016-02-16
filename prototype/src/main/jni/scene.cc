@@ -104,7 +104,8 @@ namespace tango_augmented_reality {
 
         int32_t max_point_cloud_elements;
         TangoSupport_createXYZij(20000, &XYZij);
-
+        chisel_mesh_ = new ChiselMesh();
+        plane_mesh_ = new PlaneMesh();
         gesture_camera_->SetCameraType(tango_gl::GestureCamera::CameraType::kThirdPerson);
     }
 
@@ -141,7 +142,7 @@ namespace tango_augmented_reality {
         } else {
             depth_drawable_->SetParent(nullptr);
             depth_drawable_->SetScale(glm::vec3(0.3f, 0.3f, 0.3f));
-            depth_drawable_->SetPosition(glm::vec3(+0.6f, -0.6f, 0.0f));
+            depth_drawable_->SetPosition(glm::vec3(+0.65f, -0.65f, 0.0f));
             depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
         }
 
@@ -196,7 +197,7 @@ namespace tango_augmented_reality {
                 }
                     break;
                 case PLANE: {
-                    std::lock_guard <std::mutex> lock(depth_mutex_);
+                    std::lock_guard <std::mutex> lock(plane_mesh_->render_mutex);
                     plane_mesh_->Render(gesture_camera_->GetProjectionMatrix(),
                                         gesture_camera_->GetViewMatrix());
                 }
@@ -420,11 +421,11 @@ namespace tango_augmented_reality {
 
     void Scene::SetMode(int id) {
         mode = (ARMode) id;
-        if (mode == TSDF) {
-            chisel_mesh_ = new ChiselMesh();
-            chisel_mesh_->init(depth_intrinsics);
-        } else if (mode == PLANE) {
-            plane_mesh_ = new PlaneMesh();
+        switch (mode) {
+            case TSDF:
+                break;
+            case PLANE:
+                break;
         }
     }
 
@@ -445,8 +446,22 @@ namespace tango_augmented_reality {
                 break;
             }
         }
+    }
 
+    void Scene::ClearReconstruction() {
+        switch (mode) {
+            case TSDF:
+                chisel_mesh_->clear();
+                break;
+            case PLANE:
+                plane_mesh_->clear();
+                break;
+        }
+    }
 
+    void Scene::SetDepthIntrinsics(TangoCameraIntrinsics depth_intrinsics_) {
+        depth_intrinsics = depth_intrinsics_;
+        chisel_mesh_->init(depth_intrinsics);
     }
 
 }  // namespace tango_augmented_reality

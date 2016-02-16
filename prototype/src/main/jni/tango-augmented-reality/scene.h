@@ -174,9 +174,9 @@ namespace tango_augmented_reality {
 
         ARMode GetMode() { return mode; }
 
-        void SetDepthIntrinsics(TangoCameraIntrinsics depth_intrinsics_){
-            depth_intrinsics = depth_intrinsics_;
-        }
+        void SetDepthIntrinsics(TangoCameraIntrinsics depth_intrinsics_);
+
+        void ClearReconstruction();
 
     private:
         // Video overlay drawable object to display the camera image.

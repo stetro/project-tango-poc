@@ -18,6 +18,8 @@
 #define TANGO_AUGMENTED_REALITY_PLANE_MESH_H_
 
 #include <tango-gl/drawable_object.h>
+#include <mutex>
+
 #include "tango-augmented-reality/reconstruction_octree.h"
 
 
@@ -35,6 +37,10 @@ namespace tango_augmented_reality {
         void addPoints(glm::mat4 transformation, std::vector <float> &vertices);
 
         void updateVertices();
+
+        std::mutex render_mutex;
+
+        void clear();
 
     protected:
 

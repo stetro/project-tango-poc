@@ -111,6 +111,18 @@ namespace tango_augmented_reality {
     }
 
 
+    void ReconstructionOcTree::clear() {
+        if (depth_ != 0) {
+            for (int i = 0; i < 8; ++i) {
+                if (is_available_[i]) {
+                    children_[i]->clear();
+                }
+            }
+        } else {
+            reconstructor->reset();
+        }
+    }
+
     void ReconstructionOcTree::initChild(glm::vec3 location, int index) {
         glm::vec3 childPosition;
         childPosition.x = (location.x > (position_.x + halfRange_))

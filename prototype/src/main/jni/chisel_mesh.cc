@@ -137,6 +137,13 @@ namespace tango_augmented_reality {
         }
     }
 
+    void ChiselMesh::clear() {
+        std::lock_guard <std::mutex> lock(render_mutex);
+        std::vector <GLfloat> mesh;
+        SetVertices(mesh);
+        chiselMap->Reset();
+    }
+
     ChiselMesh::ChiselMesh(GLenum render_mode) {
         render_mode_ = render_mode;
     }

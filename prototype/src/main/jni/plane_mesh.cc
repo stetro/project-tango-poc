@@ -46,6 +46,7 @@ namespace tango_augmented_reality {
         }
         LOGI("Got %d polygons", mesh.size() / 9);
         if (mesh.size() >= 0) {
+            std::lock_guard <std::mutex> lock(render_mutex);
             SetVertices(mesh);
         }
     }
@@ -67,6 +68,13 @@ namespace tango_augmented_reality {
 
         SetColor(1.0, 0.0, 0.0);
         SetAlpha(0.4);
+    }
+
+    void PlaneMesh::clear() {
+        std::lock_guard <std::mutex> lock(render_mutex);
+        std::vector <GLfloat> mesh;
+        SetVertices(mesh);
+        tree->clear();
     }
 
     void PlaneMesh::Render(const glm::mat4 &projection_mat,

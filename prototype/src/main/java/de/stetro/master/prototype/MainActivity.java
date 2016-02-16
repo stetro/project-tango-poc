@@ -77,6 +77,7 @@ public class MainActivity extends Activity implements
     private GestureDetector detector;
     private TapGestureDetector tapGestureDetector;
     private Button addObjectButton;
+    private Button clearButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +106,9 @@ public class MainActivity extends Activity implements
         addObjectButton = (Button) findViewById(R.id.add_object);
         addObjectButton.setOnClickListener(this);
         changeAddObjectLabel();
+        clearButton = (Button) findViewById(R.id.clear_reconstruction);
+        clearButton.setEnabled(false);
+        clearButton.setOnClickListener(this);
 
         ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
         Button button = (Button) findViewById(R.id.toggle_filter);
@@ -224,6 +228,9 @@ public class MainActivity extends Activity implements
                 tapGestureDetector.setAddObject();
                 changeAddObjectLabel();
                 break;
+            case R.id.clear_reconstruction:
+                TangoJNINative.clearReconstruction();
+                break;
             default:
                 Log.w(TAG, "Unknown button click");
         }
@@ -295,12 +302,15 @@ public class MainActivity extends Activity implements
         switch (view.getId()) {
             case R.id.pointclouds:
                 mode = ARMode.POINTCLOUD;
+                clearButton.setEnabled(false);
                 break;
             case R.id.tsdf:
                 mode = ARMode.TSDF;
+                clearButton.setEnabled(true);
                 break;
             case R.id.plane:
                 mode = ARMode.PLANE;
+                clearButton.setEnabled(true);
                 break;
         }
         Log.i(TAG, "onRadioButtonClicked: mode is now " + mode);

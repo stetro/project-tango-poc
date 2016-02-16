@@ -433,4 +433,8 @@ namespace tango_augmented_reality {
         main_scene_.AddObject(from, to);
     }
 
+    void AugmentedRealityApp::clearReconstruction() {
+    main_scene_.ClearReconstruction();
+    }
+
 }  // namespace tango_augmented_reality

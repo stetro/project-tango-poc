@@ -64,6 +64,7 @@ namespace tango_augmented_reality {
         
         std::mutex render_mutex;
 
+        void clear();
 
     protected:
         tango_gl::BoundingBox *bounding_box_;

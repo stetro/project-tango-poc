@@ -30,7 +30,7 @@
     <string name="plane">PlaneReconstruciton</string>
     <string name="show_occlusion">Show Occlusion</string>
     <string name="depth_fullscreen">Depth Fullscreen</string>
-    <string name="add_object">Add Object %1$s</string>
-
+    <string name="add_object">Set Object %1$s</string>
+    <string name="clear">Clear</string>
 </resources>
 

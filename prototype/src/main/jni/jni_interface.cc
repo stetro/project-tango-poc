@@ -111,6 +111,14 @@ Java_de_stetro_master_prototype_TangoJNINative_render(
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_clearReconstruction(
+    JNIEnv*, jobject) {
+  app.clearReconstruction();
+}
+
+
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_prototype_TangoJNINative_deleteResources(
     JNIEnv*, jobject) {
   app.DeleteResources();
