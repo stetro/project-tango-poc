@@ -33,12 +33,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 // The main activity of the application which shows debug information and a
 // glSurfaceView that renders graphic content.
 public class MainActivity extends Activity implements
-        View.OnClickListener {
+        View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
     // This code indicates success.
     private static final int TANGO_SUCCESS = 0;
@@ -56,6 +58,8 @@ public class MainActivity extends Activity implements
     // This is the rate at which we query our native wrapper around the tango
     // service for pose and event information.
     private static final int UPDATE_UI_INTERVAL_MS = 1000;
+    public static final int DIAMETER_FACTOR = 4;
+    public static final double SGIMA_FACTOR = 5.0;
     boolean do_filtering = false;
     private GLSurfaceView mGLView;
     // A flag to check if the Tango Service is connected. This flag avoids the
@@ -78,6 +82,13 @@ public class MainActivity extends Activity implements
     private TapGestureDetector tapGestureDetector;
     private Button addObjectButton;
     private Button clearButton;
+
+    private int diameter = 5;
+    private double sigma = 2.2;
+    private SeekBar sigmaSeekBar;
+    private SeekBar diameterSeekBar;
+    private TextView diameterTextView;
+    private TextView sigmaTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,8 +118,19 @@ public class MainActivity extends Activity implements
         addObjectButton.setOnClickListener(this);
         changeAddObjectLabel();
         clearButton = (Button) findViewById(R.id.clear_reconstruction);
-        clearButton.setEnabled(false);
+        clearButton.setVisibility(View.INVISIBLE);
         clearButton.setOnClickListener(this);
+
+        sigmaSeekBar = (SeekBar) findViewById(R.id.sigma_seek_bar);
+        sigmaSeekBar.setOnSeekBarChangeListener(this);
+        sigmaSeekBar.setProgress((int) (sigma * SGIMA_FACTOR));
+        diameterSeekBar = (SeekBar) findViewById(R.id.diameter_seek_bar);
+        diameterSeekBar.setOnSeekBarChangeListener(this);
+        diameterSeekBar.setProgress(diameter * DIAMETER_FACTOR);
+        sigmaTextView = (TextView) findViewById(R.id.sigma_text);
+        sigmaTextView.setText(String.valueOf(sigma));
+        diameterTextView = (TextView) findViewById(R.id.diameter_text);
+        diameterTextView.setText(String.valueOf(diameter));
 
         ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
         Button button = (Button) findViewById(R.id.toggle_filter);
@@ -243,6 +265,11 @@ public class MainActivity extends Activity implements
 
     private void changeFilterButtonLabel(Button button) {
         button.setText(String.format(getString(R.string.filter), (do_filtering) ? "ON" : "OFF"));
+        if (do_filtering) {
+            findViewById(R.id.filter_controls).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.filter_controls).setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
@@ -302,19 +329,44 @@ public class MainActivity extends Activity implements
         switch (view.getId()) {
             case R.id.pointclouds:
                 mode = ARMode.POINTCLOUD;
-                clearButton.setEnabled(false);
+                clearButton.setVisibility(View.INVISIBLE);
                 break;
             case R.id.tsdf:
                 mode = ARMode.TSDF;
-                clearButton.setEnabled(true);
+                clearButton.setVisibility(View.VISIBLE);
                 break;
             case R.id.plane:
                 mode = ARMode.PLANE;
-                clearButton.setEnabled(true);
+                clearButton.setVisibility(View.VISIBLE);
                 break;
         }
         Log.i(TAG, "onRadioButtonClicked: mode is now " + mode);
         TangoJNINative.setMode(mode.id());
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (seekBar.equals(sigmaSeekBar)) {
+            sigma = (double) progress / SGIMA_FACTOR;
+            if (sigmaTextView != null)
+                sigmaTextView.setText(String.valueOf(sigma));
+        }
+        if (seekBar.equals(diameterSeekBar)) {
+            diameter = progress / DIAMETER_FACTOR;
+            if (diameterTextView != null)
+                diameterTextView.setText(String.valueOf(diameter));
+        }
+        TangoJNINative.setFilterSettings(diameter, sigma);
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
     }
 
     enum ARMode {

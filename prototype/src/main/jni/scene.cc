@@ -19,6 +19,12 @@
 
 
 namespace {
+    long long currentTimeInMilliseconds() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
+    }
+
     // We want to represent the device properly with respect to the ground so we'll
     // add an offset in z to our origin. We'll set this offset to 1.3 meters based
     // on the average height of a human standing with a Tango device. This allows us
@@ -249,7 +255,10 @@ namespace tango_augmented_reality {
             // apply opencv filters
             cv::Mat temp_frame(depth_frame.size(), CV_8UC1);
             depth_frame.convertTo(temp_frame, CV_8U, 0.00390625);
-            cv::ximgproc::jointBilateralFilter(rgb_frame, temp_frame, temp_frame, 13, 20, 5);
+            long long before = currentTimeInMilliseconds();
+            cv::ximgproc::guidedFilter(rgb_frame, temp_frame, temp_frame, diameter, sigma);
+            long long after = currentTimeInMilliseconds();
+            LOGD("%lld miliseconds for filtering", after - before);
             temp_frame.convertTo(depth_frame, CV_16UC1, 255);
 
             // copy back to depth texture
@@ -366,34 +375,21 @@ namespace tango_augmented_reality {
                     x_index = j - 1;
                 }
                 size_t rgb_index = (i * yuv_width_ + j) * 3;
-                if (do_filtering) {
-                    cv::Vec3b rgb_dot;
-                    Yuv2Rgb(yuv_buffer_[i * yuv_width_ + j],
-                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
-                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
-                            &rgb_dot[0], &rgb_dot[1], &rgb_dot[2]);
-                    rgb_frame.at<cv::Vec3b>(i / x_factor, j / y_factor) = rgb_dot;
-                } else {
-                    Yuv2Rgb(yuv_buffer_[i * yuv_width_ + j],
-                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
-                            yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
-                            &rgb_buffer_[rgb_index], &rgb_buffer_[rgb_index + 1],
-                            &rgb_buffer_[rgb_index + 2]);
-                }
+                cv::Vec3b rgb_dot;
+                Yuv2Rgb(yuv_buffer_[i * yuv_width_ + j],
+                        yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index + 1],
+                        yuv_buffer_[uv_buffer_offset_ + (i / 2) * yuv_width_ + x_index],
+                        &rgb_dot[0], &rgb_dot[1], &rgb_dot[2]);
+                rgb_frame.at<cv::Vec3b>(i / x_factor, j / y_factor) = rgb_dot;
             }
         }
-        // flip(rgb_frame, rgb_frame, 0);
+        flip(rgb_frame, rgb_frame, 0);
     }
 
     void Scene::BindRGBMatAsTexture() {
         glBindTexture(GL_TEXTURE_2D, yuv_drawable_->GetTextureId());
-        if (do_filtering) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
-                         GL_UNSIGNED_BYTE, rgb_frame.ptr());
-        } else {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, yuv_width_, yuv_height_, 0, GL_RGB,
-                         GL_UNSIGNED_BYTE, rgb_buffer_.data());
-        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgb_frame.cols, rgb_frame.rows, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, rgb_frame.ptr());
     }
 
     void Scene::ToggleFilter() {
@@ -463,5 +459,6 @@ namespace tango_augmented_reality {
         depth_intrinsics = depth_intrinsics_;
         chisel_mesh_->init(depth_intrinsics);
     }
+
 
 }  // namespace tango_augmented_reality

@@ -83,4 +83,6 @@ public class TangoJNINative {
     public static native void addObject(float x, float y);
 
     public static native void clearReconstruction();
+
+    public static native void setFilterSettings(int diameter, double sigma);
 }

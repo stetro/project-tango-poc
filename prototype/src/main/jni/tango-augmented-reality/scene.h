@@ -26,6 +26,7 @@
 #include <android/log.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <sys/time.h>
 
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Native",__VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG  , "Native",__VA_ARGS__)
@@ -178,6 +179,11 @@ namespace tango_augmented_reality {
 
         void ClearReconstruction();
 
+        void SetFilterSettings(int diameter_, double sigma_) {
+            diameter = diameter_;
+            sigma = sigma_;
+        };
+
     private:
         // Video overlay drawable object to display the camera image.
         YUVDrawable *yuv_drawable_;
@@ -254,6 +260,9 @@ namespace tango_augmented_reality {
         TangoCameraIntrinsics depth_intrinsics;
 
         TangoXYZij XYZij;
+
+        int diameter = 5;
+        double sigma = 2.5;
 
         bool do_filtering = false;
         bool show_occlusion = false;

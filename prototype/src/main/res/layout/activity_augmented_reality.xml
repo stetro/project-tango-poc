@@ -14,16 +14,16 @@
    limitations under the License.
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="@android:color/background_dark">
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/background_dark">
 
     <android.opengl.GLSurfaceView
         android:id="@+id/gl_surface_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
-        android:layout_gravity="top" />
+        android:layout_gravity="top"/>
 
     <RadioGroup
         android:id="@+id/radioGroup"
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
             android:padding="10dp"
-            android:text="@string/pointclouds" />
+            android:text="@string/pointclouds"/>
 
         <RadioButton
             android:id="@+id/tsdf"
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
             android:padding="10dp"
-            android:text="@string/tsdf" />
+            android:text="@string/tsdf"/>
 
         <RadioButton
             android:id="@+id/plane"
@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
             android:padding="10dp"
-            android:text="@string/plane" />
+            android:text="@string/plane"/>
     </RadioGroup>
 
     <Button
@@ -72,7 +72,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="5dp"
         android:layout_marginTop="65dp"
-        android:text="@string/first_person" />
+        android:text="@string/first_person"/>
 
     <Button
         android:id="@+id/top_down_button"
@@ -82,7 +82,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="5dp"
         android:layout_marginTop="110dp"
-        android:text="@string/top_down" />
+        android:text="@string/top_down"/>
 
     <Button
         android:id="@+id/third_person_button"
@@ -92,65 +92,64 @@
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="5dp"
         android:layout_marginTop="155dp"
-        android:text="@string/third_person" />
+        android:text="@string/third_person"/>
 
     <Button
-        android:id="@+id/resetmotion"
+        android:id="@+id/toggle_filter"
         style="@style/Widget.AppCompat.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
         android:layout_marginStart="5dp"
-        android:text="@string/reset" />
+        android:text="@string/filter"/>
 
     <Button
-        android:id="@+id/toggle_filter"
+        android:id="@+id/resetmotion"
         style="@style/Widget.AppCompat.Button"
-        android:layout_width="120dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="5dp"
-        android:text="@string/filter" />
+        android:text="@string/reset"/>
 
     <Button
         android:id="@+id/add_object"
         style="@style/Widget.AppCompat.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/toggle_filter"
         android:layout_alignParentStart="true"
+        android:layout_below="@id/resetmotion"
         android:layout_marginStart="5dp"
-        android:text="@string/add_object" />
+        android:text="@string/add_object"/>
 
     <Button
         android:id="@+id/clear_reconstruction"
-        android:enabled="false"
         style="@style/Widget.AppCompat.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/add_object"
         android:layout_alignParentStart="true"
+        android:layout_below="@id/add_object"
         android:layout_marginStart="5dp"
-        android:text="@string/clear" />
+        android:text="@string/clear"/>
 
     <LinearLayout
         android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
         android:layout_below="@+id/third_person_button"
         android:layout_marginTop="20dp"
         android:background="@drawable/rounded"
-        android:layout_alignParentEnd="true"
         android:orientation="vertical"
-        android:padding="5dp"
-        android:layout_height="wrap_content">
+        android:padding="5dp">
 
         <CheckBox
             android:id="@+id/show_occlusion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/show_occlusion"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"/>
 
         <CheckBox
             android:id="@+id/depth_fullscreen"
@@ -158,7 +157,69 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="@string/depth_fullscreen"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/filter_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/toggle_filter"
+        android:layout_marginBottom="5dp"
+        android:layout_toEndOf="@id/toggle_filter"
+        android:background="@drawable/rounded"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="@string/diameter_value"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <SeekBar
+                android:id="@+id/diameter_seek_bar"
+                android:layout_width="400dp"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/diameter_text"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="5dp"
+                android:textColor="@android:color/black"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="@string/sigma_value"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <SeekBar
+                android:id="@+id/sigma_seek_bar"
+                android:layout_width="400dp"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/sigma_text"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="5dp"
+                android:textColor="@android:color/black"/>
+        </LinearLayout>
+
     </LinearLayout>
 
 

@@ -156,6 +156,8 @@ namespace tango_augmented_reality {
 
         void clearReconstruction();
 
+        void setFilterSettings(int diameter, double sigma);
+
     private:
         // Get a pose in matrix format with extrinsics in OpenGl space.
         //

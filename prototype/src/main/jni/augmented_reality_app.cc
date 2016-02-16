@@ -434,7 +434,11 @@ namespace tango_augmented_reality {
     }
 
     void AugmentedRealityApp::clearReconstruction() {
-    main_scene_.ClearReconstruction();
+        main_scene_.ClearReconstruction();
+    }
+
+    void AugmentedRealityApp::setFilterSettings(int diameter, double sigma) {
+        main_scene_.SetFilterSettings(diameter, sigma);
     }
 
 }  // namespace tango_augmented_reality

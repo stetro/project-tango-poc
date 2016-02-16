@@ -109,6 +109,11 @@ Java_de_stetro_master_prototype_TangoJNINative_render(
     JNIEnv*, jobject) {
   app.Render();
 }
+JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_setFilterSettings(
+    JNIEnv*, jobject, jint diameter, jdouble sigma) {
+  app.setFilterSettings(diameter, sigma);
+}
 
 JNIEXPORT void JNICALL
 Java_de_stetro_master_prototype_TangoJNINative_clearReconstruction(

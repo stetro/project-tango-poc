@@ -31,6 +31,9 @@
     <string name="show_occlusion">Show Occlusion</string>
     <string name="depth_fullscreen">Depth Fullscreen</string>
     <string name="add_object">Set Object %1$s</string>
-    <string name="clear">Clear</string>
+    <string name="clear">Clear Reconstruction</string>
+    <string name="diameter_value">Radius of Guided Filter:</string>
+    <string name="sigma_value">Regularization term of Guided Filter:</string>
+
 </resources>
 
