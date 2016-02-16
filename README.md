@@ -5,6 +5,7 @@
 > Optimization of AR applications considering the depth information with Googles project tango
 
 ## Table of Content
+* [Final Prototoype](https://github.com/stetro/project-tango-poc#final-prototype)
 * [Augmented Reality Demo](https://github.com/stetro/project-tango-poc#augmented-reality-ar)
 * [Pointcloud Extraction](https://github.com/stetro/project-tango-poc#pointcloud-app-pc)
 * [Plane based Reconstruction](https://github.com/stetro/project-tango-poc#plane-based-reconstruction-construct)
@@ -13,6 +14,20 @@
 * [Unity Marching Cubes AR Demo](https://github.com/stetro/project-tango-poc#unity-implementierung-unity)
 * [OpenCV Depthmap Generation and Filtering](https://github.com/stetro/project-tango-poc#opencv-depthmap-generation-and-filtering)
 * [OpenCV Depthmap Filtering for AR](https://github.com/stetro/project-tango-poc#opencv-depthmap-filtering-for-ar)
+
+## Final Prototype
+
+* depthmap rendering with 3 different reconstruction mechanisms
+	* pointcloud projection
+	* tsdf reconstruction
+	* plane reconstruction
+* using depthmap as Z-Buffer (`GL_DEPTH_COMPONENT`) for augmented reality occlustion
+
+![final_overview](img/final-overview.png)
+
+* optional OpenCV `guided filtering` with settings possible
+
+![filter](img/final-filter.png)
 
 ## Augmented Reality (ar/)
 * AR Camera matching intrinsics
