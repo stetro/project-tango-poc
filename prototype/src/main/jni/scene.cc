@@ -190,7 +190,7 @@ namespace tango_augmented_reality {
                 }
                     break;
                 case TSDF: {
-                    std::lock_guard <std::mutex> lock(depth_mutex_);
+                    std::lock_guard <std::mutex> lock(chisel_mesh_->render_mutex);
                     chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(),
                                          gesture_camera_->GetViewMatrix());
                 }
@@ -223,7 +223,7 @@ namespace tango_augmented_reality {
             }
                 break;
             case TSDF: {
-                std::lock_guard <std::mutex> lock(depth_mutex_);
+                std::lock_guard <std::mutex> lock(chisel_mesh_->render_mutex);
                 chisel_mesh_->Render(gesture_camera_->GetProjectionMatrix(),
                                      gesture_camera_->GetViewMatrix());
             }

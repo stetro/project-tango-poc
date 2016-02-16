@@ -23,6 +23,8 @@
 
 #include <Eigen/Core>
 
+#include<mutex>
+
 #include <open_chisel/Chisel.h>
 #include <open_chisel/camera/DepthImage.h>
 #include <open_chisel/ProjectionIntegrator.h>
@@ -59,6 +61,9 @@ namespace tango_augmented_reality {
         void addPoints(glm::mat4 transformation, TangoCameraIntrinsics intrinsics, TangoXYZij *XYZij);
 
         void updateVertices();
+        
+        std::mutex render_mutex;
+
 
     protected:
         tango_gl::BoundingBox *bounding_box_;
@@ -80,6 +85,7 @@ namespace tango_augmented_reality {
 
         chisel::Intrinsics chiselIntrinsics;
         chisel::PinholeCamera pinHoleCamera;
+
 
     };
 }  // namespace tango_augmented_reality

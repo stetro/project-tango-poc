@@ -130,7 +130,11 @@ namespace tango_augmented_reality {
             }
         }
         LOGI("Got %d polygons", mesh.size() / 3);
-        SetVertices(mesh);
+
+        {
+            std::lock_guard <std::mutex> lock(render_mutex);
+            SetVertices(mesh);
+        }
     }
 
     ChiselMesh::ChiselMesh(GLenum render_mode) {
