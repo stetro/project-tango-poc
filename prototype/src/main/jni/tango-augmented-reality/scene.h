@@ -184,6 +184,8 @@ namespace tango_augmented_reality {
             sigma = sigma_;
         };
 
+        void joyStick(double angle, double power);
+
     private:
         // Video overlay drawable object to display the camera image.
         YUVDrawable *yuv_drawable_;
@@ -233,6 +235,7 @@ namespace tango_augmented_reality {
 
         GLenum gl_depth_format_;
         int cv_depth_format_;
+        double power_ = 0.0;
 
 
         size_t yuv_width_;

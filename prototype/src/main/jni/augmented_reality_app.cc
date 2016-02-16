@@ -441,4 +441,8 @@ namespace tango_augmented_reality {
         main_scene_.SetFilterSettings(diameter, sigma);
     }
 
+    void AugmentedRealityApp::joyStick(double angle, double power) {
+        main_scene_.joyStick(angle, power);
+    }
+
 }  // namespace tango_augmented_reality

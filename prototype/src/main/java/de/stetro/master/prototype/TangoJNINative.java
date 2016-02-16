@@ -85,4 +85,6 @@ public class TangoJNINative {
     public static native void clearReconstruction();
 
     public static native void setFilterSettings(int diameter, double sigma);
+
+    public static native void joyStick(double angle, double power);
 }

@@ -158,6 +158,8 @@ namespace tango_augmented_reality {
 
         void setFilterSettings(int diameter, double sigma);
 
+        void joyStick(double angle, double power);
+
     private:
         // Get a pose in matrix format with extrinsics in OpenGl space.
         //

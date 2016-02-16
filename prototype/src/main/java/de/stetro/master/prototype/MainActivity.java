@@ -37,10 +37,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.erz.joysticklibrary.JoyStick;
+
 // The main activity of the application which shows debug information and a
 // glSurfaceView that renders graphic content.
 public class MainActivity extends Activity implements
-        View.OnClickListener, SeekBar.OnSeekBarChangeListener {
+        View.OnClickListener, SeekBar.OnSeekBarChangeListener, JoyStick.JoyStickListener {
 
     // This code indicates success.
     private static final int TANGO_SUCCESS = 0;
@@ -89,6 +91,7 @@ public class MainActivity extends Activity implements
     private SeekBar diameterSeekBar;
     private TextView diameterTextView;
     private TextView sigmaTextView;
+    private JoyStick joyStick;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,6 +117,8 @@ public class MainActivity extends Activity implements
         findViewById(R.id.top_down_button).setOnClickListener(this);
         findViewById(R.id.show_occlusion).setOnClickListener(this);
         findViewById(R.id.depth_fullscreen).setOnClickListener(this);
+        joyStick = (JoyStick) findViewById(R.id.joystick);
+        joyStick.setListener(this);
         addObjectButton = (Button) findViewById(R.id.add_object);
         addObjectButton.setOnClickListener(this);
         changeAddObjectLabel();
@@ -367,6 +372,11 @@ public class MainActivity extends Activity implements
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
 
+    }
+
+    @Override
+    public void onMove(JoyStick joyStick, double angle, double power) {
+        TangoJNINative.joyStick(angle, power);
     }
 
     enum ARMode {

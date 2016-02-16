@@ -130,6 +130,12 @@ Java_de_stetro_master_prototype_TangoJNINative_deleteResources(
 }
 
 JNIEXPORT void JNICALL
+Java_de_stetro_master_prototype_TangoJNINative_joyStick(
+    JNIEnv*, jobject, double angle, double power) {
+  app.joyStick(angle, power);
+}
+
+JNIEXPORT void JNICALL
 Java_de_stetro_master_prototype_TangoJNINative_setCamera(
     JNIEnv*, jobject, int camera_index) {
   using namespace tango_gl;

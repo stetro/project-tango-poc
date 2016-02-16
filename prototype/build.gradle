@@ -39,6 +39,7 @@ dependencies {
     compile project(':utils')
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.github.erz05:JoyStick:fcd19c2704'
     compile('com.afollestad.material-dialogs:core:0.8.5.2@aar') {
         transitive = true
     }

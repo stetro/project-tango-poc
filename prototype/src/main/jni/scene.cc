@@ -38,9 +38,9 @@ namespace {
     const tango_gl::Color kGridColor(0.85f, 0.85f, 0.85f);
 
     // Some property for the AR cube.
-    const glm::quat kCubeRotation = glm::quat(0.0f, 0.0f, 1.0f, 0.0f);
-    const glm::vec3 kCubePosition = glm::vec3(0.0f, 0.0f, -1.0f);
-    const glm::vec3 kCubeScale = glm::vec3(0.05f, 0.05f, 0.05f);
+    glm::quat kCubeRotation = glm::quat(0.0f, 0.0f, 1.0f, 0.0f);
+    glm::vec3 kCubePosition = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 kCubeScale = glm::vec3(0.05f, 0.05f, 0.1f);
     const tango_gl::Color kCubeColor(1.0f, 0.f, 0.f);
 
     inline void Yuv2Rgb(uint8_t yValue, uint8_t uValue, uint8_t vValue, uint8_t *r,
@@ -138,6 +138,16 @@ namespace tango_augmented_reality {
     void Scene::Render(const glm::mat4 &cur_pose_transformation) {
         if (!is_yuv_texture_available_) {
             return;
+        }
+
+
+        if (power_ > 0.0) {
+            glm::vec3 translation = glm::vec3(0, 0, power_ / 5000) * kCubeRotation;
+
+            kCubePosition = glm::vec3(translation.x + kCubePosition.x,
+                                      translation.y + kCubePosition.y,
+                                      translation.z + kCubePosition.z);
+            cube_->SetPosition(kCubePosition);
         }
 
         if (depth_fullscreen) {
@@ -279,7 +289,7 @@ namespace tango_augmented_reality {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // render rest of drawables
-        grid_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
+//        grid_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
         cube_->Render(ar_camera_projection_matrix_, gesture_camera_->GetViewMatrix());
 
     }
@@ -437,8 +447,10 @@ namespace tango_augmented_reality {
             glm::vec4 n1;
             glm::vec4 p2;
             glm::vec4 n2;
-            if (glm::intersectLineSphere(from_ray, to_ray, point, 0.3, p1, n1, p2, n2)) {
-                cube_->SetPosition(glm::vec3(p1));
+            if (glm::intersectLineSphere(from_ray, to_ray, point, 0.1, p1, n1, p2, n2)) {
+                p1.y = p1.y + 0.1;
+                kCubePosition = glm::vec3(p1);
+                cube_->SetPosition(kCubePosition);
                 break;
             }
         }
@@ -460,5 +472,13 @@ namespace tango_augmented_reality {
         chisel_mesh_->init(depth_intrinsics);
     }
 
+
+    void Scene::joyStick(double angle, double power) {
+        if (angle != 0.0) {
+            kCubeRotation = glm::quat(glm::vec3(0, angle + M_PI / 4, 0));
+            cube_->SetRotation(glm::inverse(kCubeRotation));
+        }
+        power_ = power;
+    }
 
 }  // namespace tango_augmented_reality

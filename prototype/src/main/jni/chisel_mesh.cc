@@ -27,7 +27,7 @@ namespace tango_augmented_reality {
         weighting = 0.5;
         enableCarving = true;
         carvingDistance = 0.5;
-        chunkResolution = 0.03;
+        chunkResolution = 0.01;
         farClipping = 2.0;
         rayTruncation = 0.5;
 
