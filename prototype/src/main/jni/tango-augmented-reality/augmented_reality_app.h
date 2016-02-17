@@ -38,7 +38,7 @@
 #include <tango-augmented-reality/tango_event_data.h>
 
 #define SKIP_INTERVAL 2
-#define INIT_DELAY_SECONDS 1
+#define INIT_DELAY_SECONDS 2
 
 namespace tango_augmented_reality {
 

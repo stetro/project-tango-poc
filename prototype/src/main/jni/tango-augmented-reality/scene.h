@@ -40,7 +40,6 @@
 #include <tango-gl/gesture_camera.h>
 #include <tango-gl/grid.h>
 #include <tango-gl/frustum.h>
-#include <tango-gl/cube.h>
 #include <tango-gl/trace.h>
 #include <tango-gl/transform.h>
 #include <tango-gl/util.h>
@@ -52,15 +51,18 @@
 #include <tango-augmented-reality/depth_drawable.h>
 #include <tango-augmented-reality/chisel_mesh.h>
 #include <tango-augmented-reality/plane_mesh.h>
-
+#include <tango-augmented-reality/ar_object.h>
 #include <tango_support_api.h>
 
 #include <opencv2/core/core.hpp>
+
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/ximgproc.hpp>
 #include <opencv2/videostab.hpp>
 #include <opencv2/photo.hpp>
+
+
 
 namespace tango_augmented_reality {
 
@@ -208,7 +210,7 @@ namespace tango_augmented_reality {
         tango_gl::Trace *trace_;
 
         // A cub placed at (0.0f, 0.0f, -1.0f) location.
-        tango_gl::Cube *cube_;
+        ArObject *cube_;
 
         ChiselMesh *chisel_mesh_;
 

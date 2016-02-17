@@ -38,9 +38,9 @@ namespace {
     const tango_gl::Color kGridColor(0.85f, 0.85f, 0.85f);
 
     // Some property for the AR cube.
-    glm::quat kCubeRotation = glm::quat(0.0f, 0.0f, 1.0f, 0.0f);
+    glm::quat kCubeRotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec3 kCubePosition = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 kCubeScale = glm::vec3(0.05f, 0.05f, 0.1f);
+    glm::vec3 kCubeScale = glm::vec3(0.10f, 0.10f, 0.10f);
     const tango_gl::Color kCubeColor(1.0f, 0.f, 0.f);
 
     inline void Yuv2Rgb(uint8_t yValue, uint8_t uValue, uint8_t vValue, uint8_t *r,
@@ -96,7 +96,7 @@ namespace tango_augmented_reality {
         frustum_ = new tango_gl::Frustum();
         trace_ = new tango_gl::Trace();
         grid_ = new tango_gl::Grid();
-        cube_ = new tango_gl::Cube();
+        cube_ = new ArObject();
         point_cloud_drawable_ = new PointCloudDrawable();
 
         trace_->SetColor(kTraceColor);
@@ -142,7 +142,7 @@ namespace tango_augmented_reality {
 
 
         if (power_ > 0.0) {
-            glm::vec3 translation = glm::vec3(0, 0, power_ / 5000) * kCubeRotation;
+            glm::vec3 translation = glm::vec3(0, power_ / 5000, 0) * kCubeRotation;
 
             kCubePosition = glm::vec3(translation.x + kCubePosition.x,
                                       translation.y + kCubePosition.y,
@@ -154,7 +154,7 @@ namespace tango_augmented_reality {
             depth_drawable_->SetParent(nullptr);
             depth_drawable_->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
             depth_drawable_->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-            depth_drawable_->SetRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            depth_drawable_->SetRotation(glm::quat(0.0f, 0.0f, 1.0f, 0.0f));
         } else {
             depth_drawable_->SetParent(nullptr);
             depth_drawable_->SetScale(glm::vec3(0.3f, 0.3f, 0.3f));
@@ -475,7 +475,7 @@ namespace tango_augmented_reality {
 
     void Scene::joyStick(double angle, double power) {
         if (angle != 0.0) {
-            kCubeRotation = glm::quat(glm::vec3(0, angle + M_PI / 4, 0));
+            kCubeRotation = glm::quat(glm::vec3(M_PI / 2, 0, angle));
             cube_->SetRotation(glm::inverse(kCubeRotation));
         }
         power_ = power;

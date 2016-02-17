@@ -76,7 +76,7 @@ namespace tango_augmented_reality {
             }
             time_t now;
             time(&now);
-            if (timev + 1 > now) {
+            if (timev + INIT_DELAY_SECONDS > now) {
                 return;
             }
             main_scene_.OnFrameAvailable(buffer);

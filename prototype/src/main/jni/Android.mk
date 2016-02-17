@@ -69,6 +69,7 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    $(CHISEL)/src/io/PLY.cpp \
                    $(CHISEL)/src/geometry/Raycast.cpp \
                    delaunay.c \
+                   ar_object.cc \
                    augmented_reality_app.cc \
                    jni_interface.cc \
                    pose_data.cc \
