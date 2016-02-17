@@ -23,7 +23,7 @@
 
 #include <Eigen/Core>
 
-#include<mutex>
+#include <mutex>
 
 #include <open_chisel/Chisel.h>
 #include <open_chisel/camera/DepthImage.h>
@@ -86,7 +86,6 @@ namespace tango_augmented_reality {
 
         chisel::Intrinsics chiselIntrinsics;
         chisel::PinholeCamera pinHoleCamera;
-
 
     };
 }  // namespace tango_augmented_reality

@@ -8,19 +8,25 @@ namespace tango_augmented_reality {
             return;
         }
 
-        // ADD LAST CONVEX HULL IF AVAILABLE
-        if (last_convex_hull.size() > 0) {
-            points.insert(points.end(), last_convex_hull.begin(), last_convex_hull.end());
-            points.insert(points.end(), last_convex_hull.begin(), last_convex_hull.end());
-        }
 
         // RANSAC PLANE DETECTION
         Plane plane = detectPlane();
+
+        // ADD LAST SUPPORTING POINTS IF AVAILABLE
+        if (last_best_supporting_points.size() > 0) {
+            ransac_best_supporting_points.insert(ransac_best_supporting_points.end(), last_best_supporting_points.begin(),
+                          last_best_supporting_points.end());
+            last_best_supporting_points.clear();
+        }
+
         if (ransac_best_supporting_points.size() < 4) {
             LOGE("exit because only %d points in supporting points",
                  ransac_best_supporting_points.size());
             return;
         }
+
+        // SCALE POINTS AROUND CENTROID
+        scaleAroundCentroid(1.01, ransac_best_supporting_points);
 
         // PROJECT SUPPORTING POINTS TO 2D
         std::vector <glm::vec2> projection = project(plane, ransac_best_supporting_points);
@@ -33,7 +39,7 @@ namespace tango_augmented_reality {
             LOGE("exit because convex hull has only %d points", hull.size());
             return;
         }
-        last_convex_hull = project(plane, hull);    // store convex hull for next iteration
+        last_best_supporting_points = ransac_best_supporting_points;    // store convex hull for next iteration
 
         // CALCULATE DELAUNAY TRIANGULATION
         del_point2d_t *delaunay_points = (del_point2d_t *) malloc(
@@ -141,7 +147,7 @@ namespace tango_augmented_reality {
     }
 
     void Reconstructor::reset() {
-        last_convex_hull.clear();
+        last_best_supporting_points.clear();
         mesh_.clear();
         points.clear();
     }
@@ -160,6 +166,17 @@ namespace tango_augmented_reality {
         }
         free(is_selected);
         return selected_index;
+    }
+
+    void Reconstructor::scaleAroundCentroid(float scale, std::vector <glm::vec3> &points) {
+        glm::vec3 centroid;
+        for (int i = 0; i < points.size(); ++i) {
+            centroid = centroid + points[i];
+        }
+        centroid = centroid / points.size();
+        for (int i = 0; i < points.size(); ++i) {
+            points[i] = ((points[i] - centroid) * 1.01) + centroid;
+        }
     }
 
     Plane::Plane(glm::vec3 normal, float distance) :
