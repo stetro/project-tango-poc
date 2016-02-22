@@ -40,7 +40,7 @@ namespace {
     // Some property for the AR cube.
     glm::quat kCubeRotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec3 kCubePosition = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 kCubeScale = glm::vec3(0.15f, 0.15f, 0.15f);
+    glm::vec3 kCubeScale = glm::vec3(0.10f, 0.10f, 0.10f);
     const tango_gl::Color kCubeColor(1.0f, 0.f, 0.f);
 
     inline void Yuv2Rgb(uint8_t yValue, uint8_t uValue, uint8_t vValue, uint8_t *r,
