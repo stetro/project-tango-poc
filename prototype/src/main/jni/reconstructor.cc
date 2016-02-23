@@ -14,8 +14,9 @@ namespace tango_augmented_reality {
 
         // ADD LAST SUPPORTING POINTS IF AVAILABLE
         if (last_best_supporting_points.size() > 0) {
-            ransac_best_supporting_points.insert(ransac_best_supporting_points.end(), last_best_supporting_points.begin(),
-                          last_best_supporting_points.end());
+            ransac_best_supporting_points.insert(ransac_best_supporting_points.end(),
+                                                 last_best_supporting_points.begin(),
+                                                 last_best_supporting_points.end());
             last_best_supporting_points.clear();
         }
 
@@ -41,30 +42,13 @@ namespace tango_augmented_reality {
         }
         last_best_supporting_points = ransac_best_supporting_points;    // store convex hull for next iteration
 
-        // CALCULATE DELAUNAY TRIANGULATION
-        del_point2d_t *delaunay_points = (del_point2d_t *) malloc(
-                sizeof(del_point2d_t) * hull.size());
-        for (int i = 0; i < hull.size(); ++i) {
-            delaunay_points[i] = {hull[i].x, hull[i].y};
-        }
-        delaunay2d_t *result = delaunay2d_from(delaunay_points, hull.size());
-        tri_delaunay2d_t *tri_result = tri_delaunay2d_from(result);
-
-        // PUSH TRIANGLES TO THE CLUSTERS MESH
+        // triangulate convex hull
         std::vector <glm::vec2> mesh_points;
-        for (int k = 0; k < tri_result->num_triangles; ++k) {
-            mesh_points.push_back(glm::vec2(tri_result->points[tri_result->tris[k * 3]].x,
-                                            tri_result->points[tri_result->tris[k * 3]].y));
-            mesh_points.push_back(glm::vec2(tri_result->points[tri_result->tris[k * 3 + 1]].x,
-                                            tri_result->points[tri_result->tris[k * 3 + 1]].y));
-            mesh_points.push_back(glm::vec2(tri_result->points[tri_result->tris[k * 3 + 2]].x,
-                                            tri_result->points[tri_result->tris[k * 3 + 2]].y));
+        for (int i = 0; i < hull.size() - 2; i++) {
+            mesh_points.push_back(hull[0]);
+            mesh_points.push_back(hull[i + 1]);
+            mesh_points.push_back(hull[i + 2]);
         }
-
-        // FREE MEMORY
-        delaunay2d_release(result);
-        tri_delaunay2d_release(tri_result);
-        free(delaunay_points);
 
         // PROJECT MESH POINTS BACK TO 3D
         mesh_.clear();
