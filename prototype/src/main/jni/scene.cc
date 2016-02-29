@@ -196,6 +196,11 @@ namespace tango_augmented_reality {
         }
 
 
+        if ((mode == TSDF || mode == PLANE) &&
+            last_depth_timestamp - last_depth_timestamp_updated > 1.0) {
+            Tap();
+        }
+
         if (show_occlusion) {
             // render reconstructions or pointcloud, depending on mode
             switch (mode) {
@@ -354,6 +359,7 @@ namespace tango_augmented_reality {
 
     void Scene::OnXYZijAvailable(const TangoXYZij *XYZ_ij) {
         std::vector <float> points;
+        last_depth_timestamp = XYZ_ij->timestamp;
         for (int i = 0; i < XYZ_ij->xyz_count; ++i) {
             XYZ_ij->xyz[i][0] = XYZ_ij->xyz[i][0] * .9;
             XYZ_ij->xyz[i][1] = XYZ_ij->xyz[i][1] * 1.2;
@@ -408,6 +414,7 @@ namespace tango_augmented_reality {
 
     void Scene::Tap() {
         glm::mat4 transformation = glm::transpose(point_cloud_transformation);
+        last_depth_timestamp_updated = XYZij.timestamp;
         if (mode == TSDF) {
             LOGD("Collect Points for Chisel");
             {

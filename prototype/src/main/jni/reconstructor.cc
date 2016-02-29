@@ -109,12 +109,50 @@ namespace tango_augmented_reality {
             }
         }
         // 6. apply linear regression to optimize plane with supporting points
-        result = ransacApplyLinearRegression(result);
+        result = ransacApplyLinearRegression(result, ransac_supporting_points);
         return result;
     }
 
-    Plane Reconstructor::ransacApplyLinearRegression(Plane plane) {
-        // TODO: apply linear regression!
+    Plane Reconstructor::ransacApplyLinearRegression(Plane plane, std::vector <glm::vec3> &points) {
+
+        // calculate centroid
+        glm::vec3 centroid;
+        for (int i = 0; i < points.size(); ++i) {
+            centroid += points[i];
+        }
+        centroid = centroid / points.size();
+
+        // calculate covariance matrix
+        Eigen::Matrix3f cv;
+        for (int i = 0; i < points.size(); ++i) {
+            glm::vec3 s = points[i] - centroid;
+            cv(0, 0) += s.x * s.x;
+            cv(1, 0) += s.x * s.y;
+            cv(2, 0) += s.x * s.z;
+            cv(0, 1) += s.y * s.x;
+            cv(1, 1) += s.y * s.y;
+            cv(2, 1) += s.y * s.z;
+            cv(0, 2) += s.z * s.x;
+            cv(1, 2) += s.z * s.y;
+            cv(2, 2) += s.z * s.z;
+        }
+
+        // apply eigenvalue decomposition
+        Eigen::EigenSolver <Eigen::Matrix3f> es(cv);
+        // get eigen vector of smallest eigen value as normal
+//        int min_index = 0;
+//        for (int i = 0; i < 3; ++i) {
+//            if (es.eigenvalues()[i] < es.eigenvalues()[min_index]) {
+//                min_index = i;
+//            }
+//        }
+////        glm::vec3 normal(es.eigenvectors().col(min_index).x,
+//                         es.eigenvectors().col(min_index).y,
+//                         es.eigenvectors().col(min_index).z);
+//        normal = glm::normalize(normal);
+//        plane.normal = normal;
+        // new distance is the cross product of normal and centroid
+//        plane.distance = glm::dot(normal, centroid);
         return plane;
     }
 

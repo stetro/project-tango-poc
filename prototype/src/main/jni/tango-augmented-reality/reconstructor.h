@@ -6,7 +6,8 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <vector>
-#include <vector>
+#include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 #include "convex_hull.h"
 
@@ -81,7 +82,7 @@ namespace tango_augmented_reality {
         int *ransacPickThreeRandomPoints();
 
         // method to apply linear regression with best supporting points and plane
-        Plane ransacApplyLinearRegression(Plane plane);
+        Plane ransacApplyLinearRegression(Plane plane,  std::vector <glm::vec3> &points);
 
         // scales given points around calculated centroid
         void scaleAroundCentroid(float scale, std::vector <glm::vec3> &points);

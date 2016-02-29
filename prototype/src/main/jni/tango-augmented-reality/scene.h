@@ -273,6 +273,9 @@ namespace tango_augmented_reality {
         bool show_occlusion = false;
         bool depth_fullscreen = false;
         ARMode mode = POINTCLOUD;
+
+        double last_depth_timestamp = 0;
+        double last_depth_timestamp_updated = 0;
     };
 }  // namespace tango_augmented_reality
 
