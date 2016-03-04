@@ -1,6 +1,6 @@
 ﻿// <copyright file="TangoMultiCamera.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,22 +28,6 @@ using UnityEngine;
 public class TangoMultiCamera : MonoBehaviour
 {
     /// <summary>
-    /// The different camera types supported by this multi-camera.
-    /// </summary>
-    public enum CameraType
-    {
-        FirstPerson,
-        ThirdPerson,
-        TopDown
-    }
-
-    // UI fields.
-    public const float UI_BUTTON_SIZE_X = 125.0f;
-    public const float UI_BUTTON_SIZE_Y = 65.0f;
-    public const float UI_BUTTON_GAP_X = 5.0f;
-    public const float UI_BUTTON_GAP_Y = 3.0f;
-
-    /// <summary>
     /// The target object to follow.
     /// </summary>
     public GameObject m_targetFollowingObject;
@@ -57,6 +41,12 @@ public class TangoMultiCamera : MonoBehaviour
     /// The default camera type.
     /// </summary>
     public CameraType m_defaultCameraType = CameraType.FirstPerson;
+
+    // UI fields.
+    private const float UI_BUTTON_SIZE_X = 125.0f;
+    private const float UI_BUTTON_SIZE_Y = 65.0f;
+    private const float UI_BUTTON_GAP_X = 5.0f;
+    private const float UI_BUTTON_GAP_Y = 3.0f;
 
     /// <summary>
     /// Scaling factor when doing a pinch to zoom gesture.
@@ -144,6 +134,17 @@ public class TangoMultiCamera : MonoBehaviour
     private Vector3 m_topDownOffsetStart;
 
     /// <summary>
+    /// The different camera types supported by this multi-camera.
+    /// </summary>
+    public enum CameraType
+    {
+        FirstPerson,
+        ThirdPerson,
+        TopDown
+    }
+
+    /// @cond
+    /// <summary>
     /// Start is called on the frame when a script is enabled.
     /// </summary>
     public void Start() 
@@ -181,6 +182,7 @@ public class TangoMultiCamera : MonoBehaviour
                     m_thirdPersonRotationEuler.y = m_thirdPersonRotationEulerStart.y + delta.x;
                 }
             }
+
             if (Input.touchCount == 2)
             {
                 // Multiple touch does pinch to zoom.
@@ -308,6 +310,7 @@ public class TangoMultiCamera : MonoBehaviour
         {
             EnableCamera(CameraType.FirstPerson);
         }
+
         if (GUI.Button(new Rect(Screen.width - UI_BUTTON_SIZE_X - UI_BUTTON_GAP_X, 
                                 Screen.height - ((UI_BUTTON_SIZE_Y + UI_BUTTON_GAP_Y) * 2),
                                 UI_BUTTON_SIZE_X, 
@@ -316,6 +319,7 @@ public class TangoMultiCamera : MonoBehaviour
         {
             EnableCamera(CameraType.ThirdPerson);
         }
+
         if (GUI.Button(new Rect(Screen.width - UI_BUTTON_SIZE_X - UI_BUTTON_GAP_X, 
                                 Screen.height - (UI_BUTTON_SIZE_Y + UI_BUTTON_GAP_Y),
                                 UI_BUTTON_SIZE_X, 
@@ -326,6 +330,7 @@ public class TangoMultiCamera : MonoBehaviour
         }
     }
 
+    /// @endcond
     /// <summary>
     /// Set the active camera type.
     /// </summary>
@@ -347,6 +352,7 @@ public class TangoMultiCamera : MonoBehaviour
             m_topDownOffset.Set(0, 7, 0);
             break;
         }
+
         m_currentCamera = cameraType;
     }
 }

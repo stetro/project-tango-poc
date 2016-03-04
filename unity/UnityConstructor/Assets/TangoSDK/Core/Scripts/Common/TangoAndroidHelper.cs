@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TangoAndroidHelper.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,24 +25,9 @@ using UnityEngine;
 /// </summary>
 public partial class AndroidHelper
 {
-    /// <summary>
-    /// Holds the current and default orientation of the device.
-    /// </summary>
-    public struct TangoDeviceOrientation
-    {
-        /// <summary>
-        /// The default orientation of the device.  This is the "natural" way to hold this device.
-        /// </summary>
-        public DeviceOrientation defaultRotation;
-
-        /// <summary>
-        /// The current orientation of the device.
-        /// </summary>
-        public DeviceOrientation currentRotation;
-    }
+    internal const int TANGO_MINIMUM_VERSION_CODE = 6804;
 
     private const string PERMISSION_REQUEST_ACTIVITY = "com.google.atap.tango.RequestPermissionActivity";
-
     private const string TANGO_APPLICATION_ID = "com.projecttango.tango";
     private const string LAUNCH_INTENT_SIGNATURE = "launchIntent";
     private const string ADF_IMPORT_EXPORT_ACTIVITY = "com.google.atap.tango.RequestImportExportActivity";
@@ -146,6 +131,22 @@ public partial class AndroidHelper
     }
 
     /// <summary>
+    /// Get native android orientation index.
+    /// </summary>
+    /// <returns>Current native andorid orientation.</returns>
+    public static int GetScreenOrientation()
+    {
+        AndroidJavaObject tangoObject = GetTangoHelperObject();
+        
+        if (tangoObject != null)
+        {
+            return tangoObject.Call<int>("getScreenOrientation");
+        }
+        
+        return -1;
+    }
+
+    /// <summary>
     /// Check if the Tango Core package is installed.
     /// </summary>
     /// <returns><c>true</c> if the package is installed; otherwise, <c>false</c>.</returns>
@@ -165,18 +166,27 @@ public partial class AndroidHelper
     }
 
     /// <summary>
+    /// Check if the Tango Core package is up to date.
+    /// </summary>
+    /// <returns><c>true</c> if the Tango Core is up to date; otherwise, <c>false</c>.</returns>
+    public static bool IsTangoCoreUpToDate()
+    {
+        return GetVersionCode(TANGO_APPLICATION_ID) >= TANGO_MINIMUM_VERSION_CODE;
+    }
+
+    /// <summary>
     /// Connects to the TangoCloudService.
     /// </summary>
-    /// <param name="apiKey">API key for making requests to the frontend server.</param>
     /// <returns><c>true</c> if we successfully connect; otherwise, <c>false</c>.</returns>
-    public static bool ConnectCloud(string apiKey)
+    internal static bool ConnectCloud()
     {
         AndroidJavaObject tangoObject = GetTangoHelperObject();
 
         if (tangoObject != null)
         {
-            return tangoObject.Call<bool>("connectCloud", apiKey);
+            return tangoObject.Call<bool>("connectCloud");
         }
+
         return false;
     }
 
@@ -184,7 +194,7 @@ public partial class AndroidHelper
     /// Disconnects from the TangoCloudService.
     /// </summary>
     /// <returns><c>true</c> if we successfully disconnect; otherwise, <c>false</c>.</returns>
-    public static bool DisconnectCloud()
+    internal static bool DisconnectCloud()
     {
         AndroidJavaObject tangoObject = GetTangoHelperObject();
 
@@ -192,6 +202,7 @@ public partial class AndroidHelper
         {
             return tangoObject.Call<bool>("disconnectCloud");
         }
+
         return false;
     }
 
@@ -227,7 +238,6 @@ public partial class AndroidHelper
 
         if (unityActivity != null)
         {
-            int requestCode = 1;
             string[] args = new string[1];
             args[0] = "SOURCE_FILE:" + adfPath;
             unityActivity.Call(LAUNCH_INTENT_SIGNATURE,
@@ -236,5 +246,21 @@ public partial class AndroidHelper
                                args,
                                Tango.Common.TANGO_ADF_IMPORT_REQUEST_CODE);
         }
+    }
+
+    /// <summary>
+    /// Holds the current and default orientation of the device.
+    /// </summary>
+    public struct TangoDeviceOrientation
+    {
+        /// <summary>
+        /// The default orientation of the device.  This is the "natural" way to hold this device.
+        /// </summary>
+        public DeviceOrientation defaultRotation;
+
+        /// <summary>
+        /// The current orientation of the device.
+        /// </summary>
+        public DeviceOrientation currentRotation;
     }
 }

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="AndroidHelper.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,15 @@ public partial class AndroidHelper : MonoBehaviour
 #pragma warning restore 414
 
     private static AndroidLifecycleCallbacks m_callbacks;
+
+    /// <summary>
+    /// The display time length of Android Toast.
+    /// </summary>
+    public enum ToastLength
+    {
+        SHORT = 0x00000000,
+        LONG = 0x00000001
+    }
 
     /// <summary>
     /// Registers for the Android pause event.
@@ -86,6 +95,22 @@ public partial class AndroidHelper : MonoBehaviour
     }
 
     /// <summary>
+    /// Registers for on orientaiton change event.
+    /// </summary>
+    /// <param name="onChanged">Delegate to call when the screen orientation changes.</param>
+    public static void RegisterOnScreenOrientationChangedEvent(OnScreenOrientationChangedEventHandler onChanged)
+    {
+        #if ANDROID_DEVICE
+        if (m_callbacks == null)
+        {
+            _RegisterCallbacks();
+        }
+        
+        m_callbacks.RegisterOnScreenOrientationChanged(onChanged);
+        #endif
+    }
+
+    /// <summary>
     /// Gets the unity activity.
     /// </summary>
     /// <returns>The unity activity.</returns>
@@ -105,6 +130,7 @@ public partial class AndroidHelper : MonoBehaviour
                 m_unityActivity = null;
             }
         }
+
         return m_unityActivity;
         #else
         return null;
@@ -197,7 +223,7 @@ public partial class AndroidHelper : MonoBehaviour
     /// <summary>
     /// Used for performance logging from the Android side.
     /// </summary>
-    /// <param name="message">Message.</param>
+    /// <param name="message">Message string to log.</param>
     public static void PerformanceLog(string message)
     {
         AndroidJavaObject unityActivity = GetUnityActivity();
@@ -292,15 +318,16 @@ public partial class AndroidHelper : MonoBehaviour
         }
     }
 
+    /// DEPRECATED: Use the other two ShowAndroidToastMessage funcitons instead.
     /// <summary>
     /// Shows the android toast message.
     /// </summary>
-    /// <param name="message">Message.</param>
+    /// <param name="message">Message string to show in the toast.</param>
     /// <param name="callFinish">If set to <c>true</c> call finish on the unity activity.</param>
     public static void ShowAndroidToastMessage(string message, bool callFinish)
     {
         ShowAndroidToastMessage(message);
-
+        
         if (callFinish)
         {
             AndroidFinish();
@@ -310,27 +337,20 @@ public partial class AndroidHelper : MonoBehaviour
     /// <summary>
     /// Shows the android toast message.
     /// </summary>
-    /// <param name="message">Message.</param>
+    /// <param name="message">Message string to show in the toast.</param>
     public static void ShowAndroidToastMessage(string message)
     {
-        AndroidJavaObject unityActivity = GetUnityActivity();
-        
-        if (unityActivity != null)
-        {
-            try
-            {
-                AndroidJavaClass toastClass = new AndroidJavaClass("android.widget.Toast");
-                unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
-                {
-                    AndroidJavaObject toastObject = toastClass.CallStatic<AndroidJavaObject>("makeText", unityActivity, message, 0x00000001);
-                    toastObject.Call("show");
-                }));
-            }
-            catch (AndroidJavaException e)
-            {
-                Debug.Log("AndroidJavaException : " + e.Message);
-            }
-        }
+        _ShowAndroidToastMessage(message, ToastLength.LONG);
+    }
+
+    /// <summary>
+    /// Shows the android toast message.
+    /// </summary>
+    /// <param name="message">Message string to show in the toast.</param>
+    /// <param name="length">Toast message time length.</param>
+    public static void ShowAndroidToastMessage(string message, ToastLength length)
+    {
+        _ShowAndroidToastMessage(message, length);
     }
 
     /// <summary>
@@ -369,6 +389,33 @@ public partial class AndroidHelper : MonoBehaviour
             Debug.Log("AndroidJavaException : " + e.Message);
         }
         #endif
+    }
+
+    /// <summary>
+    /// Shows the android toast message.
+    /// </summary>
+    /// <param name="message">Message string to show in the toast.</param>
+    /// <param name="length">Toast message time length.</param>
+    private static void _ShowAndroidToastMessage(string message, ToastLength length)
+    {
+        AndroidJavaObject unityActivity = GetUnityActivity();
+        
+        if (unityActivity != null)
+        {
+            try
+            {
+                AndroidJavaClass toastClass = new AndroidJavaClass("android.widget.Toast");
+                unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
+                {
+                    AndroidJavaObject toastObject = toastClass.CallStatic<AndroidJavaObject>("makeText", unityActivity, message, (int)length);
+                    toastObject.Call("show");
+                }));
+            }
+            catch (AndroidJavaException e)
+            {
+                Debug.Log("AndroidJavaException : " + e.Message);
+            }
+        }
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="DepthListener.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,17 +17,24 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System;
-using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace Tango
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using UnityEngine;
+
     /// <summary>
     /// Delegate for Tango depth events.
     /// </summary>
     /// <param name="tangoDepth">TangoUnityDepth object for the available depth frame.</param>
     internal delegate void OnTangoDepthAvailableEventHandler(TangoUnityDepth tangoDepth);
+    
+    /// <summary>
+    /// Delegate for Tango depth event that can be called on any thread.
+    /// </summary>
+    /// <param name="tangoDepth">TangoXYZij object for the available depth frame.</param>
+    internal delegate void OnTangoDepthMulithreadedAvailableEventHandler(TangoXYZij tangoDepth);
 
     /// <summary>
     /// Marshals Tango depth data between the C callbacks in one thread and
@@ -37,15 +44,19 @@ namespace Tango
     {
         private Tango.DepthProvider.TangoService_onDepthAvailable m_onDepthAvailableCallback;
 
-        /// <summary>
-        /// Called when a new Tango depth is available.
-        /// </summary>
-        private event OnTangoDepthAvailableEventHandler OnTangoDepthAvailable;
-
         private bool m_isDirty = false;
         private TangoUnityDepth m_tangoDepth;
         private System.Object m_lockObject = new System.Object();
-        private float[] m_depthPoints;
+
+        /// <summary>
+        /// Called when a new Tango depth is available.
+        /// </summary>
+        private OnTangoDepthAvailableEventHandler m_onTangoDepthAvailable;
+
+        /// <summary>
+        /// Called when a new Tango depth is available on the thread the depth came from.
+        /// </summary>
+        private OnTangoDepthMulithreadedAvailableEventHandler m_onTangoDepthMultithreadedAvailable;
 
         /// <summary>
         /// Register to get Tango depth callbacks.
@@ -65,12 +76,13 @@ namespace Tango
         /// </summary>
         internal void SendDepthIfAvailable()
         {
-            if (m_isDirty && OnTangoDepthAvailable != null)
+            if (m_isDirty && m_onTangoDepthAvailable != null)
             {
                 lock (m_lockObject)
                 {
-                    OnTangoDepthAvailable(m_tangoDepth);
+                    m_onTangoDepthAvailable(m_tangoDepth);
                 }
+
                 m_isDirty = false;
             }
         }
@@ -83,7 +95,7 @@ namespace Tango
         {
             if (handler != null)
             {
-                OnTangoDepthAvailable += handler;
+                m_onTangoDepthAvailable += handler;
             }
         }
 
@@ -95,7 +107,31 @@ namespace Tango
         {
             if (handler != null)
             {
-                OnTangoDepthAvailable -= handler;
+                m_onTangoDepthAvailable -= handler;
+            }
+        }
+
+        /// <summary>
+        /// Register a multithread handler for the Tango depth event.
+        /// </summary>
+        /// <param name="handler">Event handler to register.</param>
+        internal void RegisterOnTangoDepthMultithreadedAvailable(OnTangoDepthMulithreadedAvailableEventHandler handler)
+        {
+            if (handler != null)
+            {
+                m_onTangoDepthMultithreadedAvailable += handler;
+            }
+        }
+        
+        /// <summary>
+        /// Unregisters a multithread handler for the Tango depth event.
+        /// </summary>
+        /// <param name="handler">Event handler to unregister.</param>
+        internal void UnregisterOnTangoDepthMultithreadedAvailable(OnTangoDepthMulithreadedAvailableEventHandler handler)
+        {
+            if (handler != null)
+            {
+                m_onTangoDepthMultithreadedAvailable -= handler;
             }
         }
 
@@ -103,12 +139,17 @@ namespace Tango
         /// Callback that gets called when depth is available from the Tango Service.
         /// </summary>
         /// <param name="callbackContext">Callback context.</param>
-        /// <param name="xyzij">Xyzij.</param>
+        /// <param name="xyzij">The depth data returned from Tango.</param>
         private void _OnDepthAvailable(IntPtr callbackContext, TangoXYZij xyzij)
         {
             // Fill in the data to draw the point cloud.
             if (xyzij != null)
             {
+                if (m_onTangoDepthMultithreadedAvailable != null)
+                {
+                    m_onTangoDepthMultithreadedAvailable(xyzij);
+                }
+
                 lock (m_lockObject)
                 {
                     // copy single members

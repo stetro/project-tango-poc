@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TangoEvents.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System;
-using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace Tango
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using UnityEngine;
+
     /// <summary>
     /// C API wrapper for the Tango events interface.
     /// </summary>
@@ -39,7 +40,7 @@ namespace Tango
         /// <summary>
         /// Attach an onTangoEvent callback. The callback is called each time a Tango event happens.
         /// </summary>
-        /// <param name="callback">Callback.</param>
+        /// <param name="callback">Callback method.</param>
         internal static void SetCallback(TangoService_onEventAvailable callback)
         {
             int returnValue = EventsAPI.TangoService_connectOnTangoEvent(callback);

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TangoEventListener.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System;
-using UnityEngine;
 
 namespace Tango
 {
+    using System;
+    using UnityEngine;
+
     /// <summary>
     /// IDelegate for Tango event events.
     /// </summary>
@@ -65,6 +66,7 @@ namespace Tango
                 {
                     m_onTangoEventAvailable(m_tangoEvent);
                 }
+
                 m_isDirty = false;
             }
         }

@@ -36,22 +36,22 @@ LOCAL_SHARED_LIBRARIES += tango_client_api
 LOCAL_SHARED_LIBRARIES += tango_support_api
 
 
-LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/bounding_box.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/camera.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/conversions.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/drawable_object.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/frustum.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/gesture_camera.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/grid.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/goal_marker.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/line.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/cube.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/mesh.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/shaders.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/trace.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/transform.cpp \
-                   $(TANGO_C_EXAMPLES)/tango-gl/util.cpp \
+LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango_gl/axis.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/bounding_box.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/camera.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/conversions.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/drawable_object.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/frustum.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/gesture_camera.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/grid.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/goal_marker.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/line.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/cube.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/mesh.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/shaders.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/trace.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/transform.cc \
+                   $(TANGO_C_EXAMPLES)/tango_gl/util.cc \
                    $(CHISEL)/src/Chunk.cpp \
                    $(CHISEL)/src/ChunkManager.cpp \
                    $(CHISEL)/src/DistVoxel.cpp \
@@ -83,7 +83,7 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango-gl/axis.cpp \
                    depth_drawable.cc \
                    tango_event_data.cc
 
-LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango-gl/include \
+LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango_gl/include \
                     $(TANGO_C_EXAMPLES)/third-party/glm/ \
                     $(BOOST_ANDROID_INCLUDE)/include \
                     $(EIGEN_INCLUDE) \

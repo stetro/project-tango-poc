@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="AndroidHelper.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,10 +49,10 @@ public partial class AndroidHelper
     /// <summary>
     /// Parses the tango event.
     /// </summary>
-    /// <param name="timestamp">Timestamp.</param>
+    /// <param name="timestamp">Timestamp of the event.</param>
     /// <param name="eventType">Event type.</param>
-    /// <param name="key">Key.</param>
-    /// <param name="value">Value.</param>
+    /// <param name="key">Event key.</param>
+    /// <param name="value">Event value.</param>
     public static void ParseTangoEvent(double timestamp, int eventType, string key, string value)
     {
         AndroidJavaObject tangoUxObject = GetTangoUxHelperObject();

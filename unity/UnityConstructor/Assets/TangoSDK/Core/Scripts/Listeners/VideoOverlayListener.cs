@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="VideoOverlayListener.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System.Collections;
-using System;
-using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace Tango
 {
+    using System;
+    using System.Collections;
+    using System.Runtime.InteropServices;
+    using UnityEngine;
+
     /// <summary>
     /// Delegate for Tango image events.
     /// </summary>
@@ -39,6 +40,14 @@ namespace Tango
     internal delegate void OnExperimentalTangoImageAvailableEventHandler(Tango.TangoEnums.TangoCameraId cameraId);
 
     /// <summary>
+    /// Delegate for Tango image events that can be called on any thread.
+    /// </summary>
+    /// <param name="cameraId">The camera for the image.</param>
+    /// <param name="imageBuffer">The image from the camera.</param>
+    internal delegate void OnTangoImageMultithreadedAvailableEventHandler(TangoEnums.TangoCameraId cameraId, 
+                                                                          TangoImageBuffer imageBuffer);
+
+    /// <summary>
     /// Marshals Tango image data between the C callbacks in one thread and
     /// the main Unity thread.
     /// </summary>
@@ -47,55 +56,66 @@ namespace Tango
         private VideoOverlayProvider.TangoService_onImageAvailable m_onImageAvailable;
         private VideoOverlayProvider.TangoService_onUnityFrameAvailable m_onUnityFrameAvailable;
 
+        private TangoEnums.TangoCameraId m_previousCameraId;
+        private TangoUnityImageData m_previousImageBuffer;
+        private bool m_shouldSendTextureIdMethodEvent = false;
+        private bool m_shouldSendByteBufferMethodEvent = false;
+        private object m_lockObject = new object();
+
         /// <summary>
         /// Called when a new Tango image is available.
         /// </summary>
-        private event OnTangoImageAvailableEventHandler OnTangoImageAvailable;
+        private OnTangoImageAvailableEventHandler m_onTangoImageAvailable;
 
         /// <summary>
         /// Called when a new Tange image is available (experimental version).
         /// </summary>
-        private event OnExperimentalTangoImageAvailableEventHandler OnExperimentalTangoImageAvailable;
-
-        private TangoEnums.TangoCameraId m_previousCameraId;
-        private TangoUnityImageData m_previousImageBuffer;
-        private bool m_shouldSendEvent = false;
-        private bool m_usingExperimentalOverlay = false;
+        private OnExperimentalTangoImageAvailableEventHandler m_onExperimentalTangoImageAvailable;
 
         /// <summary>
-        /// Register to get Tango image events.
+        /// Called when a new Tango image is available on the thread the image came from.
+        /// </summary>
+        private OnTangoImageMultithreadedAvailableEventHandler m_onTangoImageMultithreadedAvailable;
+
+        /// <summary>
+        /// Register to get Tango image events for the texture ID is updated.
         /// 
         /// NOTE: Tango image events happen on a different thread than the main
         /// Unity thread.
         /// </summary>
         /// <param name="cameraId">Camera identifier to get events for.</param>
-        /// <param name="useExperimentalOverlay">If true, use the experimental video overlay.</param>
-        /// <param name="videoOverlayTexture">The video overlay texture to use.  Only used in experimental mode.</param> 
-        internal virtual void SetCallback(Tango.TangoEnums.TangoCameraId cameraId, bool useExperimentalOverlay, YUVTexture videoOverlayTexture)
+        /// <param name="videoOverlayTexture">The video overlay texture to use.</param> 
+        internal virtual void SetCallbackTextureIdMethod(Tango.TangoEnums.TangoCameraId cameraId, 
+                                                         YUVTexture videoOverlayTexture)
         {
-            m_usingExperimentalOverlay = useExperimentalOverlay;
-            if (!useExperimentalOverlay)
+            if (videoOverlayTexture != null)
             {
-                m_previousImageBuffer = new TangoUnityImageData();
-                m_onImageAvailable = new Tango.VideoOverlayProvider.TangoService_onImageAvailable(_OnImageAvailable);
-                Tango.VideoOverlayProvider.SetCallback(cameraId, m_onImageAvailable);
+                m_onUnityFrameAvailable = 
+                    new Tango.VideoOverlayProvider.TangoService_onUnityFrameAvailable(_OnExperimentalUnityFrameAvailable);
+                VideoOverlayProvider.ExperimentalConnectTexture(cameraId,
+                                                                videoOverlayTexture,
+                                                                m_onUnityFrameAvailable);
+
+                Debug.Log("VideoOverlayListener.SetCallback() : Experimental Overlay listener hooked up");
             }
             else
             {
-                if (videoOverlayTexture != null)
-                {
-                    m_onUnityFrameAvailable = new Tango.VideoOverlayProvider.TangoService_onUnityFrameAvailable(_OnExperimentalUnityFrameAvailable);
-                    VideoOverlayProvider.ExperimentalConnectTexture(cameraId,
-                                                                    videoOverlayTexture,
-                                                                    m_onUnityFrameAvailable);
-
-                    Debug.Log("VideoOverlayListener.SetCallback() : Experimental Overlay listener hooked up");
-                }
-                else
-                {
-                    Debug.Log("VideoOverlayListener.SetCallback() : No Texture2D found!");
-                }
+                Debug.Log("VideoOverlayListener.SetCallback() : No Texture2D found!");
             }
+        }
+
+        /// <summary>
+        /// Register to get Tango image events for getting the texture byte buffer callback.
+        /// 
+        /// NOTE: Tango image events happen on a different thread than the main
+        /// Unity thread.
+        /// </summary>
+        /// <param name="cameraId">Camera identifier to get events for.</param>
+        internal virtual void SetCallbackByteBufferMethod(Tango.TangoEnums.TangoCameraId cameraId)
+        {
+            m_previousImageBuffer = new TangoUnityImageData();
+            m_onImageAvailable = new Tango.VideoOverlayProvider.TangoService_onImageAvailable(_OnImageAvailable);
+            Tango.VideoOverlayProvider.SetCallback(cameraId, m_onImageAvailable);
         }
 
         /// <summary>
@@ -103,20 +123,18 @@ namespace Tango
         /// </summary>
         internal void SendIfVideoOverlayAvailable()
         {
-            if (m_usingExperimentalOverlay)
+            lock (m_lockObject)
             {
-                if (OnExperimentalTangoImageAvailable != null && m_shouldSendEvent)
+                if (m_onExperimentalTangoImageAvailable != null && m_shouldSendTextureIdMethodEvent)
                 {
-                    OnExperimentalTangoImageAvailable(m_previousCameraId);
-                    m_shouldSendEvent = false;
+                    m_onExperimentalTangoImageAvailable(m_previousCameraId);
+                    m_shouldSendTextureIdMethodEvent = false;
                 }
-            }
-            else
-            {
-                if (OnTangoImageAvailable != null && m_shouldSendEvent)
+
+                if (m_onTangoImageAvailable != null && m_shouldSendByteBufferMethodEvent)
                 {
-                    OnTangoImageAvailable(TangoEnums.TangoCameraId.TANGO_CAMERA_COLOR, m_previousImageBuffer);
-                    m_shouldSendEvent = false;
+                    m_onTangoImageAvailable(TangoEnums.TangoCameraId.TANGO_CAMERA_COLOR, m_previousImageBuffer);
+                    m_shouldSendByteBufferMethodEvent = false;
                 }
             }
         }
@@ -129,7 +147,7 @@ namespace Tango
         {
             if (handler != null)
             {
-                OnTangoImageAvailable += handler;
+                m_onTangoImageAvailable += handler;
             }
         }
 
@@ -141,7 +159,7 @@ namespace Tango
         {
             if (handler != null)
             {
-                OnTangoImageAvailable -= handler;
+                m_onTangoImageAvailable -= handler;
             }
         }
         
@@ -153,7 +171,7 @@ namespace Tango
         {
             if (handler != null)
             {
-                OnExperimentalTangoImageAvailable += handler;
+                m_onExperimentalTangoImageAvailable += handler;
             }
         }
         
@@ -165,7 +183,31 @@ namespace Tango
         {
             if (handler != null)
             {
-                OnExperimentalTangoImageAvailable -= handler;
+                m_onExperimentalTangoImageAvailable -= handler;
+            }
+        }
+
+        /// <summary>
+        /// Register a multithread handler for the Tango image event.
+        /// </summary>
+        /// <param name="handler">Event handler to register.</param>
+        internal void RegisterOnTangoImageMultithreadedAvailable(OnTangoImageMultithreadedAvailableEventHandler handler)
+        {
+            if (handler != null)
+            {
+                m_onTangoImageMultithreadedAvailable += handler;
+            }
+        }
+
+        /// <summary>
+        /// Unregister a multithread handler for the Tango image event.
+        /// </summary>
+        /// <param name="handler">Event handler to unregister.</param>
+        internal void UnregisterOnTangoImageMultithreadedAvailable(OnTangoImageMultithreadedAvailableEventHandler handler)
+        {
+            if (handler != null)
+            {
+                m_onTangoImageMultithreadedAvailable -= handler;
             }
         }
 
@@ -178,23 +220,31 @@ namespace Tango
         private void _OnImageAvailable(IntPtr callbackContext, TangoEnums.TangoCameraId cameraId,
                                        TangoImageBuffer imageBuffer)
         {
-            m_previousCameraId = cameraId;
-
-            if (m_previousImageBuffer.data == null)
+            if (m_onTangoImageMultithreadedAvailable != null)
             {
-                m_previousImageBuffer.data = new byte[imageBuffer.width * imageBuffer.height * 2];
+                m_onTangoImageMultithreadedAvailable(cameraId, imageBuffer);
             }
 
-            m_previousImageBuffer.width = imageBuffer.width;
-            m_previousImageBuffer.height = imageBuffer.height;
-            m_previousImageBuffer.stride = imageBuffer.stride;
-            m_previousImageBuffer.timestamp = imageBuffer.timestamp;
-            m_previousImageBuffer.format = imageBuffer.format;
-            m_previousImageBuffer.frame_number = imageBuffer.frame_number;
+            lock (m_lockObject)
+            {
+                m_previousCameraId = cameraId;
 
-            Marshal.Copy(imageBuffer.data, m_previousImageBuffer.data, 0, m_previousImageBuffer.data.Length);
+                if (m_previousImageBuffer.data == null)
+                {
+                    m_previousImageBuffer.data = new byte[(imageBuffer.width * imageBuffer.height * 3) / 2];
+                }
 
-            m_shouldSendEvent = true;
+                m_previousImageBuffer.width = imageBuffer.width;
+                m_previousImageBuffer.height = imageBuffer.height;
+                m_previousImageBuffer.stride = imageBuffer.stride;
+                m_previousImageBuffer.timestamp = imageBuffer.timestamp;
+                m_previousImageBuffer.format = imageBuffer.format;
+                m_previousImageBuffer.frame_number = imageBuffer.frame_number;
+
+                Marshal.Copy(imageBuffer.data, m_previousImageBuffer.data, 0, m_previousImageBuffer.data.Length);
+
+                m_shouldSendByteBufferMethodEvent = true;
+            }
         }
 
         /// <summary>
@@ -204,8 +254,11 @@ namespace Tango
         /// <param name="cameraId">Camera identifier.</param>
         private void _OnExperimentalUnityFrameAvailable(IntPtr callbackContext, Tango.TangoEnums.TangoCameraId cameraId)
         {
-            m_previousCameraId = cameraId;
-            m_shouldSendEvent = true;
+            lock (m_lockObject)
+            {
+                m_previousCameraId = cameraId;
+                m_shouldSendTextureIdMethodEvent = true;
+            }
         }
     }
 }

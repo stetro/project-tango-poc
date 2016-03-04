@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
 // <copyright file="TangoCloudEventListener.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,19 +17,22 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace Tango
 {
+    using System;
+    using System.Collections.Generic;
+    using UnityEngine;
+
     /// <summary>
     /// Delegate for Tango cloud events.
     /// </summary>
     /// <param name="key">Tango cloud event key that happened.</param>
     /// <param name="value">Tango cloud event value that happened.</param>
+    /// @cond PRIVATE
     internal delegate void OnTangoCloudEventAvailableEventHandler(int key, int value);
-    
+
+    /// @endcond
     /// <summary>
     /// Calls back tango cloud event listeners.
     /// </summary>
@@ -55,8 +58,10 @@ namespace Tango
                     {
                         m_onTangoCloudEventAvailable(cloudEvent.Key, cloudEvent.Value);
                     }
+
                     m_events.Clear();
                 }
+
                 m_isDirty = false;
             }
         }

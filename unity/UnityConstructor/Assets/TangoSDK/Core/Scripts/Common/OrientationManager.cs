@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
 // <copyright file="OrientationManager.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System.Collections;
-using UnityEngine;
 
 namespace Tango
 {
+    using System.Collections;
+    using UnityEngine;
+
     /// <summary>
     /// Manages the orientation of the screen.
     /// </summary>
@@ -73,6 +74,7 @@ namespace Tango
             {
                 transformation = Quaternion.AngleAxis(-90f, Vector3.forward);
             }
+
             return transformation;
         }
     }

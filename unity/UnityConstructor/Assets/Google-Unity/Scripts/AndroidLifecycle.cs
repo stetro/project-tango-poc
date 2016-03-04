@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="AndroidLifecycle.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,8 +39,25 @@ public delegate void OnResumeEventHandler();
 /// </summary>
 /// <param name="requestCode">Request code.</param>
 /// <param name="resultCode">Result code.</param>
-/// <param name="data">Data.</param>
+/// <param name="data">Intent data.</param>
 public delegate void OnActivityResultEventHandler(int requestCode, int resultCode, AndroidJavaObject data);
+
+/// <summary>
+/// Delegate for the Android screen orientation changed.
+/// </summary>
+/// <param name="newOrientation">The index of new orientation.</param>
+public delegate void OnScreenOrientationChangedEventHandler(AndroidScreenRotation newOrientation);
+
+/// <summary>
+/// Enum for native Android screen rotations.
+/// </summary>
+public enum AndroidScreenRotation
+{
+    ROTATION_0 = 0,
+    ROTATION_90 = 1,
+    ROTATION_180 = 2,
+    ROTATION_270 = 3
+}
 
 /// <summary>
 /// Binds callbacks directly to Android lifecycle.
@@ -48,26 +65,31 @@ public delegate void OnActivityResultEventHandler(int requestCode, int resultCod
 public class AndroidLifecycleCallbacks : AndroidJavaProxy 
 {
     /// <summary>
+    /// Occurs when the Android onPause event is fired.
+    /// </summary>
+    private static OnPauseEventHandler m_onPuaseEvent;
+
+    /// <summary>
+    /// Occurs when the Android onResume event is fired.
+    /// </summary>
+    private static OnResumeEventHandler m_onResumeEvent;
+
+    /// <summary>
+    /// Occurs when the Android onActivityResult event is fired.
+    /// </summary>
+    private static OnActivityResultEventHandler m_onActivityResultEvent;
+
+    /// <summary>
+    /// Occurs when the Android screen orientation changed.
+    /// </summary>
+    private static OnScreenOrientationChangedEventHandler m_onScreenOrientationChangedEvent;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AndroidLifecycleCallbacks"/> class.
     /// </summary>
     public AndroidLifecycleCallbacks() : base("com.google.unity.GoogleUnityActivity$AndroidLifecycleListener")
     {
     }
-
-    /// <summary>
-    /// Occurs when the Android onPause event is fired.
-    /// </summary>
-    private static event OnPauseEventHandler OnPauseEvent;
-
-    /// <summary>
-    /// Occurs when the Android onResume event is fired.
-    /// </summary>
-    private static event OnResumeEventHandler OnResumeEvent;
-
-    /// <summary>
-    /// Occurs when the Android onActivityResult event is fired.
-    /// </summary>
-    private static event OnActivityResultEventHandler OnActivityResultEvent;
 
     /// <summary>
     /// Registers the on pause callback to Android.
@@ -77,7 +99,7 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
     {
         if (onPause != null)
         {
-            OnPauseEvent += onPause;
+            m_onPuaseEvent += onPause;
         }
     }
 
@@ -89,7 +111,7 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
     {
         if (onResume != null)
         {
-            OnResumeEvent += onResume;
+            m_onResumeEvent += onResume;
         }
     }
 
@@ -101,7 +123,19 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
     {
         if (onActivityResult != null)
         {
-            OnActivityResultEvent += onActivityResult;
+            m_onActivityResultEvent += onActivityResult;
+        }
+    }
+
+    /// <summary>
+    /// Registers the callback to listen to screen orientation change.
+    /// </summary>
+    /// <param name="onOrientationChanged">On screen orientation changed.</param>
+    public void RegisterOnScreenOrientationChanged(OnScreenOrientationChangedEventHandler onOrientationChanged)
+    {
+        if (onOrientationChanged != null)
+        {
+            m_onScreenOrientationChangedEvent += onOrientationChanged;
         }
     }
 
@@ -113,7 +147,7 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
     {
         if (onPause != null)
         {
-            OnPauseEvent -= onPause;
+            m_onPuaseEvent -= onPause;
         }
     }
 
@@ -125,7 +159,7 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
     {
         if (onResume != null)
         {
-            OnResumeEvent -= onResume;
+            m_onResumeEvent -= onResume;
         }
     }
 
@@ -137,7 +171,19 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
     {
         if (onActivityResult != null)
         {
-            OnActivityResultEvent -= onActivityResult;
+            m_onActivityResultEvent -= onActivityResult;
+        }
+    }
+
+    /// <summary>
+    /// Unregisters the on OnScreenOrientationChanged callback to Android.
+    /// </summary>
+    /// <param name="onOrientationChanged">On screen orientation changed.</param>
+    public void UnregisterOnScreenOrientationChanged(OnScreenOrientationChangedEventHandler onOrientationChanged)
+    {
+        if (onOrientationChanged != null)
+        {
+            m_onScreenOrientationChangedEvent -= onOrientationChanged;
         }
     }
 
@@ -149,10 +195,10 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
                                                      Justification = "Android API.")]
     protected void onPause()
     {
-        if (OnPauseEvent != null)
+        if (m_onPuaseEvent != null)
         {
             Debug.Log("Unity got the Java onPause");
-            OnPauseEvent();
+            m_onPuaseEvent();
         }
     }
 
@@ -164,10 +210,10 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
                                                      Justification = "Android API.")]
     protected void onResume()
     {
-        if (OnResumeEvent != null)
+        if (m_onResumeEvent != null)
         {
             Debug.Log("Unity got the Java onResume");
-            OnResumeEvent();
+            m_onResumeEvent();
         }
     }
 
@@ -176,16 +222,31 @@ public class AndroidLifecycleCallbacks : AndroidJavaProxy
     /// </summary>
     /// <param name="requestCode">Request code.</param>
     /// <param name="resultCode">Result code.</param>
-    /// <param name="data">Data.</param>
+    /// <param name="data">Intent data.</param>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.NamingRules",
                                                      "SA1300:ElementMustBeginWithUpperCaseLetter",
                                                      Justification = "Android API.")]
     protected void onActivityResult(int requestCode, int resultCode, AndroidJavaObject data)
     {
-        if (OnActivityResultEvent != null)
+        if (m_onActivityResultEvent != null)
         {
             Debug.Log("Unity got the Java onActivityResult");
-            OnActivityResultEvent(requestCode, resultCode, data);
+            m_onActivityResultEvent(requestCode, resultCode, data);
+        }
+    }
+
+    /// <summary>
+    /// Implements the onScreenRotationChanged.
+    /// </summary>
+    /// <param name="newOrientation">New screen orientation.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.NamingRules",
+                                                     "SA1300:ElementMustBeginWithUpperCaseLetter",
+                                                     Justification = "Android API.")]
+    protected void onScreenRotationChanged(AndroidScreenRotation newOrientation)
+    {
+        if (m_onScreenOrientationChangedEvent != null)
+        {
+            m_onScreenOrientationChangedEvent(newOrientation);
         }
     }
 }

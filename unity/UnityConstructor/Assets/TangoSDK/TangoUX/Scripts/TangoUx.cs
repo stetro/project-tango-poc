@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TangoUx.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System.Collections;
-using UnityEngine;
 
 namespace Tango
 {
+    using System.Collections;
+    using UnityEngine;
+
     /// <summary>
     /// Main entry point for the Tango UX Library.
     /// 
@@ -29,7 +30,7 @@ namespace Tango
     /// UX library can be done in the Unity editor or by programatically setting the member flags.
     /// </summary>
     [RequireComponent(typeof(TangoApplication))]
-    public class TangoUx : MonoBehaviour, ITangoLifecycle, ITangoPose, ITangoEventMultithreaded, ITangoDepth
+    public class TangoUx : MonoBehaviour, ITangoLifecycle, ITangoPose, ITangoEventMultithreaded, ITangoDepthMultithreaded
     {
         public bool m_enableUXLibrary = true;
         public bool m_drawDefaultUXExceptions = true;
@@ -159,11 +160,11 @@ namespace Tango
         /// Raises the tango depth available event.
         /// </summary>
         /// <param name="tangoDepth">Tango depth.</param>
-        public void OnTangoDepthAvailable(Tango.TangoUnityDepth tangoDepth)
+        public void OnTangoDepthMultithreadedAvailable(Tango.TangoXYZij tangoDepth)
         {
             if (m_enableUXLibrary)
             {
-                AndroidHelper.ParseTangoDepthPointCount(tangoDepth.m_pointCount);
+                AndroidHelper.ParseTangoDepthPointCount(tangoDepth.xyz_count);
             }
         }
 

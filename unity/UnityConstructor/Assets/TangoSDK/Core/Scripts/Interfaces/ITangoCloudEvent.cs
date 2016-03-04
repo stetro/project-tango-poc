@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ITangoCloudEvent.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ using UnityEngine;
 /// <summary>
 /// Cloud Event notification interface.
 /// </summary>
-public interface ITangoCloudEvent
+internal interface ITangoCloudEvent
 {
     /// <summary>
     /// This is called each time a Tango cloud event happens.

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TangoARPoseController.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 //-----------------------------------------------------------------------
 using System;
 using System.Collections;
-using UnityEngine;
 using Tango;
+using UnityEngine;
 
 /// <summary>
 /// This is a movement controller based on the poses returned from the Tango service, using the correct timing needed
@@ -29,6 +29,11 @@ using Tango;
 [RequireComponent(typeof(TangoARScreen))]
 public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
 {
+    /// <summary>
+    /// If set, this contoller will use the Device with respect Area Description frame pose.
+    /// </summary>
+    public bool m_useAreaDescriptionPose = false;
+
     /// <summary>
     /// Total number of poses ever applied by this controller.
     /// </summary>
@@ -42,29 +47,28 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     public TangoEnums.TangoPoseStatusType m_poseStatus;
 
     /// <summary>
-    /// The TangoApplication being listened to.
-    /// </summary>
-    private TangoApplication m_tangoApplication;
-
-    /// <summary>
-    /// The TangoARScreen that is being updated.
-    /// </summary>
-    private TangoARScreen m_tangoARScreen;
-
-    /// <summary>
     /// The most recent pose timestamp applied.
     /// </summary>
-    private double m_poseTimestamp;
+    [HideInInspector]
+    public double m_poseTimestamp;
 
     /// <summary>
     /// The most recent Tango rotation.
     /// </summary>
-    private Vector3 m_tangoPosition;
+    [HideInInspector]
+    public Vector3 m_tangoPosition;
 
     /// <summary>
     /// The most recent Tango position.
     /// </summary>
-    private Quaternion m_tangoRotation;
+    [HideInInspector]
+    public Quaternion m_tangoRotation;
+
+    /// <summary>
+    /// Matrix that transforms from the Unity Camera to Device.
+    /// </summary>
+    [HideInInspector]
+    public Matrix4x4 m_dTuc;
 
     // We use couple of matrix transformation to convert the pose from Tango coordinate
     // frame to Unity coordinate frame.
@@ -83,13 +87,15 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     /// <summary>
     /// Matrix that transforms from Start of Service to the Unity World.
     /// </summary>
-    private Matrix4x4 m_uwTss;
+    [HideInInspector]
+    public Matrix4x4 m_uwTss;
 
     /// <summary>
-    /// Matrix that transforms from the Unity Camera to Device.
+    /// The TangoARScreen that is being updated.
     /// </summary>
-    private Matrix4x4 m_dTuc;
+    private TangoARScreen m_tangoARScreen;
 
+    /// @cond
     /// <summary>
     /// Awake is called when the script instance is being loaded.
     /// </summary>
@@ -114,21 +120,17 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     /// </summary>
     public void Start()
     {
-        m_tangoApplication = FindObjectOfType<TangoApplication>();
         m_tangoARScreen = GetComponent<TangoARScreen>();
 
-        if (m_tangoApplication != null)
+        TangoApplication tangoApplication = FindObjectOfType<TangoApplication>();
+        if (tangoApplication != null)
         {
-            if (AndroidHelper.IsTangoCorePresent())
+            tangoApplication.Register(this);
+
+            // If already connected to a service, then do initialization now.
+            if (tangoApplication.IsServiceConnected)
             {
-                // Request Tango permissions
-                m_tangoApplication.Register(this);
-                m_tangoApplication.RequestPermissions();
-            }
-            else
-            {
-                // If no Tango Core is present let's tell the user to install it!
-                StartCoroutine(_InformUserNoTangoCore());
+                OnTangoServiceConnected();
             }
         }
         else
@@ -142,19 +144,6 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     /// </summary>
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (m_tangoApplication != null)
-            {
-                m_tangoApplication.Shutdown();
-            }
-            
-            // This is a temporary fix for a lifecycle issue where calling
-            // Application.Quit() here, and restarting the application immediately,
-            // results in a hard crash.
-            AndroidHelper.AndroidQuit();
-        }
-
         if (m_tangoARScreen.m_screenUpdateTime != m_poseTimestamp)
         {
             _UpdateTransformation(m_tangoARScreen.m_screenUpdateTime);
@@ -178,17 +167,6 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     /// <param name="permissionsGranted"><c>true</c> if permissions were granted, otherwise <c>false</c>.</param>
     public void OnTangoPermissions(bool permissionsGranted)
     {
-        if (permissionsGranted)
-        {
-            m_tangoApplication.Startup(null);
-
-            // Get camera extrinsics to form final matrix transforms
-            _SetCameraExtrinsics();
-        }
-        else
-        {
-            AndroidHelper.ShowAndroidToastMessage("Motion Tracking Permissions Needed", true);
-        }
     }
 
     /// <summary>
@@ -196,6 +174,7 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     /// </summary>
     public void OnTangoServiceConnected()
     {
+        _SetCameraExtrinsics();
     }
 
     /// <summary>
@@ -205,6 +184,7 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     {
     }
 
+    /// @endcond
     /// <summary>
     /// Update the transformation to the pose for that timestamp.
     /// </summary>
@@ -213,22 +193,24 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
     {
         TangoPoseData pose = new TangoPoseData();
         TangoCoordinateFramePair pair;
-        pair.baseFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_START_OF_SERVICE;
-        pair.targetFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_DEVICE;
+        if (!m_useAreaDescriptionPose)
+        {
+            pair.baseFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_START_OF_SERVICE;
+            pair.targetFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_DEVICE;
+        }
+        else
+        {
+            pair.baseFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_AREA_DESCRIPTION;
+            pair.targetFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_DEVICE;
+        }
+
         PoseProvider.GetPoseAtTime(pose, timestamp, pair);
 
         // The callback pose is for device with respect to start of service pose.
         if (pose.status_code == TangoEnums.TangoPoseStatusType.TANGO_POSE_VALID)
         {
             // Construct matrix for the start of service with respect to device from the pose.
-            Vector3 posePosition = new Vector3((float)pose.translation[0],
-                                               (float)pose.translation[1],
-                                               (float)pose.translation[2]);
-            Quaternion poseRotation = new Quaternion((float)pose.orientation[0],
-                                                     (float)pose.orientation[1],
-                                                     (float)pose.orientation[2],
-                                                     (float)pose.orientation[3]);
-            Matrix4x4 ssTd = Matrix4x4.TRS(posePosition, poseRotation, Vector3.one);
+            Matrix4x4 ssTd = pose.ToMatrix4x4();
             
             // Calculate matrix for the camera in the Unity world, taking into account offsets.
             Matrix4x4 uwTuc = m_uwTss * ssTd * m_dTuc;
@@ -242,11 +224,13 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
             {
                 m_poseCount = 0;
             }
+
             m_poseCount++;
             
             // Other pose data -- Pose time.
             m_poseTimestamp = timestamp;
         }
+
         m_poseStatus = pose.status_code;
         
         // Apply final position and rotation.
@@ -273,27 +257,13 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
         pair.baseFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_IMU;
         pair.targetFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_DEVICE;
         PoseProvider.GetPoseAtTime(poseData, timestamp, pair);
-        Vector3 position = new Vector3((float)poseData.translation[0],
-                                       (float)poseData.translation[1],
-                                       (float)poseData.translation[2]);
-        Quaternion quat = new Quaternion((float)poseData.orientation[0],
-                                         (float)poseData.orientation[1],
-                                         (float)poseData.orientation[2],
-                                         (float)poseData.orientation[3]);
-        Matrix4x4 imuTd = Matrix4x4.TRS(position, quat, new Vector3(1.0f, 1.0f, 1.0f));
+        Matrix4x4 imuTd = poseData.ToMatrix4x4();
         
         // Get the transformation of IMU frame with respect to color camera frame.
         pair.baseFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_IMU;
         pair.targetFrame = TangoEnums.TangoCoordinateFrameType.TANGO_COORDINATE_FRAME_CAMERA_COLOR;
         PoseProvider.GetPoseAtTime(poseData, timestamp, pair);
-        position = new Vector3((float)poseData.translation[0],
-                               (float)poseData.translation[1],
-                               (float)poseData.translation[2]);
-        quat = new Quaternion((float)poseData.orientation[0],
-                              (float)poseData.orientation[1],
-                              (float)poseData.orientation[2],
-                              (float)poseData.orientation[3]);
-        Matrix4x4 imuTc = Matrix4x4.TRS(position, quat, new Vector3(1.0f, 1.0f, 1.0f));
+        Matrix4x4 imuTc = poseData.ToMatrix4x4();
 
         // Get the transform of the Unity Camera frame with respect to the Color Camera frame.
         Matrix4x4 cTuc = new Matrix4x4();
@@ -303,16 +273,5 @@ public class TangoARPoseController : MonoBehaviour, ITangoLifecycle
         cTuc.SetColumn(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 
         m_dTuc = Matrix4x4.Inverse(imuTd) * imuTc * cTuc;
-    }
-
-    /// <summary>
-    /// Internal callback when no Tango core is present.
-    /// </summary>
-    /// <returns>Coroutine IEnumerator.</returns>
-    private IEnumerator _InformUserNoTangoCore()
-    {
-        AndroidHelper.ShowAndroidToastMessage("Please install Tango Core", false);
-        yield return new WaitForSeconds(2.0f);
-        Application.Quit();
     }
 }

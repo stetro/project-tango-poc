@@ -1,6 +1,6 @@
 // <copyright file="TangoPoseController.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,16 +16,16 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System.Collections;
 using System;
-using UnityEngine;
+using System.Collections;
 using Tango;
+using UnityEngine;
 
 /// <summary>
 /// This is a basic movement controller based on
 /// pose estimation returned from the Tango Service.
 /// </summary>
-public class TangoPoseController : MonoBehaviour, ITangoLifecycle, ITangoPose
+public class TangoPoseController : MonoBehaviour, ITangoPose
 {
     // Tango pose data for debug logging and transform update.
     [HideInInspector]
@@ -37,7 +37,6 @@ public class TangoPoseController : MonoBehaviour, ITangoLifecycle, ITangoPose
     [HideInInspector]
     public TangoEnums.TangoPoseStatusType m_status;
 
-    private TangoApplication m_tangoApplication;
     private float m_prevFrameTimestamp;
 
     // Tango pose data.
@@ -60,6 +59,7 @@ public class TangoPoseController : MonoBehaviour, ITangoLifecycle, ITangoPose
     private Matrix4x4 m_matrixuwTss;
     private Matrix4x4 m_matrixdTuc;
 
+    /// @cond
     /// <summary>
     /// Initialize the controller.
     /// </summary>
@@ -92,54 +92,17 @@ public class TangoPoseController : MonoBehaviour, ITangoLifecycle, ITangoPose
     /// </summary>
     public void Start()
     {
-        m_tangoApplication = FindObjectOfType<TangoApplication>();
-        
-        if (m_tangoApplication != null)
+        m_tangoServiceVersionName = TangoApplication.GetTangoServiceVersion();
+
+        TangoApplication tangoApplication = FindObjectOfType<TangoApplication>();
+        if (tangoApplication != null)
         {
-            m_tangoApplication.Register(this);
-            if (AndroidHelper.IsTangoCorePresent())
-            {
-                // Request Tango permissions
-                m_tangoApplication.RequestPermissions();
-                m_tangoServiceVersionName = TangoApplication.GetTangoServiceVersion();
-            }
-            else
-            {
-                // If no Tango Core is present let's tell the user to install it!
-                StartCoroutine(_InformUserNoTangoCore());
-            }
+            tangoApplication.Register(this);
         }
         else
         {
             Debug.Log("No Tango Manager found in scene.");
         }
-    }
-
-    /// <summary>
-    /// Apply any needed changes to the pose.
-    /// </summary>
-    public void Update()
-    {
-        #if UNITY_ANDROID && !UNITY_EDITOR
-        if(Input.GetKeyDown(KeyCode.Escape))
-        {
-            if(m_tangoApplication != null)
-            {
-                m_tangoApplication.Shutdown();
-            }
-            
-            // This is a temporary fix for a lifecycle issue where calling
-            // Application.Quit() here, and restarting the application immediately,
-            // results in a hard crash.
-            AndroidHelper.AndroidQuit();
-        }
-        #else
-        Vector3 tempPosition = transform.position;
-        Quaternion tempRotation = transform.rotation;
-        PoseProvider.GetMouseEmulation(ref tempPosition, ref tempRotation);
-        transform.rotation = tempRotation;
-        transform.position = tempPosition;
-        #endif
     }
 
     /// <summary>
@@ -157,40 +120,10 @@ public class TangoPoseController : MonoBehaviour, ITangoLifecycle, ITangoPose
     }
 
     /// <summary>
-    /// This is called when the permission granting process is finished.
-    /// </summary>
-    /// <param name="permissionsGranted"><c>true</c> if permissions were granted, otherwise <c>false</c>.</param>
-    public void OnTangoPermissions(bool permissionsGranted)
-    {
-        if (permissionsGranted)
-        {
-            m_tangoApplication.Startup(null);
-        }
-        else
-        {
-            AndroidHelper.ShowAndroidToastMessage("Motion Tracking Permissions Needed", true);
-        }
-    }
-
-    /// <summary>
-    /// This is called when succesfully connected to the Tango service.
-    /// </summary>
-    public void OnTangoServiceConnected()
-    {
-    }
-
-    /// <summary>
-    /// This is called when disconnected from the Tango service.
-    /// </summary>
-    public void OnTangoServiceDisconnected()
-    {
-    }
-
-    /// <summary>
     /// Handle the callback sent by the Tango Service
     /// when a new pose is sampled.
     /// </summary>
-    /// <param name="pose">Pose.</param>
+    /// <param name="pose">Pose from Tango.</param>
     public void OnTangoPoseAvailable(Tango.TangoPoseData pose)
     {
         // Get out of here if the pose is null
@@ -222,6 +155,7 @@ public class TangoPoseController : MonoBehaviour, ITangoLifecycle, ITangoPose
                 {
                     m_frameCount = 0;
                 }
+
                 m_frameCount++;
 
                 // Compute delta frame timestamp.
@@ -252,14 +186,5 @@ public class TangoPoseController : MonoBehaviour, ITangoLifecycle, ITangoPose
         }
     }
 
-    /// <summary>
-    /// Informs the user that they should install Tango Core via Android toast.
-    /// </summary>
-    /// <returns>IEnumerator used for coroutines.</returns>
-    private IEnumerator _InformUserNoTangoCore()
-    {
-        AndroidHelper.ShowAndroidToastMessage("Please install Tango Core", false);
-        yield return new WaitForSeconds(2.0f);
-        Application.Quit();
-    }
+    /// @endcond
 }

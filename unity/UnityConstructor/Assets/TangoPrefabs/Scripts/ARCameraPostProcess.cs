@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ARCameraPostProcess.cs" company="Google">
 //
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class ARCameraPostProcess : MonoBehaviour
     /// The camera intrinsics are needed for undistortion or distortion.
     /// </summary>
     /// <param name="intrinsics">Color camera intrinsics.</param>
-    public void SetupIntrinsic(TangoCameraIntrinsics intrinsics)
+    internal void SetupIntrinsic(TangoCameraIntrinsics intrinsics)
     {
         m_postProcessMaterial.SetFloat("_Width", (float)intrinsics.width);
         m_postProcessMaterial.SetFloat("_Height", (float)intrinsics.height);

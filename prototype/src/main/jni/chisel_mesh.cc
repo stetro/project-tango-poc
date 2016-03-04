@@ -26,7 +26,7 @@ namespace tango_augmented_reality {
         truncationDistScale = 8.0;
         weighting = 0.5;
         enableCarving = true;
-        carvingDistance = 0.5;
+        carvingDistance = 0.3;
         chunkResolution = 0.04;
         farClipping = 2.0;
         rayTruncation = 0.5;
@@ -36,7 +36,7 @@ namespace tango_augmented_reality {
                 new chisel::Chisel(Eigen::Vector3i(chunkSize, chunkSize, chunkSize),
                                    chunkResolution, false));
         // float quadratic, float linear, float constant, float scale
-        chisel::TruncatorPtr truncator(new chisel::QuadraticTruncator(0.0019, 0.00152, 0.001504, 8.0));
+        chisel::TruncatorPtr truncator(new chisel::QuadraticTruncator(0.0030, 0.00152, 0.001504, 8.0));
         chisel::ConstantWeighterPtr weighter(new chisel::ConstantWeighter(weighting));
 
         chisel::Vec3List centroids;
@@ -70,7 +70,7 @@ namespace tango_augmented_reality {
         pose.translation[2] = 0;
 
 
-        if (TangoSupport_upsampleImageNearest(depth_interpolator, XYZij, &pose, &depth_buffer) !=
+        if (TangoSupport_upsampleImageNearestNeighbor(depth_interpolator, XYZij, &pose, &depth_buffer) !=
             TANGO_SUCCESS) {
             LOGE("Error upsampling the image.");
             return;
