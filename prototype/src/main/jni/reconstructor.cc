@@ -140,19 +140,19 @@ namespace tango_augmented_reality {
         // apply eigenvalue decomposition
         Eigen::EigenSolver <Eigen::Matrix3f> es(cv);
         // get eigen vector of smallest eigen value as normal
-//        int min_index = 0;
-//        for (int i = 0; i < 3; ++i) {
-//            if (es.eigenvalues()[i] < es.eigenvalues()[min_index]) {
-//                min_index = i;
-//            }
-//        }
-////        glm::vec3 normal(es.eigenvectors().col(min_index).x,
-//                         es.eigenvectors().col(min_index).y,
-//                         es.eigenvectors().col(min_index).z);
-//        normal = glm::normalize(normal);
-//        plane.normal = normal;
+        int min_index = 0;
+        for (int i = 0; i < 3; ++i) {
+            if (es.eigenvalues()[i].real() < es.eigenvalues()[i].real()) {
+                min_index = i;
+            }
+        }
+        glm::vec3 normal(es.eigenvectors().col(min_index)[0].real(),
+                         es.eigenvectors().col(min_index)[1].real(),
+                         es.eigenvectors().col(min_index)[2].real());
+        normal = glm::normalize(normal);
+        plane.normal = normal;
         // new distance is the cross product of normal and centroid
-//        plane.distance = glm::dot(normal, centroid);
+        plane.distance = glm::dot(normal, centroid);
         return plane;
     }
 

@@ -89,6 +89,7 @@ LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango_gl/include \
                     $(EIGEN_INCLUDE) \
                     $(CHISEL)/include
 
+SYSTEM_C_INCLUDES +=
 
 LOCAL_CFLAGS    += -std=c++11 -mfloat-abi=softfp -mfpu=neon -march=armv7 -mthumb -O3
 
