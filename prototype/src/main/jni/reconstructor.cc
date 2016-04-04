@@ -3,34 +3,30 @@
 namespace tango_augmented_reality {
 
     void Reconstructor::reconstruct() {
-        mesh_.clear();
 
-        std::vector <glm::vec3> rest;
-        rest = points;
+        mesh_.clear();
 
         for (int planeIndex = 0; planeIndex < ransac_detect_planes; ++planeIndex) {
             // continue with next plane iteration if not enough points available
-            if (rest.size() < 4 && !plane_available[planeIndex]) {
+            if (points.size() < 4 && !plane_available[planeIndex]) {
                 continue;
             }
 
             // RANSAC PLANE DETECTION
-            if ((!plane_available[planeIndex] && rest.size() > 4) ||
-                (plane_available[planeIndex] && planes[planeIndex].points.size() < rest.size())) {
-                // LOGI("rest points plane detection ...");
-                planes[planeIndex] = detectPlane(rest);
-                rest = ransac_best_not_supporting_points;
+            int calculated_points_size = 0;
+            if ((!plane_available[planeIndex] && points.size() > 4)) {
+                calculated_points_size = points.size();
+                planes[planeIndex] = detectPlane(points);
+                points = ransac_best_not_supporting_points;
             } else if (plane_available[planeIndex] && planes[planeIndex].points.size() > 4) {
-                // LOGI("plane points plane detection %d ...", planes[planeIndex].points.size());
+                calculated_points_size = planes[planeIndex].points.size();
                 planes[planeIndex] = detectPlane(planes[planeIndex].points);
             } else {
-                // LOGI("skip plane");
-                plane_available[planeIndex] = false;
                 continue;
             }
 
-            if (ransac_best_supporting_points.size() < 4) {
-                plane_available[planeIndex] = false;
+            if ((calculated_points_size * ransac_sufficient_support) >
+                ransac_best_supporting_points.size()) {
                 continue;
             } else {
                 plane_available[planeIndex] = true;
@@ -54,6 +50,7 @@ namespace tango_augmented_reality {
 
             // STORE THE LAST CONVEX HULL FOR EACH PLANE
             planes[planeIndex].points = hull_projection;
+            scaleAroundCentroid(ransac_scale_planes, hull_projection);
 
             // TRIANGULATION
             std::vector <glm::vec2> mesh_points;
@@ -273,4 +270,5 @@ namespace tango_augmented_reality {
     float Plane::distanceTo(glm::vec3 point) {
         return glm::dot(normal, point) - distance;
     }
+
 }

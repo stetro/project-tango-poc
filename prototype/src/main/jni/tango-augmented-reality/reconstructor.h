@@ -14,7 +14,7 @@
 #ifndef MASTERPROTOTYPE_RECONSTRUCTOR_H
 #define MASTERPROTOTYPE_RECONSTRUCTOR_H
 
-#define RANSAC_DETECT_PLANES 3
+#define RANSAC_DETECT_PLANES 2
 
 namespace tango_augmented_reality {
 
@@ -113,7 +113,7 @@ namespace tango_augmented_reality {
         // how many planes per cluster getting detected
         const int ransac_detect_planes = RANSAC_DETECT_PLANES;
         // scale factor to solve the gap problem
-        float ransac_scale_planes = 0.08;
+        float ransac_scale_planes = 0.1;
         // supporting points of ransac estimation
         std::vector <glm::vec3> ransac_supporting_points;
         // not supporting points of ransac estimation
