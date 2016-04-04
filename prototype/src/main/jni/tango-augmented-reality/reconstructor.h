@@ -107,7 +107,7 @@ namespace tango_augmented_reality {
         // how many random samples we're going to test
         int ransac_iterations = 8;
         // threshold between plane and point to count a point as supporting
-        float ransac_threshold = 0.05;
+        float ransac_threshold = 0.08;
         // amount of points, which should support the plane model to be sufficient
         float ransac_sufficient_support = 0.33;
         // how many planes per cluster getting detected

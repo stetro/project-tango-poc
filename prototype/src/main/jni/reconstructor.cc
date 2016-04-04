@@ -15,15 +15,16 @@ namespace tango_augmented_reality {
             }
 
             // RANSAC PLANE DETECTION
-            if (!plane_available[planeIndex] && rest.size() > 4) {
-                LOGI("rest points plane detection ...");
+            if ((!plane_available[planeIndex] && rest.size() > 4) ||
+                (plane_available[planeIndex] && planes[planeIndex].points.size() < rest.size())) {
+                // LOGI("rest points plane detection ...");
                 planes[planeIndex] = detectPlane(rest);
                 rest = ransac_best_not_supporting_points;
             } else if (plane_available[planeIndex] && planes[planeIndex].points.size() > 4) {
-                LOGI("plane points plane detection %d ...", planes[planeIndex].points.size());
+                // LOGI("plane points plane detection %d ...", planes[planeIndex].points.size());
                 planes[planeIndex] = detectPlane(planes[planeIndex].points);
             } else {
-                LOGI("skip plane");
+                // LOGI("skip plane");
                 plane_available[planeIndex] = false;
                 continue;
             }

@@ -44,54 +44,49 @@ import com.erz.joysticklibrary.JoyStick;
 public class MainActivity extends Activity implements
         View.OnClickListener, SeekBar.OnSeekBarChangeListener, JoyStick.JoyStickListener {
 
+    // calculation factor for diameter slider
+    public static final int DIAMETER_FACTOR = 3;
+    // calculation factor for sigma slider
+    public static final double SIGMA_FACTOR = 50.0;
     // This code indicates success.
     private static final int TANGO_SUCCESS = 0;
-
     // The minimum Tango Core version required from this application.
     private static final int MIN_TANGO_CORE_VERSION = 6804;
-
     // The package name of Tang Core, used for checking minimum Tango Core version.
     private static final String TANGO_PACKAGE_NAME = "com.projecttango.tango";
-
     // Tag for debug logging.
     private static final String TAG = MainActivity.class.getSimpleName();
-
-    // The interval at which we'll update our UI debug text in milliseconds.
-    // This is the rate at which we query our native wrapper around the tango
-    // service for pose and event information.
-    private static final int UPDATE_UI_INTERVAL_MS = 1000;
-    public static final int DIAMETER_FACTOR = 4;
-    public static final double SGIMA_FACTOR = 5.0;
+    // guided filter flag
     boolean do_filtering = false;
+    // initial guided filter values
+    private int diameter = 5;
+    private double sigma = 0.8;
     private GLSurfaceView mGLView;
+
     // A flag to check if the Tango Service is connected. This flag avoids the
     // program attempting to disconnect from the service while it is not
     // connected.This is especially important in the onPause() callback for the
     // activity class.
     private boolean mIsConnectedService = false;
+
     // Screen size for normalizing the touch input for orbiting the render camera.
     private Point mScreenSize = new Point();
+
     // Handles the debug text UI update loop.
     private Handler mHandler = new Handler();
-    // Debug text UI update loop, updating at 10Hz.
-    private Runnable mUpdateUiLoopRunnable = new Runnable() {
-        public void run() {
-            mHandler.postDelayed(this, UPDATE_UI_INTERVAL_MS);
-        }
-    };
+
+    // selected depth reconstruction mode
     private ARMode mode = ARMode.POINTCLOUD;
+
+    // UI Classes and helper
     private GestureDetector detector;
     private TapGestureDetector tapGestureDetector;
-    private Button addObjectButton;
+    private Button placeObjectButton;
     private Button clearButton;
-
-    private int diameter = 5;
-    private double sigma = 2.2;
     private SeekBar sigmaSeekBar;
     private SeekBar diameterSeekBar;
     private TextView diameterTextView;
     private TextView sigmaTextView;
-    private JoyStick joyStick;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,18 +112,25 @@ public class MainActivity extends Activity implements
         findViewById(R.id.top_down_button).setOnClickListener(this);
         findViewById(R.id.show_occlusion).setOnClickListener(this);
         findViewById(R.id.depth_fullscreen).setOnClickListener(this);
-        joyStick = (JoyStick) findViewById(R.id.joystick);
+
+        // init the joystick and listener
+        JoyStick joyStick = (JoyStick) findViewById(R.id.joystick);
         joyStick.setListener(this);
-        addObjectButton = (Button) findViewById(R.id.add_object);
-        addObjectButton.setOnClickListener(this);
+
+        // button for the 3D object raypicking
+        placeObjectButton = (Button) findViewById(R.id.place_object);
+        placeObjectButton.setOnClickListener(this);
         changeAddObjectLabel();
+
+        // clear the current reconstruction
         clearButton = (Button) findViewById(R.id.clear_reconstruction);
         clearButton.setVisibility(View.INVISIBLE);
         clearButton.setOnClickListener(this);
 
+        // init the guided filter options
         sigmaSeekBar = (SeekBar) findViewById(R.id.sigma_seek_bar);
         sigmaSeekBar.setOnSeekBarChangeListener(this);
-        sigmaSeekBar.setProgress((int) (sigma * SGIMA_FACTOR));
+        sigmaSeekBar.setProgress((int) (sigma * SIGMA_FACTOR));
         diameterSeekBar = (SeekBar) findViewById(R.id.diameter_seek_bar);
         diameterSeekBar.setOnSeekBarChangeListener(this);
         diameterSeekBar.setProgress(diameter * DIAMETER_FACTOR);
@@ -136,11 +138,12 @@ public class MainActivity extends Activity implements
         sigmaTextView.setText(String.valueOf(sigma));
         diameterTextView = (TextView) findViewById(R.id.diameter_text);
         diameterTextView.setText(String.valueOf(diameter));
-
-        ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
         Button button = (Button) findViewById(R.id.toggle_filter);
         button.setOnClickListener(this);
         changeFilterButtonLabel(button);
+
+        // set the current mode in UI
+        ((RadioButton) findViewById(R.id.pointclouds)).setChecked(true);
 
         // Button to reset motion tracking
         Button mMotionReset = (Button) findViewById(R.id.resetmotion);
@@ -197,8 +200,6 @@ public class MainActivity extends Activity implements
             finish();
         }
 
-        // Start the debug text UI update loop.
-        mHandler.post(mUpdateUiLoopRunnable);
     }
 
     @Override
@@ -251,7 +252,7 @@ public class MainActivity extends Activity implements
             case R.id.show_occlusion:
                 TangoJNINative.setShowOcclusion(((CheckBox) v).isChecked());
                 break;
-            case R.id.add_object:
+            case R.id.place_object:
                 tapGestureDetector.setAddObject();
                 changeAddObjectLabel();
                 break;
@@ -265,7 +266,7 @@ public class MainActivity extends Activity implements
 
     private void changeAddObjectLabel() {
         String additionalLabel = tapGestureDetector.isAddObject() ? "(PICKING)" : "";
-        addObjectButton.setText(String.format(getString(R.string.add_object), additionalLabel));
+        placeObjectButton.setText(String.format(getString(R.string.add_object), additionalLabel));
     }
 
     private void changeFilterButtonLabel(Button button) {
@@ -330,7 +331,7 @@ public class MainActivity extends Activity implements
     }
 
     public void onRadioButtonClicked(View view) {
-        // Check which radio button was clicked
+        // Check which radio button was clicked and change mode
         switch (view.getId()) {
             case R.id.pointclouds:
                 mode = ARMode.POINTCLOUD;
@@ -351,8 +352,9 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        // check for guided filter progress changes
         if (seekBar.equals(sigmaSeekBar)) {
-            sigma = (double) progress / SGIMA_FACTOR;
+            sigma = (double) progress / SIGMA_FACTOR;
             if (sigmaTextView != null)
                 sigmaTextView.setText(String.valueOf(sigma));
         }

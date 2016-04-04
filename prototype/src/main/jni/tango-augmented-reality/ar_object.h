@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 
+// rendering 3D Object
+
 namespace tango_augmented_reality {
     class ArObject : public tango_gl::Mesh {
     public:

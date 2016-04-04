@@ -70,21 +70,30 @@ public class TangoJNINative {
     // Pass touch events to the native layer.
     public static native void onTouchEvent(int touchCount, int event0, float x0, float y0, float x1, float y1);
 
+    // Toggle Guided Filter
     public static native void toggleFilter();
 
+    // Trigger a tap event
     public static native void tap();
 
+    // Setting depth reconstruction mode
     public static native void setMode(int mode);
 
+    // change the visibility of the occlusion objects
     public static native void setShowOcclusion(boolean checked);
 
+    // change the the depth map to fullscreen
     public static native void setDepthFullscreen(boolean checked);
 
+    // raypicking for the object placement
     public static native void addObject(float x, float y);
 
+    // clear the current reconstruction
     public static native void clearReconstruction();
 
+    // changing filter properties
     public static native void setFilterSettings(int diameter, double sigma);
 
+    // set joy stick movement
     public static native void joyStick(double angle, double power);
 }

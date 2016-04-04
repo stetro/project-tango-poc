@@ -92,8 +92,10 @@ namespace tango_augmented_reality {
         // setting the reconstruction mode
         void setMode(int id);
 
+        // sets the occlusion visibility
         void setShowOcclusion(bool show);
 
+        // sets the depth visibility
         void setDepthFullscreen(bool show);
 
         // Tango service event callback function for pose data. Called when new events
@@ -152,12 +154,16 @@ namespace tango_augmented_reality {
         // @JavaVM java_vm: the Java VM is using from the Java layer.
         void SetJavaVM(JavaVM *java_vm) { java_vm_ = java_vm; }
 
+        // does raypicking for the object placement
         void addObject(float x, float y);
 
+        // triggers the reconstruction resetting
         void clearReconstruction();
 
+        // set the current filter object to scene
         void setFilterSettings(int diameter, double sigma);
 
+        // set the current joystick movement to scene
         void joyStick(double angle, double power);
 
     private:
