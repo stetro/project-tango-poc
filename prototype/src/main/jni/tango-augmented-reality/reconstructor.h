@@ -14,6 +14,8 @@
 #ifndef MASTERPROTOTYPE_RECONSTRUCTOR_H
 #define MASTERPROTOTYPE_RECONSTRUCTOR_H
 
+#define RANSAC_DETECT_PLANES 3
+
 namespace tango_augmented_reality {
 
     class Plane {
@@ -28,6 +30,9 @@ namespace tango_augmented_reality {
         glm::quat plane_z_rotation;
         glm::quat inverse_plane_z_rotation;
 
+        // current 3d convex hull of plane
+        std::vector <glm::vec3> points;
+
         Plane(glm::vec3 normal, float distance);
 
         Plane() { };
@@ -38,6 +43,7 @@ namespace tango_augmented_reality {
             plane_origin = plane.plane_origin;
             plane_z_rotation = plane.plane_z_rotation;
             inverse_plane_z_rotation = plane.inverse_plane_z_rotation;
+            points = plane.points;
         };
 
         // calculates the distance between a point and this plane
@@ -55,11 +61,22 @@ namespace tango_augmented_reality {
         // gets the reconstructed mesh
         std::vector <glm::vec3> getMesh() { return mesh_; }
 
+        // gets the count of available points
+        int getPointCount();
+
+        // add a point to a plane or the main point pool
+        void addPoint(glm::vec3 point);
+
+        // clear points of the main point pool
+        void clearPoints();
+
         // triggers the mesh reconstruction from points
         void reconstruct();
 
         // resets the reconstructor
         void reset();
+
+        Reconstructor();
 
 
     private:
@@ -67,7 +84,7 @@ namespace tango_augmented_reality {
         std::vector <glm::vec3> mesh_;
 
         // uses RANSAC to detect a plane model
-        Plane detectPlane();
+        Plane detectPlane(std::vector <glm::vec3> &points);
 
         // project points onto the plane
         std::vector <glm::vec2> project(Plane plane, std::vector <glm::vec3> &points);
@@ -76,10 +93,10 @@ namespace tango_augmented_reality {
         std::vector <glm::vec3> project(Plane plane, std::vector <glm::vec2> &points);
 
         // computes the support of the plane against points with ransac_threshold
-        int ransacEstimateSupportingPoints(Plane plane);
+        int ransacEstimateSupportingPoints(Plane plane, std::vector <glm::vec3> &points);
 
         // computes the support of the plane against points with ransac_threshold
-        int *ransacPickThreeRandomPoints();
+        int *ransacPickThreeRandomPoints(std::vector < glm::vec3 > &points);
 
         // method to apply linear regression with best supporting points and plane
         Plane ransacApplyLinearRegression(Plane plane,  std::vector <glm::vec3> &points);
@@ -87,18 +104,28 @@ namespace tango_augmented_reality {
         // scales given points around calculated centroid
         void scaleAroundCentroid(float scale, std::vector <glm::vec3> &points);
 
-        // last best supporting points of last plane
-        std::vector <glm::vec3> last_best_supporting_points;
         // how many random samples we're going to test
-        int ransac_iterations = 20;
+        int ransac_iterations = 8;
         // threshold between plane and point to count a point as supporting
         float ransac_threshold = 0.05;
         // amount of points, which should support the plane model to be sufficient
-        float ransac_sufficient_support = 0.66;
+        float ransac_sufficient_support = 0.33;
+        // how many planes per cluster getting detected
+        const int ransac_detect_planes = RANSAC_DETECT_PLANES;
+        // scale factor to solve the gap problem
+        float ransac_scale_planes = 0.08;
         // supporting points of ransac estimation
         std::vector <glm::vec3> ransac_supporting_points;
+        // not supporting points of ransac estimation
+        std::vector <glm::vec3> ransac_not_supporting_points;
         // supporting points of best ransac estimation
         std::vector <glm::vec3> ransac_best_supporting_points;
+        // not supporting points of best ransac estimation
+        std::vector <glm::vec3> ransac_best_not_supporting_points;
+        // planes per cluster
+        std::array<Plane, RANSAC_DETECT_PLANES> planes;
+        // available planes
+        std::array<bool, RANSAC_DETECT_PLANES> plane_available;
 
     };
 

@@ -25,8 +25,6 @@ namespace tango_augmented_reality {
         // add a single point to the deepest level
         void addPoint(glm::vec3 point);
 
-        // gets a set of points on a last child nodes position
-        std::vector <glm::vec3> getPoints(glm::vec3 position);
 
         // triggers the clusters reconstruction
         void reconstruct();
@@ -53,8 +51,6 @@ namespace tango_augmented_reality {
         bool is_available_[8];
         // 8 children of a node
         ReconstructionOcTree **children_;
-        // container for points per node
-        std::vector <glm::vec3> points_;
         // boolean flag if the points got updated
         bool updated;
 

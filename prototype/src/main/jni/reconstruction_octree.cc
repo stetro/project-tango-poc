@@ -24,7 +24,7 @@ namespace tango_augmented_reality {
     int ReconstructionOcTree::getSize() {
         int size = 0;
         if (depth_ == 0) {
-            size = points_.size();
+            size = reconstructor->getPointCount();
         } else {
             for (int i = 0; i < 8; ++i) {
                 if (is_available_[i]) {
@@ -47,22 +47,13 @@ namespace tango_augmented_reality {
         }
         updated = true;
         if (depth_ == 0) {
-            points_.push_back(point);
+            reconstructor->addPoint(point);
         } else {
             int index = getChildIndex(point);
             if (!is_available_[index]) {
                 initChild(point, index);
             }
             children_[index]->addPoint(point);
-        }
-    }
-
-    std::vector <glm::vec3> ReconstructionOcTree::getPoints(glm::vec3 location) {
-        int index = getChildIndex(location);
-        if (depth_ == 0 || !is_available_[index]) {
-            return points_;
-        } else {
-            return children_[index]->getPoints(location);
         }
     }
 
@@ -81,7 +72,6 @@ namespace tango_augmented_reality {
 
     void ReconstructionOcTree::reconstruct() {
         if (depth_ == 0 && updated) {
-            reconstructor->points = points_;
             reconstructor->reconstruct();
         } else if (updated) {
             for (int i = 0; i < 8; ++i) {
@@ -106,7 +96,7 @@ namespace tango_augmented_reality {
             }
             return mesh;
         }
-        points_.clear();
+        reconstructor->clearPoints();
         return reconstructor->getMesh();
     }
 

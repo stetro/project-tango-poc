@@ -17,7 +17,9 @@
 LOCAL_PATH := $(call my-dir)
 PROJECT_ROOT_FROM_JNI:= ../../../../..
 PROJECT_ROOT:= $(call my-dir)/../../../../..
-TANGO_C_EXAMPLES:=/home/stetro/Source/tango-examples-c
+NATIVE_LIBS:=$(LOCAL_PATH)/../../../../native-libraries/
+GLM:=$(LOCAL_PATH)/../../../../native-libraries/glm
+TANGO_GL:=$(LOCAL_PATH)/../../../../native-libraries/tango_gl
 OPENCV:=/home/stetro/Source/opencv/platforms/build_android_arm/
 BOOST_ANDROID_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/boost
 EIGEN_INCLUDE := $(LOCAL_PATH)/../../../../native-libraries/eigen
@@ -36,22 +38,22 @@ LOCAL_SHARED_LIBRARIES += tango_client_api
 LOCAL_SHARED_LIBRARIES += tango_support_api
 
 
-LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango_gl/axis.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/bounding_box.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/camera.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/conversions.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/drawable_object.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/frustum.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/gesture_camera.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/grid.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/goal_marker.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/line.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/cube.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/mesh.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/shaders.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/trace.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/transform.cc \
-                   $(TANGO_C_EXAMPLES)/tango_gl/util.cc \
+LOCAL_SRC_FILES += $(TANGO_GL)/axis.cc \
+                   $(TANGO_GL)/bounding_box.cc \
+                   $(TANGO_GL)/camera.cc \
+                   $(TANGO_GL)/conversions.cc \
+                   $(TANGO_GL)/drawable_object.cc \
+                   $(TANGO_GL)/frustum.cc \
+                   $(TANGO_GL)/gesture_camera.cc \
+                   $(TANGO_GL)/grid.cc \
+                   $(TANGO_GL)/goal_marker.cc \
+                   $(TANGO_GL)/line.cc \
+                   $(TANGO_GL)/cube.cc \
+                   $(TANGO_GL)/mesh.cc \
+                   $(TANGO_GL)/shaders.cc \
+                   $(TANGO_GL)/trace.cc \
+                   $(TANGO_GL)/transform.cc \
+                   $(TANGO_GL)/util.cc \
                    $(CHISEL)/src/Chunk.cpp \
                    $(CHISEL)/src/ChunkManager.cpp \
                    $(CHISEL)/src/DistVoxel.cpp \
@@ -83,8 +85,8 @@ LOCAL_SRC_FILES += $(TANGO_C_EXAMPLES)/tango_gl/axis.cc \
                    depth_drawable.cc \
                    tango_event_data.cc
 
-LOCAL_C_INCLUDES += $(TANGO_C_EXAMPLES)/tango_gl/include \
-                    $(TANGO_C_EXAMPLES)/third-party/glm/ \
+LOCAL_C_INCLUDES += $(TANGO_GL)/include \
+                    $(GLM)/ \
                     $(BOOST_ANDROID_INCLUDE)/include \
                     $(EIGEN_INCLUDE) \
                     $(CHISEL)/include
@@ -97,6 +99,6 @@ LOCAL_LDLIBS    +=  -lc -lm -llog -landroid -ldl -llog -lGLESv3 -L$(SYSROOT)/usr
 
 include $(BUILD_SHARED_LIBRARY)
 
-$(call import-add-path, $(TANGO_C_EXAMPLES))
+$(call import-add-path, $(NATIVE_LIBS))
 $(call import-module,tango_client_api)
 $(call import-module,tango_support_api)

@@ -22,7 +22,8 @@ namespace tango_augmented_reality {
     PlaneMesh::PlaneMesh() {
         render_mode_ = GL_TRIANGLES;
         SetShader();
-        tree = new ReconstructionOcTree(glm::vec3(-20, -20, -20), 40, 8);
+
+        tree = new ReconstructionOcTree(glm::vec3(-20, -20, -20), 40, 7);
     }
 
     void PlaneMesh::addPoints(glm::mat4 transformation, std::vector <float> &vertices) {

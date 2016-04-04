@@ -3,58 +3,64 @@
 namespace tango_augmented_reality {
 
     void Reconstructor::reconstruct() {
-        if (points.size() < 4) {
-            LOGE("exit because only %d points in cluster", points.size());
-            return;
-        }
-
-
-        // RANSAC PLANE DETECTION
-        Plane plane = detectPlane();
-
-        // ADD LAST SUPPORTING POINTS IF AVAILABLE
-        if (last_best_supporting_points.size() > 0) {
-            ransac_best_supporting_points.insert(ransac_best_supporting_points.end(),
-                                                 last_best_supporting_points.begin(),
-                                                 last_best_supporting_points.end());
-            last_best_supporting_points.clear();
-        }
-
-        if (ransac_best_supporting_points.size() < 4) {
-            LOGE("exit because only %d points in supporting points",
-                 ransac_best_supporting_points.size());
-            return;
-        }
-
-        // SCALE POINTS AROUND CENTROID
-        scaleAroundCentroid(1.01, ransac_best_supporting_points);
-
-        // PROJECT SUPPORTING POINTS TO 2D
-        std::vector <glm::vec2> projection = project(plane, ransac_best_supporting_points);
-
-        // CALCULATE THE CONVEX HULL
-        ConvexHull *h = new ConvexHull();
-        std::vector <glm::vec2> hull = h->generateConvexHull(projection);
-        hull.pop_back();
-        if (hull.size() < 3) {
-            LOGE("exit because convex hull has only %d points", hull.size());
-            return;
-        }
-        last_best_supporting_points = ransac_best_supporting_points;    // store convex hull for next iteration
-
-        // triangulate convex hull
-        std::vector <glm::vec2> mesh_points;
-        for (int i = 0; i < hull.size() - 2; i++) {
-            mesh_points.push_back(hull[0]);
-            mesh_points.push_back(hull[i + 1]);
-            mesh_points.push_back(hull[i + 2]);
-        }
-
-        // PROJECT MESH POINTS BACK TO 3D
         mesh_.clear();
-        std::vector <glm::vec3> back_projection = project(plane, mesh_points);
-        for (int l = 0; l < back_projection.size(); ++l) {
-            mesh_.push_back(back_projection[l]);
+
+        std::vector <glm::vec3> rest;
+        rest = points;
+
+        for (int planeIndex = 0; planeIndex < ransac_detect_planes; ++planeIndex) {
+            // continue with next plane iteration if not enough points available
+            if (rest.size() < 4 && !plane_available[planeIndex]) {
+                continue;
+            }
+
+            // RANSAC PLANE DETECTION
+            if (!plane_available[planeIndex] && rest.size() > 4) {
+                LOGI("rest points plane detection ...");
+                planes[planeIndex] = detectPlane(rest);
+                rest = ransac_best_not_supporting_points;
+            } else if (plane_available[planeIndex] && planes[planeIndex].points.size() > 4) {
+                LOGI("plane points plane detection %d ...", planes[planeIndex].points.size());
+                planes[planeIndex] = detectPlane(planes[planeIndex].points);
+            } else {
+                LOGI("skip plane");
+                plane_available[planeIndex] = false;
+                continue;
+            }
+
+            if (ransac_best_supporting_points.size() < 4) {
+                plane_available[planeIndex] = false;
+                continue;
+            } else {
+                plane_available[planeIndex] = true;
+            }
+
+            // PROJECT SUPPORTING POINTS TO 2D
+            std::vector <glm::vec2> projection = project(planes[planeIndex],
+                                                         ransac_best_supporting_points);
+
+            // CALCULATE THE CONVEX HULL
+            ConvexHull *h = new ConvexHull();
+            std::vector <glm::vec2> hull = h->generateConvexHull(projection);
+            hull.pop_back();    // remove last point which is available twice
+            if (hull.size() < 4) {
+                plane_available[planeIndex] = false;
+                continue;
+            }
+
+            // PROJECT BACK TO 3D
+            std::vector <glm::vec3> hull_projection = project(planes[planeIndex], hull);
+
+            // STORE THE LAST CONVEX HULL FOR EACH PLANE
+            planes[planeIndex].points = hull_projection;
+
+            // TRIANGULATION
+            std::vector <glm::vec2> mesh_points;
+            for (int i = 0; i < hull_projection.size() - 2; i++) {
+                mesh_.push_back(hull_projection[0]);
+                mesh_.push_back(hull_projection[i + 1]);
+                mesh_.push_back(hull_projection[i + 2]);
+            }
         }
     }
 
@@ -80,7 +86,7 @@ namespace tango_augmented_reality {
         return result;
     }
 
-    Plane Reconstructor::detectPlane() {
+    Plane Reconstructor::detectPlane(std::vector < glm::vec3 > &points) {
         int best_support = 0;
         Plane result;
         int ransac_sufficient_support_count = ransac_sufficient_support * points.size();
@@ -89,18 +95,20 @@ namespace tango_augmented_reality {
         while (iterations > 0) {
             iterations--;
             // 1. pick 3 random points
-            int *selected_index = ransacPickThreeRandomPoints();
+            int *selected_index = ransacPickThreeRandomPoints(points);
+
             // 2. estimate plane from picked points
             Plane plane = Plane::calculatePlane(points[selected_index[0]],
                                                 points[selected_index[1]],
                                                 points[selected_index[2]]);
             free(selected_index);
             // 3. estimate support for calculated plane
-            int support = ransacEstimateSupportingPoints(plane);
+            int support = ransacEstimateSupportingPoints(plane, points);
             // 4. replace better solutions
             if (best_support < support) {
                 best_support = support;
                 ransac_best_supporting_points = ransac_supporting_points;
+                ransac_best_not_supporting_points = ransac_not_supporting_points;
                 result = plane;
             }
             // 5. stop if support is already sufficient
@@ -156,26 +164,34 @@ namespace tango_augmented_reality {
         return plane;
     }
 
-    int Reconstructor::ransacEstimateSupportingPoints(Plane plane) {
+    int Reconstructor::ransacEstimateSupportingPoints(Plane plane,
+                                                      std::vector <glm::vec3> &points) {
         int support = 0;
         ransac_supporting_points.clear();
+        ransac_not_supporting_points.clear();
         for (int i = 0; i < points.size(); ++i) {
             if (plane.distanceTo(points[i]) < ransac_threshold) {
                 support++;
                 ransac_supporting_points.push_back(points[i]);
+            } else {
+                ransac_not_supporting_points.push_back(points[i]);
             }
         }
         return support;
     }
 
     void Reconstructor::reset() {
-        last_best_supporting_points.clear();
         mesh_.clear();
         points.clear();
+        ransac_best_not_supporting_points.clear();
+        ransac_best_supporting_points.clear();
+        for (int i = 0; i < RANSAC_DETECT_PLANES; ++i) {
+            plane_available[i] = false;
+        }
     }
 
-    int *Reconstructor::ransacPickThreeRandomPoints() {
-        int *selected_index = (int *) malloc(sizeof(int) * 3);
+    int *Reconstructor::ransacPickThreeRandomPoints(std::vector < glm::vec3 > &points) {
+        int *selected_index = (int *) malloc(sizeof(int) * RANSAC_DETECT_PLANES);
         bool *is_selected = (bool *) malloc(sizeof(bool) * points.size());
         for (int j = 0; j < points.size(); ++j) {
             is_selected[j] = false;
@@ -199,6 +215,39 @@ namespace tango_augmented_reality {
         for (int i = 0; i < points.size(); ++i) {
             points[i] = ((points[i] - centroid) * 1.01) + centroid;
         }
+    }
+
+    Reconstructor::Reconstructor() {
+        for (int i = 0; i < RANSAC_DETECT_PLANES; ++i) {
+            plane_available[i] = false;
+        }
+    }
+
+    void Reconstructor::addPoint(glm::vec3 point) {
+        for (int i = 0; i < RANSAC_DETECT_PLANES; ++i) {
+            if (plane_available[i]) {
+                if (planes[i].distanceTo(point) < ransac_threshold) {
+                    planes[i].points.push_back(point);
+                    return;
+                }
+            }
+        }
+        points.push_back(point);
+    }
+
+    void Reconstructor::clearPoints() {
+        points.clear();
+    }
+
+    int Reconstructor::getPointCount() {
+        int count = 0;
+        for (int i = 0; i < RANSAC_DETECT_PLANES; ++i) {
+            if (plane_available[i]) {
+                count += planes[i].points.size();
+            }
+        }
+        count += points.size();
+        return count;
     }
 
     Plane::Plane(glm::vec3 normal, float distance) :
