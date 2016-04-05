@@ -105,9 +105,9 @@ namespace tango_augmented_reality {
         void scaleAroundCentroid(float scale, std::vector <glm::vec3> &points);
 
         // how many random samples we're going to test
-        int ransac_iterations = 8;
+        int ransac_iterations = 12;
         // threshold between plane and point to count a point as supporting
-        float ransac_threshold = 0.08;
+        float ransac_threshold = 0.12;
         // amount of points, which should support the plane model to be sufficient
         float ransac_sufficient_support = 0.33;
         // how many planes per cluster getting detected

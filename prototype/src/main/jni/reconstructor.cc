@@ -222,15 +222,22 @@ namespace tango_augmented_reality {
     }
 
     void Reconstructor::addPoint(glm::vec3 point) {
+        int closest_index = -1;
+        float closest_distance = ransac_threshold;
         for (int i = 0; i < RANSAC_DETECT_PLANES; ++i) {
             if (plane_available[i]) {
-                if (planes[i].distanceTo(point) < ransac_threshold) {
-                    planes[i].points.push_back(point);
-                    return;
+                float current_distance = planes[i].distanceTo(point);
+                if (current_distance < ransac_threshold && current_distance < closest_distance) {
+                    closest_distance = current_distance;
+                    closest_index = i;
                 }
             }
         }
-        points.push_back(point);
+        if (closest_index >= 0) {
+            planes[closest_index].points.push_back(point);
+        } else {
+            points.push_back(point);
+        }
     }
 
     void Reconstructor::clearPoints() {
